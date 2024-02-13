@@ -3,10 +3,11 @@
 #include <time.h>
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
-#define API_KEY "AIzaSyBPiK4SxDCJWXSzbbOXgwWcyunc-LVY9PM"
-#define DATABASE_URL "https://thegrowthchamberproject-default-rtdb.firebaseio.com/" 
-#define USER_EMAIL "growthchamber@walnut.garden"
+#define API_KEY "AIzaSyAsGvcYkkIhaLzNqt6YIt7DVEskcAKUHig"
+#define DATABASE_URL "https://the-intelligarden-project-default-rtdb.firebaseio.com/" 
+#define USER_EMAIL "IntelligardenNodeAznab@walnut.garden"
 #define USER_PASSWORD "ThisIsThePasscode"
+#define DATABASE_ROOT_NAME "AznabNode1/"
 
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -27,14 +28,13 @@ const char* password = "12345654321";
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
-int GpioLamp = 23, GpioCooler = 27;
 
 // Variables to save date and time
 String formattedDate;
 String dayStamp;
 String timeStamp;
 
-OneWire oneWireBus(5);
+OneWire oneWireBus(15);
 DallasTemperature sensors(&oneWireBus);
 
 bool isTimeUpdated = true;
@@ -72,9 +72,6 @@ void lostTrackOfTime()
 void setup()
 {
     Serial.begin(115200);
-    pinMode(GpioLamp, OUTPUT);
-    pinMode(GpioCooler, OUTPUT);
-    // digitalWrite(27, HIGH); // lights on by default
     sensors.begin();
     Serial.println("Sensors initialized!");
     Serial.print("Connecting to ");
@@ -189,7 +186,7 @@ void setup()
 
             if(firebaseOK)
             {
-                auto databasePath = std::to_string(year) + "/" + std::to_string(month) + "/" 
+                auto databasePath = DATABASE_ROOT_NAME + std::to_string(year) + "/" + std::to_string(month) + "/" 
                               + std::to_string(day) + "/" + std::to_string(hour);
                 sensors.requestTemperatures();
                 if(Firebase.RTDB.getFloat(&fbdo, databasePath) == NULL)
@@ -247,29 +244,5 @@ void loop()
     int hour = rtc.getHour(true);
     int minute = rtc.getMinute();
     Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
-    Serial.println("Light time: 5 to 20");
-    if(hour > 4 and hour < 21)
-        digitalWrite(GpioLamp, !HIGH);
-    else
-        digitalWrite(GpioLamp, !LOW);
 
-    if(hour > 4 and hour < 21)
-    {
-        if(temp > (dayTemp + threshold))
-            digitalWrite(GpioCooler, !HIGH);
-        if(temp <= (dayTemp - threshold))
-            digitalWrite(GpioCooler, !LOW);
-    }
-    else
-    {
-        if(temp > (nightTemp + threshold))
-            digitalWrite(GpioCooler, !HIGH);
-        if(temp <= (nightTemp - threshold))
-            digitalWrite(GpioCooler, !LOW);
-    }
-
-    Serial.print("cooler =");
-    Serial.println(!digitalRead(GpioCooler) ? "on" : "off");
-    Serial.print("lamp =");
-    Serial.println(!digitalRead(GpioLamp) ? "on" : "off");
 }
