@@ -189,10 +189,30 @@ void setup()
                 auto databasePath = DATABASE_ROOT_NAME + std::to_string(year) + "/" + std::to_string(month) + "/" 
                               + std::to_string(day) + "/" + std::to_string(hour);
                 sensors.requestTemperatures();
-                if(Firebase.RTDB.getFloat(&fbdo, databasePath) == NULL)
+                if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/SoilSurface") == NULL)
                 {
                     Serial.println("new data is about to be registered on the database!");
-                    if (Firebase.RTDB.setFloat(&fbdo, databasePath, sensors.getTempCByIndex(0)))
+                    if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/SoilSurface", sensors.getTempCByIndex(1)))
+                    {
+                        Serial.println("PASSED");
+                        Serial.println("PATH: " + fbdo.dataPath());
+                        Serial.println("TYPE: " + fbdo.dataType());
+                    }
+                    else
+                    {
+                        Serial.println("FAILED");
+                        Serial.println("REASON: " + fbdo.errorReason());
+                    }
+                }
+                else
+                {
+                    Serial.println("warning: the data for the current time and date is already registered on the database!");
+                }
+
+                if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/1MeterAbove") == NULL)
+                {
+                    Serial.println("new data is about to be registered on the database!");
+                    if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/1MeterAbove", sensors.getTempCByIndex(0)))
                     {
                         Serial.println("PASSED");
                         Serial.println("PATH: " + fbdo.dataPath());
@@ -238,7 +258,10 @@ void loop()
 
     sensors.requestTemperatures();
     double temp = sensors.getTempCByIndex(0);
-    Serial.print("temp =");
+    Serial.print("temp 0=");
+    Serial.println(temp);
+    temp = sensors.getTempCByIndex(1);
+    Serial.print("temp 1=");
     Serial.println(temp);
     
     int hour = rtc.getHour(true);
