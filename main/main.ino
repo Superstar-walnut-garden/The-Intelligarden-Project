@@ -5,7 +5,8 @@
 #include "addons/RTDBHelper.h"
 #define API_KEY "AIzaSyAsGvcYkkIhaLzNqt6YIt7DVEskcAKUHig"
 #define DATABASE_URL "https://the-intelligarden-project-default-rtdb.firebaseio.com/" 
-#define USER_EMAIL "IntelligardenNodeAznab@walnut.garden"
+//#define USER_EMAIL "IntelligardenNodeAznab@walnut.garden"
+#define USER_EMAIL "demo@walnut.garden"
 #define USER_PASSWORD "ThisIsThePasscode"
 #define DATABASE_ROOT_NAME "AznabNode1/"
 
@@ -16,6 +17,9 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <rom/rtc.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <SPIFFS.h>
 
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
@@ -55,6 +59,31 @@ IPAddress subnet(255, 255, 0, 0);
 IPAddress primaryDNS(178, 22, 122, 100);
 IPAddress secondaryDNS;
 
+const char* APssid = "ESP32-Access-Point";
+const char* APpassword = "12345654321";
+
+// Create an instance of the server
+AsyncWebServer server(80);
+
+// Function to read WiFi credentials from SPIFFS
+bool readWiFiCredentials(String &ssid, String &password) {
+  if (!SPIFFS.exists("/wifi_credentials.txt")) {
+    Serial.println("Credentials file does not exist.");
+    return false;
+  }
+
+  File file = SPIFFS.open("/wifi_credentials.txt", FILE_READ);
+  if (!file) {
+    Serial.println("Failed to open credentials file.");
+    return false;
+  }
+
+  ssid = file.readStringUntil('\n');
+  password = file.readStringUntil('\n');
+  file.close();
+  return true;
+}
+
 void lostTrackOfTime()
 {
     Serial.println("Error: cannot connect to the network!!!");
@@ -74,21 +103,81 @@ void setup()
     Serial.begin(115200);
     sensors.begin();
     Serial.println("Sensors initialized!");
-    Serial.print("Connecting to ");
-    Serial.println(ssid);
-    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
-    WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
+    
+
+    // Initialize SPIFFS
+    if(!SPIFFS.begin(true))
     {
-        static int localCounter = 0;
-        delay(500);
-        Serial.print(".");
-        if(localCounter ++ > 10)
+        Serial.println("An Error has occurred while mounting SPIFFS");
+        return;
+    }
+
+    // Configure access point
+    WiFi.softAP(APssid, APpassword);
+    Serial.println();
+    Serial.print("SoftAP IP address: ");
+    Serial.println(WiFi.softAPIP());
+
+    // Serve HTML page to enter WiFi credentials
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        Serial.println("html file send request");
+        request->send(SPIFFS, "/index.html", "text/html");
+    });
+
+    // Handle form submission and save credentials
+    server.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        String input_ssid = request->getParam("ssid")->value();
+        String input_password = request->getParam("password")->value();
+        
+        // Save the credentials to SPIFFS
+        File file = SPIFFS.open("/wifi_credentials.txt", FILE_WRITE);
+        if (file) 
         {
-            localCounter = 0;
-            break;
+            file.println(input_ssid);
+            file.println(input_password);
+            file.close();
+            Serial.println("Credentials saved successfully.");
+        } 
+        else 
+        {
+            Serial.println("Failed to open file for writing.");
+        }
+    });
+
+    String stored_ssid, stored_password;
+    if (readWiFiCredentials(stored_ssid, stored_password)) 
+    {
+        std::string correctedSSID(stored_ssid.c_str());
+        std::string correctedPassword(stored_password.c_str());
+        correctedSSID.pop_back();
+        correctedPassword.pop_back();
+        Serial.print("Connecting to ");
+        Serial.println(correctedSSID.c_str());
+        Serial.println(correctedPassword.c_str());
+        // WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
+        // Connect to WiFi with the stored credentials
+        WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
+        WiFi.begin(correctedSSID.c_str(), correctedPassword.c_str());
+        while (WiFi.status() != WL_CONNECTED)
+        {
+            static int localCounter = 0;
+            delay(500);
+            Serial.print(".");
+            if(localCounter ++ > 30)
+            {
+                localCounter = 0;
+                break;
+            }
         }
     }
+    else 
+    {
+        // Handle the case where no credentials are found
+        Serial.println("No stored WiFi credentials found. Please connect to the AP to configure.");
+    }
+
     if(WiFi.status() == WL_CONNECTED)
     {
         bool firebaseOK = true;
@@ -119,7 +208,7 @@ void setup()
             Serial.print('.');
             delay(1000);
             static int localCounter = 0;
-            if(localCounter ++ > 6)
+            if(localCounter ++ > 12)
             {
                 localCounter = 0;
                 Serial.println("Error: Couldn't get user's UID");
@@ -237,6 +326,7 @@ void setup()
     {
         lostTrackOfTime();
     }
+    server.begin();
 }
 
 void loop()
