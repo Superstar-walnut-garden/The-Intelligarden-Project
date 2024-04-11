@@ -21,12 +21,10 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 
+#include "WifiSetup.hpp"
+
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
-
-// Replace with your network credentials
-const char* ssid     = "Superstar-Garden 2.4";
-const char* password = "12345654321";
 
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
@@ -53,11 +51,7 @@ String uid;
 
 bool signupOK = false;
 
-IPAddress local_IP(192, 168, 1, 184);
-IPAddress gateway(192, 168, 1, 1);
-IPAddress subnet(255, 255, 0, 0);
-IPAddress primaryDNS(178, 22, 122, 100);
-IPAddress secondaryDNS;
+
 
 const char* APssid = "ESP32-Access-Point";
 const char* APpassword = "12345654321";
@@ -65,24 +59,7 @@ const char* APpassword = "12345654321";
 // Create an instance of the server
 AsyncWebServer server(80);
 
-// Function to read WiFi credentials from SPIFFS
-bool readWiFiCredentials(String &ssid, String &password) {
-  if (!SPIFFS.exists("/wifi_credentials.txt")) {
-    Serial.println("Credentials file does not exist.");
-    return false;
-  }
 
-  File file = SPIFFS.open("/wifi_credentials.txt", FILE_READ);
-  if (!file) {
-    Serial.println("Failed to open credentials file.");
-    return false;
-  }
-
-  ssid = file.readStringUntil('\n');
-  password = file.readStringUntil('\n');
-  file.close();
-  return true;
-}
 
 void lostTrackOfTime()
 {
@@ -100,17 +77,13 @@ void lostTrackOfTime()
 
 void setup()
 {
+    WifiSetup *wifiSetup = WifiSetup::getInstance();
     Serial.begin(115200);
     sensors.begin();
     Serial.println("Sensors initialized!");
     
 
-    // Initialize SPIFFS
-    if(!SPIFFS.begin(true))
-    {
-        Serial.println("An Error has occurred while mounting SPIFFS");
-        return;
-    }
+    
 
     // Configure access point
     WiFi.softAP(APssid, APpassword);
@@ -146,46 +119,14 @@ void setup()
         }
     });
 
-    String stored_ssid, stored_password;
-    if (readWiFiCredentials(stored_ssid, stored_password)) 
-    {
-        std::string correctedSSID(stored_ssid.c_str());
-        std::string correctedPassword(stored_password.c_str());
-        correctedSSID.pop_back();
-        correctedPassword.pop_back();
-        Serial.print("Connecting to ");
-        Serial.println(correctedSSID.c_str());
-        Serial.println(correctedPassword.c_str());
-        // WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
-        // Connect to WiFi with the stored credentials
-        WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
-        WiFi.begin(correctedSSID.c_str(), correctedPassword.c_str());
-        while (WiFi.status() != WL_CONNECTED)
-        {
-            static int localCounter = 0;
-            delay(500);
-            Serial.print(".");
-            if(localCounter ++ > 30)
-            {
-                localCounter = 0;
-                break;
-            }
-        }
-    }
-    else 
-    {
-        // Handle the case where no credentials are found
-        Serial.println("No stored WiFi credentials found. Please connect to the AP to configure.");
-    }
+    
 
-    if(WiFi.status() == WL_CONNECTED)
+    if(wifiSetup->isConnected())
     {
         bool firebaseOK = true;
         // Print local IP address and start web server
         Serial.println("");
         Serial.println("WiFi connected.");
-        Serial.println("IP address: ");
-        Serial.println(WiFi.localIP());
         // ------------- firebase setup ----------------
         // Assign the api key (required)
         config.api_key = API_KEY;
@@ -338,10 +279,6 @@ void loop()
     {
         softdog = 0;
         esp_restart(); // Continuesly reset to support the system stability;
-    }
-    if(WiFi.status() == WL_CONNECTED)
-    {
-
     }
     Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
 
