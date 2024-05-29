@@ -25,8 +25,8 @@ class WifiSetup
         IPAddress local_IP(192, 168, 1, 184);
         IPAddress gateway(192, 168, 1, 1);
         IPAddress subnet(255, 255, 0, 0);
-        IPAddress primaryDNS(178, 22, 122, 100);
-        IPAddress secondaryDNS;
+        IPAddress primaryDNS(10, 202, 10, 202);
+        IPAddress secondaryDNS(10, 202, 10, 102);
         initSPIFFS();
         String stored_ssid, stored_password;
         if (readWiFiCredentials(stored_ssid, stored_password)) 
