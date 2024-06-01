@@ -48,7 +48,6 @@ int virtualMain()
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
     SystemTime *systemTime = new SystemTime();
-    Serial.begin(115200);
     sensors.begin();
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
