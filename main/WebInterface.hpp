@@ -15,7 +15,7 @@ class WebInterface
     WebInterface(): server(80)
     {
         // Configure access point
-        //WiFi.softAP(APssid, APpassword);
+        WiFi.softAP(APssid, APpassword);
         Serial.println();
         Serial.print("SoftAP IP address: ");
         Serial.println(WiFi.softAPIP());
