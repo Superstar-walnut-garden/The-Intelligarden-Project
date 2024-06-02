@@ -47,7 +47,7 @@ class WifiSetup
                 static int localCounter = 0;
                 delay(500);
                 Serial.print(".");
-                if(localCounter ++ > 30)
+                if(localCounter ++ > 15)
                 {
                     localCounter = 0;
                     break;

@@ -24,7 +24,27 @@ class WebInterface
         server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
         {
             Serial.println("html file send request");
-            request->send(SPIFFS, "/index.html", "text/html");
+            String ssid;
+            auto credentials = SPIFFS.open("/wifi_credentials.txt", FILE_READ);
+            if(credentials)
+            {
+                ssid = credentials.readStringUntil('\n');
+                credentials.close();
+            }
+            String htmlFile;
+            auto file = SPIFFS.open("/index.html", FILE_READ);
+            if (file)
+            {
+                htmlFile = file.readString();
+                file.close();
+            }
+
+            if(WiFi.status() == WL_CONNECTED)
+                htmlFile += (String("<p>Connected to: ") + ssid) + "</p>";
+            else
+                htmlFile += (String("<p>Error: Couldn't Connect to: ") + ssid) + "</p>";
+
+            request->send(200, "text/html", htmlFile);
         });
 
         // Handle form submission and save credentials
@@ -32,16 +52,18 @@ class WebInterface
         {
             String input_ssid = request->getParam("ssid")->value();
             String input_password = request->getParam("password")->value();
-            request->send(SPIFFS, "/index.html", "text/html");
+            request->send(SPIFFS, "/restarting.html", "text/html");
             
             // Save the credentials to SPIFFS
             File file = SPIFFS.open("/wifi_credentials.txt", FILE_WRITE);
-            if (file) 
+            if (file)
             {
                 file.println(input_ssid);
                 file.println(input_password);
                 file.close();
                 Serial.println("Credentials saved successfully.");
+                request->send(SPIFFS, "/restarting.html", "text/html");
+                delay(3000);
                 esp_restart(); // restart and connect
             } 
             else 
