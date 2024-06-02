@@ -66,5 +66,24 @@
         <input type="password" id="password" name="password" required><br><br>
         <input type="submit" value="Submit">
     </form>
+    <p><span id="connectionStatus"></span></p>
+    <script>
+      // JavaScript code to fetch the sensor value
+      fetch("/getSensorValue") // Replace with your actual API endpoint
+        .then(response => response.json())
+        .then(data => {
+          var connectionStatus = data.connectionStatus; // 0 or 1
+          var ssidName = data.ssidName; // Replace with your actual SSID
+
+          if (connectionStatus === 0) {
+            document.getElementById("connectionStatus").textContent =
+              "Couldn't connect to " + ssidName;
+          } else if (connectionStatus === 1) {
+            document.getElementById("connectionStatus").textContent =
+              "Connected to " + ssidName;
+          }
+        })
+        .catch(error => console.error("Error fetching data:", error));
+    </script>
 </body>
 </html>

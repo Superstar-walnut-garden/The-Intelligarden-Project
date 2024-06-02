@@ -24,13 +24,7 @@ class WebInterface
         server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
         {
             Serial.println("html file send request");
-            String ssid;
-            auto credentials = SPIFFS.open("/wifi_credentials.txt", FILE_READ);
-            if(credentials)
-            {
-                ssid = credentials.readStringUntil('\n');
-                credentials.close();
-            }
+            
             String htmlFile;
             auto file = SPIFFS.open("/index.html", FILE_READ);
             if (file)
@@ -39,12 +33,25 @@ class WebInterface
                 file.close();
             }
 
-            if(WiFi.status() == WL_CONNECTED)
-                htmlFile += (String("<p>Connected to: ") + ssid) + "</p>";
-            else
-                htmlFile += (String("<p>Error: Couldn't Connect to: ") + ssid) + "</p>";
+            
 
             request->send(200, "text/html", htmlFile);
+        });
+
+        server.on("/getSensorValue", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
+            String ssid;
+            auto credentials = SPIFFS.open("/wifi_credentials.txt", FILE_READ);
+            if(credentials)
+            {
+                ssid = credentials.readStringUntil('\n');
+                credentials.close();
+            }
+            std::string correctedSSID(ssid.c_str());
+            correctedSSID.pop_back(); // remove the \n
+            String json = "{\"connectionStatus\": " + String((WiFi.status() == WL_CONNECTED)) +
+                  ", \"ssidName\": \"" + correctedSSID.c_str() + "\"}";
+            request->send(200, "application/json", json);
         });
 
         // Handle form submission and save credentials
