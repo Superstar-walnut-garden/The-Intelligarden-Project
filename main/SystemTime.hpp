@@ -10,8 +10,13 @@
 class SystemTime
 {
     public:
-    SystemTime(): rtc(0), timeClient(ntpUDP), timeUpdated(true)
+    SystemTime(): rtc(0), timeClient(ntpUDP), timeUpdated(false)
     {
+
+    }
+    void obtainTime()
+    {
+
         Serial.println("Connecting to time server!");
         Serial.println("time offset: 3:30 GMT");
         timeClient.setTimeOffset(12600);
