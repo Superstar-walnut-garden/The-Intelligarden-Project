@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 WiFi Setup</title>
+    <title>ESP32 restarting</title>
     <style>
         body {
         font-family: 'Arial', sans-serif;
@@ -16,6 +16,8 @@
         h1 {
         color: #2fb1bf;
         text-align: center;
+        vertical-align: middle;
+        
         }
 
         form {
@@ -51,20 +53,35 @@
         input[type="submit"]:hover {
         background-color: #114e66;
         }
-        p {
-            color: darkgray;
-            vertical-align: bottom;
+        div {
+        width: fit-content;
+        margin:0 auto;    
+        display:block;
+        padding: 10px;
+        border: none;
+        border-radius: 4px;
+        background-color: #2fb1bf;
+        color: white;
+        cursor: pointer;
         }
+
+        div:hover {
+        background-color: #114e66;
+        }
+        a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #ffffff;
+            
+        }
+        
     </style>
 </head>
 <body>
-    <h1>Intelligarden WiFi Setup</h1>
-    <form action="/submit" method="get">
-        <label for="ssid">WiFi SSID:</label><br>
-        <input type="text" id="ssid" name="ssid" required><br>
-        <label for="password">WiFi Password:</label><br>
-        <input type="password" id="password" name="password" required><br><br>
-        <input type="submit" value="Submit">
-    </form>
+    <h1>Device is rebooting!</h1>
+    <div>
+        <a href="http://192.168.4.1">ReSetup your device</a>
+    </div>
+    
 </body>
 </html>
