@@ -157,7 +157,7 @@ int virtualMain()
         if(softdog ++ > 80)
         {
             softdog = 0;
-            esp_restart(); // Continuesly reset to support the system stability;
+            // esp_restart(); // Continuesly reset to support the system stability;
         }
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
 
