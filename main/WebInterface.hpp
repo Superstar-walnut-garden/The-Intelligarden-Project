@@ -7,6 +7,7 @@
 #include <ESPAsyncWebServer.h>
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
+#include "Pump.hpp"
 const char* APssid = "ESP32-Access-Point";
 const char* APpassword = "12345654321";
 
@@ -86,6 +87,14 @@ class WebInterface
             correctedDuration.pop_back();
             String json = "{\"startTime\": \"" + String(correctedTime.c_str()) +
                   "\" , \"duration\": \"" + correctedDuration.c_str() + "\"}";
+            request->send(200, "application/json", json);
+        });
+        server.on("/getPumpStatus", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
+            auto *pumpObject = Pump::getInstance();
+
+            String json = "{\"state\": \"" + String(pumpObject->getPumpState()) +
+                  "\" , \"rTime\": \"" + String("0:00") + "\"}";
             request->send(200, "application/json", json);
         });
 

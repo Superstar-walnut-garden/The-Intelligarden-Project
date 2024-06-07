@@ -21,6 +21,7 @@
 #include "WifiSetup.hpp"
 #include "WebInterface.hpp"
 #include "SystemTime.hpp"
+#include "Pump.hpp"
 
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
@@ -47,7 +48,8 @@ int virtualMain()
 {
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
-    SystemTime *systemTime = new SystemTime();;
+    auto *systemTime = SystemTime::getInstance();
+    auto *pump = Pump::getInstance();
     sensors.begin();
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
@@ -174,6 +176,7 @@ int virtualMain()
             int hour = systemTime->getHour();
             int minute = systemTime->getMinute();
             Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
+            pump->loop(hour, minute);
         }
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");

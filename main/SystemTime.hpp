@@ -10,10 +10,13 @@
 class SystemTime
 {
     public:
-    SystemTime(): rtc(0), timeClient(ntpUDP), timeUpdated(false)
+    static SystemTime *getInstance()
     {
-
+        if(!instance)
+            instance = new SystemTime();
+        return instance;
     }
+    
     void obtainTime()
     {
 
@@ -121,6 +124,12 @@ class SystemTime
             rtc.setTime(0, 0, 5, 1, 1, 2024);
         }
     }
+    SystemTime(): rtc(0), timeClient(ntpUDP), timeUpdated(false)
+    {
+
+    }
+    static SystemTime *instance;
 };
+SystemTime *SystemTime::instance = nullptr;
 
 #endif

@@ -22,8 +22,17 @@
             margin: 0 auto;
             padding: 20px;
             background-color: #ffffff;
-            border-radius: 5px;
+            border: 5px solid #497570;
+            border-radius: 10px;
+            border-end-end-radius: 0px;
+            border-end-start-radius: 0px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .cPump-off {
+            border: 5px solid #c9c9c9;
+        }
+        .cPump-on {
+            border: 5px solid #497570;
         }
         label {
             display: block;
@@ -59,10 +68,44 @@
         button:hover {
             background-color: #20737c;
         }
+        .statusContainer {
+        
+            display: table;
+            width: 450px;
+            margin: 0 auto;
+            /* border: 3px solid #4caf50; */
+        }
+        .pump-status {
+            font-size: 16px;
+            color: #333;
+            padding: 10px;
+            padding-left: 40px;
+            padding-right: 40px;
+            border-radius: 10px;
+            border-top-left-radius: 0px;
+            border-top-right-radius: 0px;
+            background-color: #e0e0e0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .pump-on {
+            background-color: #497570;
+            color: white;
+        }
+        .pump-off {
+            background-color: #c9c9c9;
+            color: white;
+        }
+        .remaining-time {
+            font-size: 14px;
+            color: #777;
+            margin-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container cPump-on" id="mainContainer">
         <h1>Pump Settings</h1>
         <form action="/submitPump" method="get">
             <label for="startTime">Start Time:</label>
@@ -80,6 +123,11 @@
             <option value="60">1 hour</option>
         </select>
         <button id="manualPowerOff" style="background-color: #ff9393;">Manual Power Off</button>
+    </div>
+    <div class="statusContainer">
+        <div class="pump-status pump-on" id="status">Pump is On</div>
+        <!-- Change the class to "led-off" if the pump is off -->
+        <div class="remaining-time" id="remaining-time">Remaining time: 00:00</div>
     </div>
     <script>
       // Fetch start time and duration from Arduino server
@@ -104,8 +152,24 @@
             document.getElementById("duration").value = date2.toTimeString().slice(0, 5);
         })
         .catch(error => console.error("Error fetching data:", error));
-      
 
+        fetch("/getPumpStatus") // Replace with your actual API endpoint
+        .then(response => response.json())
+        .then(data => {
+            var status = data.status; // 0 or 1
+            var rTime = data.rTime; // Replace with your actual SSID
+
+            // Set input values
+            document.getElementById("remaining-time").textContent = "Remaining Time: " + rTime;
+            document.getElementById("status").textContent = (data.state == '1') ? "Pump is On" : "Pump is off";
+
+            
+            document.getElementById("mainContainer").className = "container " + ((data.state == '1') ? "cPump-on" : "cPump-off");
+            document.getElementById("status").className = "pump-status " +  ((data.state == '1') ? "pump-on" : "pump-off");
+
+        })
+        .catch(error => console.error("Error fetching data:", error));
+      
       // Send command to Arduino server
       async function sendCommandToServer(command, durationMinutes) {
           try {
