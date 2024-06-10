@@ -1,4 +1,4 @@
-#Opensourse smart gardening system
+# Opensourse smart gardening system
 
 * Multi-sensor temperature data logging
 * Scheduled irrigation pump auto control
