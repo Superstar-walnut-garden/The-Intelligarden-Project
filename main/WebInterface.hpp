@@ -191,8 +191,19 @@ class WebInterface
             DynamicJsonDocument json(128);
             deserializeJson(json, data);
             String command = json["command"].as<String>();
+            
             Serial.print("command received: ");
             Serial.println(command);
+            auto *pump = Pump::getInstance();
+            if(command.equals("turn_on"))
+            {
+                int duration = std::stoi(std::string(json["duration"].as<String>().c_str()));
+                pump->manualSwitch(duration);
+            }
+            if(command.equals("turn_off"))
+            {
+                pump->manualSwitch(); // turn off the pump
+            }
             // request->send(200, "application/json", "{\"status\": \"success\"}");
             String htmlFile;
             auto file = SPIFFS.open("/pumpSetting.html", FILE_READ);
