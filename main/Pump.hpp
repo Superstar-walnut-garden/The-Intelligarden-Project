@@ -2,16 +2,18 @@
 #define PUMP_HPP
 #include <SPIFFS.h>
 #include <string.h>
+#include "Configuration.hpp"
 
 
 class Pump
 {
     private:
-    bool pumpState;
+    enum class PumpState {off, manualOn, autoOn};
+    PumpState pumpState;
     static Pump *instance;
-    int manualTime = 0, manualMinutes = 0, manualHours = 0;
+    Time manualTime;
     bool manualOn;
-    Pump(): pumpState(0), manualOn(false)
+    Pump(): pumpState(PumpState::off), manualOn(false), manualTime(0, 0)
     {
         
     }
@@ -30,95 +32,67 @@ class Pump
     
     bool getPumpState()
     {
-        return pumpState;
+        return (pumpState != PumpState::off);
     }
     void manualSwitch(signed manualTime = -1)
     {
-        if(manualTime >= 0)
+        if(pumpState != PumpState::autoOn)
         {
-            this->manualTime = manualTime;
-            manualOn = true;
-        }
-        else if(manualTime == -1)
-        {
-            manualOn = false;
-            pumpState = 0;
+            if(manualTime >= 0)
+            {
+                this->manualTime = Time(0, manualTime);
+                manualOn = true;
+            }
+            else if(manualTime == -1)
+            {
+                manualOn = false;
+                this->manualTime = Time(0, 0);
+                pumpState = PumpState::off;
+            }
         }
     }
     void loop(int currentHours, int currentMinutes)
     {
-        String startTime, duration;
-        auto file = SPIFFS.open("/schedule.txt", FILE_READ);
-        if(file)
+        auto *cfg = Configuration::getInstance();
+        auto pSchedule = cfg->getPumpSchedule();
+        auto untilTime = pSchedule.start + pSchedule.duration;
+        auto currentTime = Time(currentHours, currentMinutes);
+        
+        Serial.println("pump start time: " + String(pSchedule.start.getHour()) + ":" + String(pSchedule.start.getMinute()));
+        Serial.println("pump end time: " + String(untilTime.getHour()) + ":" + String(untilTime.getMinute()));
+        Serial.println("pump duration: " + String(pSchedule.duration.getHour()) + ":" + String(pSchedule.duration.getMinute()));
+
+        Serial.println("checking if the schedule is ready");
+        if(pumpState != PumpState::manualOn) // don't care about the schedule if manual mode is selected.
         {
-            startTime = file.readStringUntil('\n');
-            duration = file.readStringUntil('\n');
-            file.close();
-
-            std::string correctedTime(startTime.c_str());
-            correctedTime.pop_back();
-            std::string correctedDuration(duration.c_str());
-            correctedDuration.pop_back();
-
-            int hours, minutes, autoDurationHours, autoDurationMinutes;
-            if(correctedTime.find(":") != -1)
+            if(currentTime >= pSchedule.start and currentTime <= untilTime)
             {
-                Serial.println("schedule data = " + String(correctedTime.c_str()) + " " + String(correctedDuration.c_str()));
-                std::size_t timeDelimiterPos = correctedTime.find(':');
-                if (timeDelimiterPos != std::string::npos) {
-                    hours = std::stoi(correctedTime.substr(0, timeDelimiterPos));
-                    minutes = std::stoi(correctedTime.substr(timeDelimiterPos + 1));
-                }
-
-                // Parse correctedDuration
-                std::size_t durationDelimiterPos = correctedDuration.find(':');
-                if (durationDelimiterPos != std::string::npos) {
-                    autoDurationHours = std::stoi(correctedDuration.substr(0, durationDelimiterPos));
-                    autoDurationMinutes = std::stoi(correctedDuration.substr(durationDelimiterPos + 1));
-                }
-
-                auto untilMinutes = minutes + autoDurationMinutes;
-                auto untilHours = hours + autoDurationHours;
-                if(untilMinutes >= 60)
-                {
-                    untilMinutes -= 60;
-                    untilHours ++;
-                }
-                Serial.println("pump start time: " + String(hours) + ":" + String(minutes));
-                Serial.println("pump end time: " + String(untilHours) + ":" + String(untilMinutes));
-                Serial.println("pump duration: " + String(autoDurationHours) + ":" + String(autoDurationMinutes));
-
-                Serial.println("checking if the schedule is ready");
-                auto currentTimeInMin = getMinutesFrom(currentHours, currentMinutes);
-                auto startTimeInMin = getMinutesFrom(hours, minutes);
-                auto untilTimeInMin = getMinutesFrom(untilHours, untilMinutes);
-                if(currentTimeInMin >= startTimeInMin and currentTimeInMin <= untilTimeInMin)
-                {
-                    Serial.println("Pump is on (with schedule)");
-                    pumpState = 1;
-                }
-                else
-                {
-                    Serial.println("Pump is off (with schedule)");
-                    pumpState = 0;
-                }
-            }
-        }
-        if(manualOn)
-        {
-            manualMinutes = manualTime + (currentHours * 60) + currentMinutes;
-
-            if(getMinutesFrom(currentHours, currentMinutes) <= manualMinutes) // minutes check
-            {
-                Serial.println("Pump is manually on");
-                pumpState = 1;
+                Serial.println("Pump is on (with schedule)");
+                pumpState = PumpState::autoOn;
             }
             else
             {
-                Serial.println("Pump is manually off");
-                manualOn = false;
-                pumpState = 0;
+                Serial.println("Pump is off (with schedule)");
+                pumpState = PumpState::off;
             }
+        }
+
+        if(manualOn) // manual command flag
+        {
+            manualOn = 0; // drop the flag
+            manualTime += currentTime;
+        }
+        if(currentTime < manualTime) // manual time check
+        {
+            Serial.println("Pump is manually on");
+            pumpState = PumpState::manualOn;
+        }
+        else
+        {
+            Serial.println("Pump is manually off");
+            manualTime = Time(0, 0); // reset the manual time
+            if(pumpState == PumpState::manualOn)
+                pumpState = PumpState::off;
         }
     }
 };
