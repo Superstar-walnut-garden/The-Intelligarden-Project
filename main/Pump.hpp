@@ -67,11 +67,13 @@ class Pump
         {
             if(currentTime >= pSchedule.start and currentTime <= untilTime)
             {
+                digitalWrite(25, HIGH);
                 Serial.println("Pump is on (with schedule)");
                 pumpState = PumpState::autoOn;
             }
             else
             {
+                digitalWrite(25, LOW);
                 Serial.println("Pump is off (with schedule)");
                 pumpState = PumpState::off;
             }
@@ -84,11 +86,13 @@ class Pump
         }
         if(currentTime < manualTime) // manual time check
         {
+            digitalWrite(25, HIGH);
             Serial.println("Pump is manually on");
             pumpState = PumpState::manualOn;
         }
         else
         {
+            digitalWrite(25, LOW);
             Serial.println("Pump is manually off");
             manualTime = Time(0, 0); // reset the manual time
             if(pumpState == PumpState::manualOn)
