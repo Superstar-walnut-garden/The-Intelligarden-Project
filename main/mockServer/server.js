@@ -28,3 +28,20 @@ app.post('/setSensorList', (req, res) => {
 app.listen(port, () => {
     console.log(`Mock server running at http://localhost:${port}`);
 });
+const BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+function encode64BitNumberToBase62(num) {
+    let bigIntNum = BigInt(num);
+    let base62String = "";
+
+    while (bigIntNum > 0) {
+        let remainder = bigIntNum % 62n;
+        base62String = BASE62[Number(remainder)] + base62String;
+        bigIntNum /= 62n;
+    }
+
+    return base62String;
+}
+let number = "2810246214155019048";
+let encodedString = encode64BitNumberToBase62(number);
+console.log(encodedString); // Example output: 

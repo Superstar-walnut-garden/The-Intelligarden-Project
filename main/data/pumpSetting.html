@@ -47,6 +47,15 @@
             border-radius: 5px;
 
         }
+        input[type="text"] {
+            width: 95%;
+            padding: 10px;
+            /* margin:0 auto;    
+            display:block; */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+
+        }
         select {
             width: 100%;
             padding: 10px;
@@ -112,7 +121,7 @@
             <label for="startTime">Start Time:</label>
             <input type="time" id="startTime" name="startTime">
             <label for="duration">Duration:</label>
-            <input type="time" id="duration" name="duration">
+            <input type="text" id="duration" name="duration" pattern="^([0-9]{1,2}):([0-9]{2})$" placeholder="hh:mm">
             <button type="submit">Submit</button>
         </form>
         <button id="turnOnFor" style="border-end-end-radius: 0px; border-end-start-radius: 0px;">Turn on for:</button>

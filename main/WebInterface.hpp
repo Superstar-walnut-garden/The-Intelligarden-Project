@@ -8,6 +8,7 @@
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 #include "Pump.hpp"
+#include "IObserver.hpp"
 const char* APssid = "ESP32-Access-Point";
 const char* APpassword = "12345654321";
 
@@ -32,6 +33,23 @@ class WebInterface
         {
             Serial.println("opening pump settings!");
             request->send(SPIFFS, "/pumpSetting.html", "text/html");
+        });
+        server.on("/tempSensors", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
+            Serial.println("opening sensor settings!");
+            request->send(SPIFFS, "/tempSensors.html", "text/html");
+        });
+        server.on("/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
+        {
+            String json;
+            auto *cfg = Configuration::getInstance();
+            json += "{";
+            for(auto dev : cfg->getSensorList())
+                json += "\"" + String(std::to_string((uint64_t)dev).c_str()) +
+                  "\": \"" + "sensor" + "\",";
+            json.remove(json.length() - 1); // remove the final ","
+            json += "}";
+            request->send(200, "application/json", json);
         });
 
         server.on("/getWifiState", HTTP_GET, [](AsyncWebServerRequest *request)

@@ -1,16 +1,20 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 #include "Time.hpp"
+#include "Subject.hpp"
+#include <vector>
 
-constexpr auto pumpFileAddress ="/schedule.txt";
-constexpr auto wifiFileAddress ="/wifi_credentials.txt";
-constexpr auto TimeFileAddress ="/backup_time.txt";
+constexpr auto pumpFileAddress = "/schedule.txt";
+constexpr auto wifiFileAddress = "/wifi_credentials.txt";
+constexpr auto TimeFileAddress = "/backup_time.txt";
+constexpr auto sensorFileAddress = "/sensors.txt";
 
-class Configuration
+class Configuration : public Subject<Configuration>
 {
     private:
     Configuration(){}
     static Configuration *instance;
+    std::vector<uint64_t> devList;
 
     public: 
     static Configuration *getInstance()
@@ -112,6 +116,15 @@ class Configuration
         wifiCred.ssid.remove(wifiCred.ssid.length() - 1); // remove the "/n" from the end
         wifiCred.pwd.remove(wifiCred.pwd.length() - 1);
         return wifiCred;
+    }
+    std::vector<uint64_t> getSensorList()
+    {
+        notify();
+        return devList;
+    }
+    void setSensorList(std::vector<uint64_t> devList)
+    {
+        this->devList = devList;
     }
 };
 Configuration *Configuration::instance = nullptr;
