@@ -45,8 +45,8 @@ class WebInterface
             auto *cfg = Configuration::getInstance();
             json += "{";
             for(auto dev : cfg->getSensorList())
-                json += "\"" + String(std::to_string((uint64_t)dev).c_str()) +
-                  "\": \"" + "sensor" + "\",";
+                json += "\"" + String(std::to_string((uint64_t)dev.getAddress()).c_str()) +
+                  "\": \"" + String(dev.getName().c_str()) + "\",";
             json.remove(json.length() - 1); // remove the final ","
             json += "}";
             request->send(200, "application/json", json);
@@ -127,15 +127,40 @@ class WebInterface
             }
             request->send(SPIFFS, "/pumpSetting.html", "text/html");
         });
+        server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest * request)
+        {
+            request->send(200); //response to client
+        }, NULL
+        , [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total)
+        {
+            auto *cfg = Configuration::getInstance();
+            std::vector<TempSensorNode> list;
+            for (size_t i = 0; i < len; i++)
+                Serial.write(data[i]);
         
+            Serial.println();
+            // Parse JSON payload
+            DynamicJsonDocument json(1024); // this should be dynamic not static like this!
+            deserializeJson(json, data);
+            Serial.println("payload elements:");
+            for (JsonPair jNode : json.as<JsonObject>()) // extract data from json payload
+            {
+                list.push_back(TempSensorNode(std::stoll(jNode.key().c_str())
+                    , std::string(jNode.value().as<String>().c_str())));
+                Serial.print(jNode.key().c_str()); // print data
+                Serial.print(": ");
+                Serial.println(jNode.value().as<String>());
+            }
+            cfg->storeSensorNames(list);
+        });
     }
-    void init()
+    void init() //start the web server
     {
         server.begin();
     }
 
     private:
-    AsyncWebServer server;
+    AsyncWebServer server; // server object
     
 };
 

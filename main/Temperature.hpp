@@ -13,19 +13,19 @@
 class Temperature: public Subject<Temperature>, public IObserver<Configuration>
 {
     public:
-    static Temperature *getInstance()
+    static Temperature *getInstance() // get singleton instance
     {
         if(!instance)
             instance = new Temperature();
         return instance;
     }
-    void read(bool doNotify = false)
+    void read(bool doNotify = false) // request a temp conversion from sensors
     {
         sensors.requestTemperatures();
         if(doNotify)
             notify(); // notify the observers when data is ready
     }
-    double getData(std::string name)
+    double getData(std::string name) // returns sensor data from a registered sensor
     {
         return sensors.getTempCByIndex(0);
     }
@@ -40,11 +40,11 @@ class Temperature: public Subject<Temperature>, public IObserver<Configuration>
     //     }
     //     return sensors.getTempCByIndex(0);
     // }
-    auto getSensorList()
+    auto getSensorList() // returns a list of connected sensors (address only)
     {
         return sensorList;
     }
-    void update(Configuration *cfg)
+    void update(Configuration *cfg) // 
     {
         Serial.println("notified");
         cfg->setSensorList(obtainSensors());
@@ -53,11 +53,11 @@ class Temperature: public Subject<Temperature>, public IObserver<Configuration>
 
 
     private:
-    std::vector<uint64_t> obtainSensors()
+    std::vector<TempSensorNode> obtainSensors()
     {
         oneWireBus.begin(15);
         oneWireBus.reset();
-        std::vector<uint64_t> devList;
+        std::vector<TempSensorNode> devList;
         byte addr[8];
         Serial.println("obtaining sensors");
         while(oneWireBus.search(addr))
@@ -72,8 +72,8 @@ class Temperature: public Subject<Temperature>, public IObserver<Configuration>
             Serial.println("\n an address found!");
             uint64_t addr64;
             std::memcpy(&addr64, addr, sizeof(addr64));
-            devList.push_back(addr64);
-            Serial.println(devList.at(0), HEX);
+            devList.push_back(TempSensorNode(addr64, "", true));
+            Serial.println(devList.at(0).getAddress(), HEX);
         }
         oneWireBus.reset_search();
         Serial.println("obtaining sensors completed");

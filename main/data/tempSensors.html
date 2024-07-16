@@ -92,14 +92,26 @@
                         sensorItem.className = 'sensor-item';
                         let shortAddress = encode64BitNumberToBase62(address);
                         if(name != "")
-                            sensorItem.innerHTML = `
-                                <span style="color:black">Addr:${shortAddress}</span>
-                                <input type="text" value="${name}" data-index="${index}">
-                            `;
+                        sensorItem.innerHTML = `
+                            <div style="display: flex; width: 70%;">
+                                <div style="width: 45%;">
+                                    <span id="${address}" style="color:black">ID: ${shortAddress}</span>
+                                </div>
+                                <div style="width: 55%;">
+                                    <input type="text" value="${name}" data-index="${index}">
+                                </div>
+                            </div>
+                        `;
                         else
                             sensorItem.innerHTML = `
-                                <span style="color:gray">Addr:${shortAddress}</span>
-                                <input type="text" value="${name}" data-index="${index}">
+                                <div style="display: flex; width: 70%;">
+                                    <div style="width: 45%;">
+                                        <span id="${address}" style="color:gray">ID: ${shortAddress}</span>
+                                    </div>
+                                    <div style="width: 55%;">
+                                        <input type="text" value="${name}" data-index="${index}">
+                                    </div>
+                                </div>
                             `;
                         sensorList.appendChild(sensorItem);
                     });
@@ -111,11 +123,12 @@
         }
 
         async function saveData() {
-            const sensorList = document.querySelectorAll('.sensor-item input[type="text"]');
+            const sensorList = document.getElementById('sensorList');
+            const sensors = sensorList.querySelectorAll('div[style*="display: flex"]');
             const updatedData = {};
-            sensorList.forEach(input => {
-                const address = input.previousElementSibling.textContent.split(':')[1];
-                updatedData[address] = input.value;
+            sensors.forEach(sensor => {
+                const address = sensor.querySelector('span').id;
+                updatedData[address] = sensor.querySelector('input').value;
             });
             try {
                 const response = await fetch('/setSensorList', {
@@ -179,16 +192,19 @@
                 notification.textContent = "Save";
             }, 2000);
         }
-        function encode64BitNumberToBase62(num) {
+        function encode64BitNumberToBase62(num) 
+        {
             let bigIntNum = BigInt(num);
-            let base62String = "";
 
+            // Remove the first 8 bits and the last 8 bits
+            bigIntNum = (bigIntNum >> 8n) & ((1n << 48n) - 1n);
+
+            let base62String = "";
             while (bigIntNum > 0) {
                 let remainder = bigIntNum % 62n;
                 base62String = BASE62[Number(remainder)] + base62String;
                 bigIntNum /= 62n;
             }
-
             return base62String;
         }
 

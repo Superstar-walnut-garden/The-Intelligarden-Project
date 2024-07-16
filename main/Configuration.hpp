@@ -2,6 +2,7 @@
 #define CONFIGURATION_HPP
 #include "Time.hpp"
 #include "Subject.hpp"
+#include "TempSensorNode.hpp"
 #include <vector>
 
 constexpr auto pumpFileAddress = "/schedule.txt";
@@ -14,7 +15,32 @@ class Configuration : public Subject<Configuration>
     private:
     Configuration(){}
     static Configuration *instance;
-    std::vector<uint64_t> devList;
+    std::vector<TempSensorNode> devList;
+    std::vector<TempSensorNode> savedDevList;
+
+    void retriveSavedSensorList()
+    {
+        File file = SPIFFS.open(sensorFileAddress, FILE_READ);
+        if (!file) {
+            Serial.println("Failed to open file for reading");
+            return;
+        }
+
+        savedDevList.clear();
+        while (file.available()) {
+            String line = file.readStringUntil('\n');
+            uint64_t address;
+            char name[100];
+            sscanf(line.c_str(), "%llu,%99s", &address, name);
+            savedDevList.push_back(TempSensorNode(address, std::string(name)));
+        }
+
+        file.close();
+        Serial.println("Data read from SPIFFS");
+
+        savedDevList.push_back(TempSensorNode(0x030303, "dummy sensor"));
+    }
+
 
     public: 
     static Configuration *getInstance()
@@ -117,15 +143,39 @@ class Configuration : public Subject<Configuration>
         wifiCred.pwd.remove(wifiCred.pwd.length() - 1);
         return wifiCred;
     }
-    std::vector<uint64_t> getSensorList()
+    std::vector<TempSensorNode> getSensorList()
     {
-        notify();
+        notify(); // notify sensor manager (Temperature) to retrive a list of connected sensors
+        retriveSavedSensorList(); // retrive list from flash memory
+        TempSensorNode::mergeAndCopy(devList, savedDevList); // merge and copy saved nodes to devList
         return devList;
     }
-    void setSensorList(std::vector<uint64_t> devList)
+    
+    void setSensorList(std::vector<TempSensorNode> devList)
     {
         this->devList = devList;
     }
+    void storeSensorNames(std::vector<TempSensorNode>& list)
+    {
+        File file = SPIFFS.open(sensorFileAddress, FILE_WRITE);
+        if (!file) {
+            Serial.println("Failed to open file for writing");
+            return;
+        }
+
+        for (auto& node : list)
+        {
+            if(node.getName().length() != 0) // if it has a name
+            {
+                file.printf("%llu,%s\n", node.getAddress(), node.getName().c_str());
+                Serial.println("Named sensor found!");
+            }
+        }
+
+        file.close();
+        Serial.println("Sensor Data saved to SPIFFS");
+    }
+
 };
 Configuration *Configuration::instance = nullptr;
 
