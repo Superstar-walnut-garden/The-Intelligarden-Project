@@ -25,6 +25,7 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include "Temperature.hpp"
+#include "Display.hpp"
 
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
@@ -63,7 +64,9 @@ int virtualMain()
     auto *pump = Pump::getInstance();
     auto *temperature = Temperature::getInstance();
     auto *configuration = Configuration::getInstance();
-    configuration->attach(temperature);
+    auto *display = Display::getInstance();
+    configuration->attach(temperature); // attach temperature as an observer
+    temperature->attach(display); // attach display as an observer
     
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
@@ -176,7 +179,8 @@ int virtualMain()
             // esp_restart(); // Continuesly reset to support the system stability;
         }
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
-
+        display->drawUI();
+        delay(100);
 
         temperature->read(true); // read and notify the observers
         auto *cfg = Configuration::getInstance();
