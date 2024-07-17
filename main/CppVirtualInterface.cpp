@@ -22,14 +22,16 @@
 #include "WebInterface.hpp"
 #include "SystemTime.hpp"
 #include "Pump.hpp"
+#include <Wire.h>
+#include <U8g2lib.h>
+#include "Temperature.hpp"
 
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
 
 
 
-OneWire oneWireBus(15);
-DallasTemperature sensors(&oneWireBus);
+
 
 
 FirebaseData fbdo;
@@ -46,11 +48,23 @@ bool signupOK = false;
 
 int virtualMain()
 {
+    
+    pinMode(25, OUTPUT);
+    // while(true) // TEST the moc and triak
+    // {
+    //     digitalWrite(25, HIGH);
+    //     delay(5000);
+    //     digitalWrite(25, LOW);
+    //     delay(5000);
+    // }
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
     auto *systemTime = SystemTime::getInstance();
     auto *pump = Pump::getInstance();
-    sensors.begin();
+    auto *temperature = Temperature::getInstance();
+    auto *configuration = Configuration::getInstance();
+    configuration->attach(temperature);
+    
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
     
@@ -105,11 +119,11 @@ int virtualMain()
             {
                 auto databasePath = DATABASE_ROOT_NAME + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
                                 + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
-                    sensors.requestTemperatures();
+                    temperature->read();
                     if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/SoilSurface") == NULL)
                     {
                         Serial.println("new data is about to be registered on the database!");
-                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/SoilSurface", sensors.getTempCByIndex(1)))
+                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/SoilSurface", temperature->getData("soilSurfaceTemp")))
                         {
                             Serial.println("PASSED");
                             Serial.println("PATH: " + fbdo.dataPath());
@@ -129,7 +143,7 @@ int virtualMain()
                     if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/1MeterAbove") == NULL)
                     {
                         Serial.println("new data is about to be registered on the database!");
-                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/1MeterAbove", sensors.getTempCByIndex(0)))
+                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/1MeterAbove", temperature->getData("airTemp")))
                         {
                             Serial.println("PASSED");
                             Serial.println("PATH: " + fbdo.dataPath());
@@ -164,13 +178,16 @@ int virtualMain()
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
 
 
-        sensors.requestTemperatures();
-        double temp = sensors.getTempCByIndex(0);
-        Serial.print("temp 0=");
-        Serial.println(temp);
-        temp = sensors.getTempCByIndex(1);
-        Serial.print("temp 1=");
-        Serial.println(temp);
+        temperature->read(true); // read and notify the observers
+        auto *cfg = Configuration::getInstance();
+        auto list = cfg->getSensorList();
+        Serial.println("Sensor Data:");
+        for(auto sensor : list)
+        {
+            const auto name = sensor.getName();
+            const auto data = temperature->getData(name);
+            Serial.print((name + "= " + std::to_string(data) + "C").c_str());
+        }
         if(systemTime->isTimeUpdated())
         {
             int hour = systemTime->getHour();
