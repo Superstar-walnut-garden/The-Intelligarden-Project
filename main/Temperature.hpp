@@ -27,7 +27,18 @@ class Temperature: public Subject<Temperature>, public IObserver<Configuration>
     }
     double getData(std::string name) // returns sensor data from a registered sensor
     {
-        return sensors.getTempCByIndex(0);
+        auto *cfg = Configuration::getInstance();
+        auto list = cfg->getSensorList();
+        auto node = TempSensorNode::findByName(list, name);
+        uint8_t formatedAddress[8];
+        auto address = node.getAddress();
+        for (int i = 0; i < 8; ++i) {
+        formatedAddress[i] = (address >> (i * 8)) & 0xFF;
+    }
+        if(address != 0)
+            return sensors.getTempC(formatedAddress);
+        else
+            return -128; // an error code
     }
     // std::vector<std::map<std::string, double>> getAllData()
     // {

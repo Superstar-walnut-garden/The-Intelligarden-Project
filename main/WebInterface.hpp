@@ -140,13 +140,15 @@ class WebInterface
         
             Serial.println();
             // Parse JSON payload
-            DynamicJsonDocument json(1024); // this should be dynamic not static like this!
+            DynamicJsonDocument json(len); 
             deserializeJson(json, data);
             Serial.println("payload elements:");
             for (JsonPair jNode : json.as<JsonObject>()) // extract data from json payload
             {
+                Serial.println("before pushback");
                 list.push_back(TempSensorNode(std::stoll(jNode.key().c_str())
                     , std::string(jNode.value().as<String>().c_str())));
+                Serial.println("after pushback");
                 Serial.print(jNode.key().c_str()); // print data
                 Serial.print(": ");
                 Serial.println(jNode.value().as<String>());

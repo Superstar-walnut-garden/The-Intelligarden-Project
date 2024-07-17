@@ -38,7 +38,6 @@ class Configuration : public Subject<Configuration>
         file.close();
         Serial.println("Data read from SPIFFS");
 
-        savedDevList.push_back(TempSensorNode(0x030303, "dummy sensor"));
     }
 
 

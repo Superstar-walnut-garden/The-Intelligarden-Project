@@ -38,6 +38,7 @@ class TempSensorNode
         for(auto &node : list)
             if(node.getName() == name)
                 return node;
+        return TempSensorNode(0); // dummy node
     }
     static TempSensorNode findByAddress(std::vector<TempSensorNode> &list, uint64_t address)
     {

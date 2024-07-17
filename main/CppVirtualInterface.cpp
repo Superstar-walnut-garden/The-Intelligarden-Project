@@ -179,12 +179,15 @@ int virtualMain()
 
 
         temperature->read(true); // read and notify the observers
-        double temp = temperature->getData("ambientTemp");
-        Serial.print("temp 0=");
-        Serial.println(temp);
-        temp = temperature->getData("airTemp");
-        Serial.print("temp 1=");
-        Serial.println(temp);
+        auto *cfg = Configuration::getInstance();
+        auto list = cfg->getSensorList();
+        Serial.println("Sensor Data:");
+        for(auto sensor : list)
+        {
+            const auto name = sensor.getName();
+            const auto data = temperature->getData(name);
+            Serial.print((name + "= " + std::to_string(data) + "C").c_str());
+        }
         if(systemTime->isTimeUpdated())
         {
             int hour = systemTime->getHour();
