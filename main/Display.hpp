@@ -56,7 +56,7 @@ class Display: public IObserver<Temperature>
     }
 
     private:
-    Display(): oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("No data!")
+    Display(): oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up...")
     {
         oled.begin();
     }
