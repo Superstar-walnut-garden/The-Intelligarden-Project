@@ -92,11 +92,13 @@ class Pump
         }
         else
         {
-            digitalWrite(25, LOW);
             Serial.println("Pump is manually off");
             manualTime = Time(0, 0); // reset the manual time
             if(pumpState == PumpState::manualOn)
+            {
                 pumpState = PumpState::off;
+                digitalWrite(25, LOW);
+            }
         }
     }
 };
