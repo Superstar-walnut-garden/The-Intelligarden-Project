@@ -34,7 +34,7 @@ class Temperature: public Subject<Temperature>, public IObserver<Configuration>
         auto address = node.getAddress();
         for (int i = 0; i < 8; ++i) {
         formatedAddress[i] = (address >> (i * 8)) & 0xFF;
-    }
+        }
         if(address != 0)
             return sensors.getTempC(formatedAddress);
         else

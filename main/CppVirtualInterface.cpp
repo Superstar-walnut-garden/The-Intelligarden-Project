@@ -25,6 +25,7 @@
 #include <Wire.h>
 #include <U8g2lib.h>
 #include "Temperature.hpp"
+#include "Display.hpp"
 
 constexpr double nightTemp = 23.0, dayTemp = 25.0;
 constexpr double threshold = 0.05;
@@ -42,7 +43,7 @@ FirebaseConfig config;
 String uid;
 
 bool signupOK = false;
-
+bool firebaseOK = true;
 
 
 
@@ -63,7 +64,10 @@ int virtualMain()
     auto *pump = Pump::getInstance();
     auto *temperature = Temperature::getInstance();
     auto *configuration = Configuration::getInstance();
-    configuration->attach(temperature);
+    auto *display = Display::getInstance();
+    configuration->attach(temperature); // attach temperature as an observer
+    temperature->attach(display); // attach display as an observer
+    display->drawUI();
     
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
@@ -73,7 +77,6 @@ int virtualMain()
         systemTime->obtainTime();
         if(systemTime->isTimeUpdated())
         {
-            bool firebaseOK = true;
             Serial.println("");
             Serial.println("WiFi connected.");
             // ------------- firebase setup ----------------
@@ -112,56 +115,6 @@ int virtualMain()
             Serial.print("User UID: ");
             Serial.println(uid);
             Firebase.reconnectWiFi(true);
-
-            
-
-            if(firebaseOK)
-            {
-                auto databasePath = DATABASE_ROOT_NAME + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
-                                + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
-                    temperature->read();
-                    if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/SoilSurface") == NULL)
-                    {
-                        Serial.println("new data is about to be registered on the database!");
-                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/SoilSurface", temperature->getData("soilSurfaceTemp")))
-                        {
-                            Serial.println("PASSED");
-                            Serial.println("PATH: " + fbdo.dataPath());
-                            Serial.println("TYPE: " + fbdo.dataType());
-                        }
-                        else
-                        {
-                            Serial.println("FAILED");
-                            Serial.println("REASON: " + fbdo.errorReason());
-                        }
-                    }
-                    else
-                    {
-                        Serial.println("warning: the data for the current time and date is already registered on the database!");
-                    }
-
-                    if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/1MeterAbove") == NULL)
-                    {
-                        Serial.println("new data is about to be registered on the database!");
-                        if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/1MeterAbove", temperature->getData("airTemp")))
-                        {
-                            Serial.println("PASSED");
-                            Serial.println("PATH: " + fbdo.dataPath());
-                            Serial.println("TYPE: " + fbdo.dataType());
-                        }
-                        else
-                        {
-                            Serial.println("FAILED");
-                            Serial.println("REASON: " + fbdo.errorReason());
-                        }
-                    }
-                    else
-                    {
-                        Serial.println("warning: the data for the current time and date is already registered on the database!");
-                    }
-            }
-            else
-                Serial.println("Error: User's UID is not available, database registration skipped!");
         }
     }
 
@@ -176,7 +129,8 @@ int virtualMain()
             // esp_restart(); // Continuesly reset to support the system stability;
         }
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
-
+        display->drawUI();
+        delay(100);
 
         temperature->read(true); // read and notify the observers
         auto *cfg = Configuration::getInstance();
@@ -194,6 +148,41 @@ int virtualMain()
             int minute = systemTime->getMinute();
             Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
             pump->loop(hour, minute);
+            if((minute % 10) == 0)
+            {
+                if(firebaseOK)
+                {
+                    auto *cfg = Configuration::getInstance();
+                    auto sensorList = cfg->getSensorList();
+                    for(auto sensor : sensorList)
+                    {
+                        auto name = sensor.getName();
+                        auto value = temperature->getData(name);
+                        auto databasePath = DATABASE_ROOT_NAME + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
+                                    + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
+                        temperature->read();
+                        if(Firebase.RTDB.getFloat(&fbdo, databasePath + "/" + name) == NULL)
+                        {
+                            Serial.println("new data is about to be registered on the database!");
+                            if (Firebase.RTDB.setFloat(&fbdo, databasePath + "/" + name, temperature->getData(name)))
+                            {
+                                Serial.println("PASSED");
+                                Serial.println("PATH: " + fbdo.dataPath());
+                                Serial.println("TYPE: " + fbdo.dataType());
+                            }
+                            else
+                            {
+                                Serial.println("FAILED");
+                                Serial.println("REASON: " + fbdo.errorReason());
+                            }
+                        }
+                        else
+                        {
+                            Serial.println("warning: the data for the current time and date is already registered on the database!");
+                        }
+                    }
+                }
+            }
         }
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");
