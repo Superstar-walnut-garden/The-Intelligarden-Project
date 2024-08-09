@@ -36,3 +36,4 @@ git commit -m "Description of changes"
 8. mobizt/Firebase ESP32 Client@4.3.19
 
 # Software Design Map (Main UML Class Diagram)
+![UML-Diagram](https://github.com/user-attachments/assets/92c3151d-2e2d-40f5-99a5-e614d2298b24)
