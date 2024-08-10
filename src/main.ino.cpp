@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include "CppVirtualInterface.hpp"
 void setup()
 {

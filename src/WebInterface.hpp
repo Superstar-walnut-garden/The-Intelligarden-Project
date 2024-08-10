@@ -10,7 +10,7 @@
 #include "Pump.hpp"
 #include "IObserver.hpp"
 const char* APssid = "ESP32-Access-Point";
-const char* APpassword = "12345654321";
+const char* APpassword = "";
 
 class WebInterface
 {
