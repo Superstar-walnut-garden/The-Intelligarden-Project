@@ -6,16 +6,14 @@
 #include <rom/rtc.h>
 #include <SPIFFS.h>
 #include <WiFiUdp.h>
+#include "Subject.hpp"
+#include <bitset>
+#include "Time.hpp"
 
-class SystemTime
+class SystemTime: public Subject<SystemTime>
 {
     public:
-    static SystemTime *getInstance()
-    {
-        if(!instance)
-            instance = new SystemTime();
-        return instance;
-    }
+    static SystemTime *getInstance();
     
     void obtainTime()
     {
@@ -69,15 +67,56 @@ class SystemTime
             Serial.println(hour);
             Serial.print("MINUTE: ");
             Serial.println(minute);
+            notify();
         }
         else
         {
             lostTrackOfTime();
         }
     }
+    void notifierEngine()
+    {
+        static auto previousTime = getTime();
+        auto newTime = getTime();
+        if(previousTime != newTime) // if time is changed (i.e. this happens every minute)
+        {
+            notify();
+            previousTime = newTime;
+        }
+    }
     bool isTimeUpdated()
     {
         return timeUpdated;
+    }
+    std::string getWeekdayString()
+    {
+        auto weekday = rtc.getDayofWeek();
+        std::string weekdayStr;
+        for (int i = 0; i < 7; i++)
+            if(i == weekday)
+                weekdayStr.push_back('1');
+            else
+                weekdayStr.push_back('0');
+        return weekdayStr;
+    }
+    int getWeekday()
+    {
+        return rtc.getDayofWeek();
+    }
+    bool isCurrentWeekdayPresentIn(int selectedWeekdays)
+    {
+        if(getWeekday() & selectedWeekdays) // check using: bit-and
+            return true;
+        return false;
+    }
+    static int parseWeekday(const std::string& weekdayString)
+    {
+        std::bitset<7> bits(weekdayString);
+        return static_cast<int>(bits.to_ulong());
+    }
+    Time getTime()
+    {
+        return Time(getHour(), getMinute());
     }
     short getMinute()
     {
@@ -130,6 +169,5 @@ class SystemTime
     }
     static SystemTime *instance;
 };
-SystemTime *SystemTime::instance = nullptr;
 
 #endif

@@ -147,7 +147,7 @@ int virtualMain()
             int hour = systemTime->getHour();
             int minute = systemTime->getMinute();
             Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
-            pump->loop(hour, minute);
+            systemTime->notifierEngine();
             if((minute % 10) == 0)
             {
                 if(firebaseOK)

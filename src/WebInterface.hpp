@@ -63,10 +63,9 @@ class WebInterface
         {
             String startTime, duration;
             auto *cfg = Configuration::getInstance();
-            auto pSchedule = cfg->getPumpSchedule();
-            String json = "{\"startTime\": \"" + String(pSchedule.start.toString()) +
-                  "\" , \"duration\": \"" + pSchedule.duration.toString() + "\"}";
-            request->send(200, "application/json", json);
+            cfg->getSchedulerList().printList();
+            auto scheduleJson = cfg->getSchedulerList().getListJson().c_str();
+            request->send(200, "application/json", scheduleJson);
         });
         server.on("/getPumpStatus", HTTP_GET, [](AsyncWebServerRequest *request)
         {
@@ -119,11 +118,11 @@ class WebInterface
             if(command.equals("turn_on"))
             {
                 int duration = std::stoi(std::string(json["duration"].as<String>().c_str()));
-                pump->manualSwitch(duration);
+                // pump->manualSwitch(duration);
             }
             if(command.equals("turn_off"))
             {
-                pump->manualSwitch(); // turn off the pump
+                // pump->manualSwitch(); // turn off the pump
             }
             request->send(SPIFFS, "/pumpSetting.html", "text/html");
         });
