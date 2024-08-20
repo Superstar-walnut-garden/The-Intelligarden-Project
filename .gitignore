@@ -6,3 +6,4 @@ build
 .vscode/ipch
 lib
 test
+data/dist

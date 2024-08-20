@@ -4,6 +4,9 @@
 #include <Arduino.h>  // Needed for the String class
 #include <cstdio>
 #include <string>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
 
 class Time
 {
