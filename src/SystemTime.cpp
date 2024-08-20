@@ -66,6 +66,7 @@ void SystemTime::obtainTime()
         Serial.println(hour);
         Serial.print("MINUTE: ");
         Serial.println(minute);
+        notify();
     }
     else
     {
