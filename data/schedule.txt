@@ -1,2 +1,18 @@
-0:00
-1:00
+[
+    {
+        "id": 0,
+        "start": "18:00",
+        "duration": "01:15",
+        "weekday": "1111111",
+        "enabled": true,
+        "on": true
+    },
+    {
+        "id": 1,
+        "start": "08:00",
+        "duration": "01:15",
+        "weekday": "1111111",
+        "enabled": true,
+        "on": true
+    }
+]
