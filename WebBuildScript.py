@@ -6,8 +6,8 @@ def before_build_spiffs(source, target, env):
     env.Execute("cd intelligarden-web-app && npm run build")
     print("React App built!")
     print("Removing old SPIFFS image...")
-    env.Execute("rm -rf data")
+    env.Execute("node file_operations.js remove data/dist")
     print("Copying React App to SPIFFS...")
-    env.Execute("cp -r intelligarden-web-app/dist/* data/dist")
+    env.Execute("node file_operations.js copy intelligarden-web-app/dist data/dist")
 
 env.AddPreAction("$BUILD_DIR/spiffs.bin", before_build_spiffs)
