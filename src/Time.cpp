@@ -53,6 +53,12 @@ int Time::getTimeInMinutes()
 }
 std::string Time::toString()
 {
+    auto toStringTwoDigits = [](int number)
+    {
+        std::ostringstream oss;
+        oss << std::setw(2) << std::setfill('0') << number;
+        return oss.str();
+    };
     return std::to_string(hour) + ":" + std::to_string(minute);
 }
 Time Time::parse(const char* timeStr)
