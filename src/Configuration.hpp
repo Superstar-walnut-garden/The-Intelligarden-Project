@@ -37,50 +37,19 @@ public:
         Time start;
         Time duration;
     };
-
-    void setPumpSchedule(Time start, Time duration);
-    void setPumpSchedule(String start, String duration);
-    void setWifiCredentials(String ssid, String pwd);
-    PumpSchedule getPumpSchedule();
     struct WifiCred
     {       
         String ssid;
         String pwd;
     };
-    auto getSchedulerList()
-    {
-        auto schedulerList = SchedulerList();
-        auto file = SPIFFS.open(pumpFileAddress, FILE_READ);
-        if(file)
-        {
-            auto json = file.readString(); // read raw data from file
-            schedulerList.repopulateWith(json.c_str(), json.length()); // parse data and repopulate the SchedulerList
-            Scheduler scheduler(schedulerList);
-            scheduler.determineStatusofItems(); // check with current date and time to indicate which item is on
-            file.close();
-        }
-        return schedulerList;
-    }
-    void setSchedulerList(const char *json, int length = 1024)
-    {
-        //auto schedulerList = SchedulerList(json, length);
-        File file = SPIFFS.open(pumpFileAddress, FILE_WRITE);
-        if (file)
-        {
-            file.println(json);
-            file.close();
-            Serial.println("scheduling data saved successfully.");
-        } 
-        else 
-        {
-            Serial.println("Failed to open file for writing.");
-        }
-    }
-    void update(SystemTime *systemTime)
-    {
-        currentTime = systemTime->getTime();
-        currentWeekday = systemTime->getWeekday();
-    }
+
+    void setPumpSchedule(Time start, Time duration);
+    void setPumpSchedule(String start, String duration);
+    void setWifiCredentials(String ssid, String pwd);
+    PumpSchedule getPumpSchedule();
+    SchedulerList getSchedulerList();
+    void setSchedulerList(const char *json, int length = 1024);
+    void update(SystemTime *systemTime);
     WifiCred getWifiCredentials();
     std::vector<TempSensorNode> getSensorList();
     void setSensorList(std::vector<TempSensorNode> devList);
