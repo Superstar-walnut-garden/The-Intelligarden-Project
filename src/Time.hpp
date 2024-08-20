@@ -16,16 +16,8 @@ public:
     int getHour();               // Return type specified explicitly as int
     int getMinute();
     int getTimeInMinutes();
-    std::string toString()
-    {
-        return std::to_string(hour) + ":" + std::to_string(minute);
-    }
-    static Time parse(const char* timeStr)
-    {
-        int hours, minutes;
-        sscanf(timeStr, "%d:%d", &hours, &minutes);
-        return Time(hours, minutes); // Assuming Time takes hours, minutes, and seconds
-    }
+    std::string toString();
+    static Time parse(const char* timeStr);
 
     Time operator + (Time obj);    // Return type specified as Time
     Time& operator += (Time obj);  // Return type specified as reference to Time
@@ -33,14 +25,8 @@ public:
     bool operator > (Time obj);
     bool operator <= (Time obj);
     bool operator >= (Time obj);
-    auto operator != (Time obj)
-    {
-        return (this->getTimeInMinutes() != obj.getTimeInMinutes());
-    }
-    auto operator == (Time obj)
-    {
-        return (this->getTimeInMinutes() == obj.getTimeInMinutes());
-    }
+    bool operator != (Time obj);
+    bool operator == (Time obj);
 
 private:
     short hour;

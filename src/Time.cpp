@@ -51,40 +51,53 @@ int Time::getTimeInMinutes()
 {
     return (hour * 60) + minute;
 }
-
-String Time::toString()
+std::string Time::toString()
 {
-    return String(hour) + ":" + String(minute);
+    return std::to_string(hour) + ":" + std::to_string(minute);
+}
+Time Time::parse(const char* timeStr)
+{
+    int hours, minutes;
+    sscanf(timeStr, "%d:%d", &hours, &minutes);
+    return Time(hours, minutes); // Assuming Time takes hours, minutes, and seconds
 }
 
 // Operator overloading methods
-Time Time::operator + (Time& obj)
+Time Time::operator + (Time obj)
 {
     return Time(this->hour + obj.getHour(), this->minute + obj.getMinute());
 }
 
-Time& Time::operator += (Time& obj)
+Time& Time::operator += (Time obj)
 {
     *this = *this + obj;
     return *this;
 }
 
-bool Time::operator < (Time& obj)
+bool Time::operator < (Time obj)
 {
     return (this->getTimeInMinutes() < obj.getTimeInMinutes());
 }
 
-bool Time::operator > (Time& obj)
+bool Time::operator > (Time obj)
 {
     return (this->getTimeInMinutes() > obj.getTimeInMinutes());
 }
 
-bool Time::operator <= (Time& obj)
+bool Time::operator <= (Time obj)
 {
     return (this->getTimeInMinutes() <= obj.getTimeInMinutes());
 }
 
-bool Time::operator >= (Time& obj)
+bool Time::operator >= (Time obj)
 {
     return (this->getTimeInMinutes() >= obj.getTimeInMinutes());
+}
+bool Time::operator != (Time obj)
+{
+    return (this->getTimeInMinutes() != obj.getTimeInMinutes());
+}
+bool Time::operator == (Time obj)
+{
+    return (this->getTimeInMinutes() == obj.getTimeInMinutes());
 }

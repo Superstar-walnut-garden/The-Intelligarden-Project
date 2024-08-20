@@ -157,3 +157,37 @@ void Configuration::storeSensorNames(std::vector<TempSensorNode>& list)
     file.close();
     Serial.println("Sensor Data saved to SPIFFS");
 }
+void Configuration::setSchedulerList(const char *json, int length)
+{
+    //auto schedulerList = SchedulerList(json, length);
+    File file = SPIFFS.open(pumpFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json);
+        file.close();
+        Serial.println("scheduling data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+SchedulerList Configuration::getSchedulerList()
+{
+    auto schedulerList = SchedulerList();
+    auto file = SPIFFS.open(pumpFileAddress, FILE_READ);
+    if(file)
+    {
+        auto json = file.readString(); // read raw data from file
+        schedulerList.repopulateWith(json.c_str(), json.length()); // parse data and repopulate the SchedulerList
+        Scheduler scheduler(schedulerList);
+        scheduler.determineStatusofItems(); // check with current date and time to indicate which item is on
+        file.close();
+    }
+    return schedulerList;
+}
+void Configuration::update(SystemTime *systemTime)
+{
+    currentTime = systemTime->getTime();
+    currentWeekday = systemTime->getWeekday();
+}
