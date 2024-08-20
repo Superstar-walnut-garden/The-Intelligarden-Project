@@ -13,23 +13,7 @@ WebInterface::WebInterface() : server(80)
     Serial.println(WiFi.softAPIP());
 
     // Serve HTML page to enter WiFi credentials
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        Serial.println("Opening WiFi setup page");
-        request->send(SPIFFS, "/index.html", "text/html");
-    });
-
-    server.on("/pumpsetting", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        Serial.println("Opening pump settings!");
-        request->send(SPIFFS, "/pumpSetting.html", "text/html");
-    });
-
-    server.on("/tempSensors", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        Serial.println("Opening sensor settings!");
-        request->send(SPIFFS, "/tempSensors.html", "text/html");
-    });
+    server.serveStatic("/", SPIFFS, "/dist/").setDefaultFile("index.html");
 
     server.on("/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
@@ -56,10 +40,9 @@ WebInterface::WebInterface() : server(80)
     {
         String startTime, duration;
         auto *cfg = Configuration::getInstance();
-        auto pSchedule = cfg->getPumpSchedule();
-        String json = "{\"startTime\": \"" + String(pSchedule.start.toString()) +
-            "\" , \"duration\": \"" + pSchedule.duration.toString() + "\"}";
-        request->send(200, "application/json", json);
+        cfg->getSchedulerList().printList();
+        auto scheduleJson = cfg->getSchedulerList().getListJson().c_str();
+        request->send(200, "application/json", scheduleJson);
     });
 
     server.on("/getPumpStatus", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -69,6 +52,15 @@ WebInterface::WebInterface() : server(80)
         String json = "{\"state\": \"" + String(pumpObject->getPumpState()) +
             "\" , \"rTime\": \"" + String("0:00") + "\"}";
         request->send(200, "application/json", json);
+    });
+    server.on("/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        JsonDocument doc; // creating a json doc
+        doc["time"] = SystemTime::getInstance()->getTime().toString(); // get time and add to json
+        doc["weekday"] = SystemTime::getInstance()->getWeekdayString(); // get weekday and add to json
+        std::string output; // declaring a string for serializing json data
+        serializeJson(doc, output); // convert json data to a string
+        request->send(200, "application/json", output.c_str()); // sending data to client
     });
 
     // Handle form submission and save credentials
@@ -86,16 +78,29 @@ WebInterface::WebInterface() : server(80)
         esp_restart(); // Restart and connect
     });
 
-    server.on("/submitPump", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/setPumpSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
     {
-        auto startTime = request->getParam("startTime")->value();
-        auto duration = request->getParam("duration")->value();
+        Serial.println("setPumpSchedule request handled!////////////////////////");
+        request->send(200, "text/plain", "pump schedule set!"); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
         auto *cfg = Configuration::getInstance();
-        cfg->setPumpSchedule(startTime, duration);
-        request->send(SPIFFS, "/pumpSetting.html", "text/html");
+        Serial.println();
+        // Parse JSON payload
+        JsonDocument json;
+        deserializeJson(json, data);
+        Serial.println("Payload elements:");
+        for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
+        {
+            Serial.print(jNode.key().c_str()); // Print data
+            Serial.print(": ");
+            Serial.println(jNode.value().as<String>());
+        }
+        cfg->setSchedulerList((char *)(data));
     });
 
-    server.on("/sendCommand", HTTP_POST, [](AsyncWebServerRequest * request){}, NULL,
+    server.on("/sendCommand", HTTP_POST, [](AsyncWebServerRequest *request){}, NULL,
         [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         for (size_t i = 0; i < len; i++) {
@@ -115,20 +120,20 @@ WebInterface::WebInterface() : server(80)
         if(command.equals("turn_on"))
         {
             int duration = std::stoi(std::string(json["duration"].as<String>().c_str()));
-            pump->manualSwitch(duration);
+            // pump->manualSwitch(duration);
         }
         if(command.equals("turn_off"))
         {
-            pump->manualSwitch(); // Turn off the pump
+            // pump->manualSwitch(); // turn off the pump
         }
         request->send(SPIFFS, "/pumpSetting.html", "text/html");
     });
 
-    server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest * request)
+    server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
     {
         request->send(200); // Response to client
     }, NULL
-    , [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total)
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         auto *cfg = Configuration::getInstance();
         std::vector<TempSensorNode> list;
