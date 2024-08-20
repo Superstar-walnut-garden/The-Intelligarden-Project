@@ -1,50 +1,21 @@
 #ifndef TIME_HPP
 #define TIME_HPP
+
+#include <Arduino.h>  // Needed for the String class
 #include <cstdio>
 #include <string>
-#include <arduino.h>
+
 class Time
 {
-    public:
-    Time(int hour = 0, int minute = 0): hour(hour), minute(minute)
-    {
-        for(auto i = 0; i <= (minute / 60); i ++)
-            if(minute >= 60)
-            {
-                minute -= 60;
-                hour++;
-            }
-    }
-    void setHour(int hour)
-    {
-        this->hour = hour;
-    }
-    void setMinute(int minute)
-    {
-        this->minute = minute;
-    }
-    void setTimeInMinutes(int minute)
-    {
-        this->hour = (minute / 60);
-        this->minute =  (minute % 60);
-    }
-    void setTime(int hour, int minute)
-    {
-        setHour(hour);
-        setMinute(minute);
-    }
-    auto getHour()
-    {
-        return hour;
-    }
-    auto getMinute()
-    {
-        return minute;
-    }
-    auto getTimeInMinutes()
-    {
-        return (hour * 60) + minute;
-    }
+public:
+    Time(int hour = 0, int minute = 0);  // Constructor declaration with default values
+    void setHour(int hour);
+    void setMinute(int minute);
+    void setTimeInMinutes(int minute);
+    void setTime(int hour, int minute);
+    int getHour();               // Return type specified explicitly as int
+    int getMinute();
+    int getTimeInMinutes();
     std::string toString()
     {
         return std::to_string(hour) + ":" + std::to_string(minute);
@@ -56,30 +27,12 @@ class Time
         return Time(hours, minutes); // Assuming Time takes hours, minutes, and seconds
     }
 
-    auto operator + (Time obj)
-    {
-        return Time(this->hour + obj.getHour(), this->minute + obj.getMinute());
-    }
-    auto operator += (Time obj)
-    {
-        return *this + obj;
-    }
-    auto operator < (Time obj)
-    {
-        return (this->getTimeInMinutes() < obj.getTimeInMinutes());
-    }
-    auto operator > (Time obj)
-    {
-        return (this->getTimeInMinutes() > obj.getTimeInMinutes());
-    }
-    auto operator <= (Time obj)
-    {
-        return (this->getTimeInMinutes() < obj.getTimeInMinutes());
-    }
-    auto operator >= (Time obj)
-    {
-        return (this->getTimeInMinutes() > obj.getTimeInMinutes());
-    }
+    Time operator + (Time obj);    // Return type specified as Time
+    Time& operator += (Time obj);  // Return type specified as reference to Time
+    bool operator < (Time obj);    // Return type specified as bool
+    bool operator > (Time obj);
+    bool operator <= (Time obj);
+    bool operator >= (Time obj);
     auto operator != (Time obj)
     {
         return (this->getTimeInMinutes() != obj.getTimeInMinutes());
@@ -89,9 +42,9 @@ class Time
         return (this->getTimeInMinutes() == obj.getTimeInMinutes());
     }
 
-    private:
+private:
     short hour;
     short minute;
 };
 
-#endif
+#endif // TIME_HPP

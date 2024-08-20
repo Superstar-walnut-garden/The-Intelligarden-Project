@@ -1,5 +1,6 @@
 #ifndef WEBINTERFACE_HPP
 #define WEBINTERFACE_HPP
+
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <rom/rtc.h>
@@ -9,13 +10,11 @@
 #include <ArduinoJson.h>
 #include "Pump.hpp"
 #include "IObserver.hpp"
-const char* APssid = "ESP32-Access-Point";
-const char* APpassword = "";
 
 class WebInterface
 {
-    public:
-    WebInterface(): server(80)
+public:
+        WebInterface(): server(80)
     {
         // Configure access point
         WiFi.softAP(APssid, APpassword);
@@ -154,15 +153,11 @@ class WebInterface
             }
             cfg->storeSensorNames(list);
         });
-    }
-    void init() //start the web server
-    {
-        server.begin();
-    }
+    }  // Constructor declaration
+    void init();     // Method to start the web server
 
-    private:
-    AsyncWebServer server; // server object
-    
+private:
+    AsyncWebServer server; // Server object
 };
 
-#endif
+#endif // WEBINTERFACE_HPP

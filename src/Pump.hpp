@@ -1,31 +1,22 @@
 #ifndef PUMP_HPP
 #define PUMP_HPP
+
 #include <SPIFFS.h>
 #include <string.h>
 #include "Configuration.hpp"
+#include "Time.hpp"
+#include <Arduino.h>
+#include "IObserver.hpp"
 #include "SystemTime.hpp"
+#include <string.h>
 
-
-class Pump
+class Pump: public IObserver<SystemTime>
 {
-    private:
-    static Pump *instance;
-    Pump()
-    {
-        
-    }
-    public:
-    static Pump *getInstance()
-    {
-        if(!instance)
-            instance = new Pump();
-        return instance;
-    }
-    
-    bool getPumpState()
-    {
-        return digitalRead(25);
-    }
+public:
+    static Pump *getInstance();
+    bool getPumpState();
+    void manualSwitch(signed manualTime = -1);
+    void loop(int currentHours, int currentMinutes);
     void update(SystemTime *systemTime)
     {
         auto schList = Configuration::getInstance()->getSchedulerList(); // get scheduler list from configuration
@@ -33,7 +24,14 @@ class Pump
         digitalWrite(25, sch.isAnyItemOn());
         Serial.println("pump pin is " + getPumpState() ? "on" : "off");
     }
-};
-Pump *Pump::instance = nullptr;
+    bool getPumpState()
+    {
+        return digitalRead(25);
+    }
 
-#endif
+private:
+    static Pump *instance;
+    Pump();
+};
+
+#endif // PUMP_HPP
