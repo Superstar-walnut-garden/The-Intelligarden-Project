@@ -4,6 +4,7 @@
 #include "SPIFFS.h"
 #include <WiFi.h>
 #include <WiFiUdp.h>
+#include "Configuration.hpp"
 
 class WifiSetup
 {
@@ -14,8 +15,6 @@ public:
 private:
     WifiSetup();
     static WifiSetup *instance;
-    bool readWiFiCredentials(String &ssid, String &password);
-    void initSPIFFS();
 };
 
 #endif // WIFISETUP_HPP

@@ -1,13 +1,13 @@
 #include "WebInterface.hpp"
 
-const char* APssid = "ESP32-Access-Point";
-const char* APpassword = "";
-
 // Constructor implementation
 WebInterface::WebInterface() : server(80)
 {
     // Configure access point
-    WiFi.softAP(APssid, APpassword);
+    auto hotspotCred = Configuration::getInstance()->getHotspotCredentials();
+    auto ssid = hotspotCred.getSsid();
+    auto password = hotspotCred.getPassword();
+    WiFi.softAP(ssid.c_str(), password.c_str());
     Serial.println();
     Serial.print("SoftAP IP address: ");
     Serial.println(WiFi.softAPIP());
@@ -28,14 +28,6 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", json);
     });
 
-    server.on("/getWifiState", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        auto *cfg = Configuration::getInstance();
-        String json = "{\"connectionStatus\": " + String((WiFi.status() == WL_CONNECTED)) +
-            ", \"ssidName\": \"" + cfg->getWifiCredentials().ssid + "\"}";
-        request->send(200, "application/json", json);
-    });
-
     server.on("/getPumpSchedule", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         String startTime, duration;
@@ -53,6 +45,7 @@ WebInterface::WebInterface() : server(80)
             "\" , \"rTime\": \"" + String("0:00") + "\"}";
         request->send(200, "application/json", json);
     });
+
     server.on("/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         JsonDocument doc; // creating a json doc
@@ -64,18 +57,38 @@ WebInterface::WebInterface() : server(80)
     });
 
     // Handle form submission and save credentials
-    server.on("/submit", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/getWifiState", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        auto input_ssid = request->getParam("ssid")->value();
-        auto input_password = request->getParam("password")->value();
-
-        // Save the credentials to SPIFFS
-        auto *cfg = Configuration::getInstance();
-        cfg->setWifiCredentials(input_ssid, input_password); // Save credentials
+        
+        auto wifiCred = Configuration::getInstance()->getWifiCredentials();
         Serial.println("Credentials saved successfully.");
-        request->send(SPIFFS, "/restarting.html", "text/html");
-        delay(3000);
-        esp_restart(); // Restart and connect
+        request->send(200, "application/json", wifiCred.toJsonString().c_str());
+    });
+
+    server.on("/getHotspotConfig", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        
+        auto hotspotCred = Configuration::getInstance()->getHotspotCredentials();
+        Serial.println("Credentials saved successfully.");
+        request->send(200, "application/json", hotspotCred.toJsonString().c_str());
+    });
+
+    server.on("/setWifiConfig", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Configuration::getInstance()->setWifiCredentials(WifiHotspotData((char *) data));
+    });
+
+    server.on("/setHotspotConfig", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Configuration::getInstance()->setHotspotCredentials(WifiHotspotData((char *) data));
     });
 
     server.on("/setPumpSchedule", HTTP_POST, [](AsyncWebServerRequest *request)

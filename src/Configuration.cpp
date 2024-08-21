@@ -54,17 +54,30 @@ void Configuration::setPumpSchedule(String start, String duration)
     }
 }
 
-void Configuration::setWifiCredentials(String ssid, String pwd)
+void Configuration::setWifiCredentials(WifiHotspotData data)
 {
     File file = SPIFFS.open(wifiFileAddress, FILE_WRITE);
     if (file)
     {
-        file.println(ssid);
-        file.println(pwd);
+        file.println(data.toJsonString().c_str());
         file.close();
-        Serial.println("Credentials saved successfully.");
+        Serial.println("wifi credential data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
     }
-    else
+}
+void Configuration::setHotspotCredentials(WifiHotspotData data)
+{
+    File file = SPIFFS.open(hotspotFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(data.toJsonString().c_str());
+        file.close();
+        Serial.println("hotspot credential data saved successfully.");
+    } 
+    else 
     {
         Serial.println("Failed to open file for writing.");
     }
@@ -106,22 +119,27 @@ Configuration::PumpSchedule Configuration::getPumpSchedule()
     return pSchedule;
 }
 
-Configuration::WifiCred Configuration::getWifiCredentials()
+WifiHotspotData Configuration::getWifiCredentials()
 {
-    WifiCred wifiCred;
-    if (SPIFFS.exists(wifiFileAddress))
+    auto file = SPIFFS.open(wifiFileAddress, FILE_READ);
+    if(file)
     {
-        File file = SPIFFS.open(wifiFileAddress, FILE_READ);
-        if (file)
-        {
-            wifiCred.ssid = file.readStringUntil('\n');
-            wifiCred.pwd = file.readStringUntil('\n');
-            file.close();
-        }
+        auto json = file.readString(); // read raw data from file
+        file.close();
+        return WifiHotspotData(json.c_str());
     }
-    wifiCred.ssid.remove(wifiCred.ssid.length() - 1); // remove the newline character
-    wifiCred.pwd.remove(wifiCred.pwd.length() - 1);
-    return wifiCred;
+    return WifiHotspotData(); // return empty
+}
+WifiHotspotData Configuration::getHotspotCredentials()
+{
+    auto file = SPIFFS.open(hotspotFileAddress, FILE_READ);
+    if(file)
+    {
+        auto json = file.readString(); // read raw data from file
+        file.close();
+        return WifiHotspotData(json.c_str());
+    }
+    return WifiHotspotData(); // return empty
 }
 
 std::vector<TempSensorNode> Configuration::getSensorList()
