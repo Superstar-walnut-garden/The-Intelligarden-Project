@@ -51,6 +51,10 @@ int virtualMain()
 {
     
     pinMode(25, OUTPUT);
+    if (!SPIFFS.begin(true))
+    {
+        Serial.println("Fatal Error: An Error has occurred while mounting SPIFFS!");
+    }
     // while(true) // TEST the moc and triak
     // {
     //     digitalWrite(25, HIGH);
