@@ -170,6 +170,22 @@ WebInterface::WebInterface() : server(80)
         }
         cfg->storeSensorNames(list);
     });
+
+    server.on("/getFirebaseData", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        auto firebaseData = Configuration::getInstance()->getFirebaseData();
+        Serial.println("FirebaseData get request handled.");
+        request->send(200, "application/json", firebaseData.toJsonString().c_str());
+    });
+
+    server.on("/setFirebaseData", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Configuration::getInstance()->setFirebaseData(FBData((char *) data));
+    });
 }
 
 // Method to start the web server
