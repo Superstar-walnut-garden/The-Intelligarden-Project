@@ -24,8 +24,6 @@ class FirebaseManager: public IObserver<SystemTime>
     String uid; // Variable to save USER UID
     bool signupOK;
     bool firebaseOK;
-
-    void FBDataNull(std::string data);
 };
 
 #endif

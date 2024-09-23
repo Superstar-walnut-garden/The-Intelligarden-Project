@@ -9,18 +9,17 @@ FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(tru
 
 void FirebaseManager::init()
 {
+    if(fbData.isNull() or !fbData.isEnabled())
+        return;
+        
     // Assign the api key (required)
     config.api_key = fbData.getApiKey();
-    FBDataNull(config.api_key.c_str());
     // Assign the RTDB URL (required) 
     config.database_url = fbData.getDatabaseURL();
-    FBDataNull(config.database_url.c_str());
     // Assign the user sign in credentials
     auth.user.email = fbData.getUserEmail();
-    FBDataNull(auth.user.email.c_str());
 
     auth.user.password = fbData.getUserPassword();
-    FBDataNull (auth.user.password.c_str());
 
     fbdo.setResponseSize(4096);
     // Assign the callback function for the long running token generation task
@@ -50,18 +49,6 @@ void FirebaseManager::init()
     Serial.print("User UID: ");
     Serial.println(uid);
     Firebase.reconnectWiFi(true);
-}
-
-void FirebaseManager::FBDataNull(std::string data)
-{
-    if(data == "")
-    {
-        firebaseOK = false;
-        char buffer[100];  // Adjust the buffer size as needed
-        sprintf(buffer, "Error: Couldn't get user's %s", data.c_str());
-        Serial.println(buffer); 
-        //Serial.println("buffer" + data.c_str());
-    }
 }
 
 void FirebaseManager::update(SystemTime *systemTime)
