@@ -3,5 +3,6 @@
     "databaseURL":"https://the-intelligarden-project-default-rtdb.firebaseio.com/",
     "userEmail":"IntelligardenNodeAznab@walnut.garden",
     "userPassword":"ThisIsThePasscode",
-    "databaseRootName":"AznabNode1/"
+    "databaseRootName":"AznabNode1/",
+    "enabled":true
 }
