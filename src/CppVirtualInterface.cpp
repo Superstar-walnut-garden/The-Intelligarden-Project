@@ -32,8 +32,8 @@ String uid;
 bool signupOK = false;
 bool firebaseOK = true;
 
-FBData fbd;
-FirebaseManager fbm(fbd);
+
+//FirebaseManager fbm(Configuration::getInstance()->getFirebaseData());
 
 int virtualMain()
 {
@@ -64,7 +64,7 @@ int virtualMain()
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
     
-    //FirebaseManager fbm(fbdo);
+    FirebaseManager fbm(Configuration::getInstance()->getFirebaseData());
 
     if(wifiSetup->isConnected())
     {
@@ -73,7 +73,6 @@ int virtualMain()
         {
             Serial.println("");
             Serial.println("WiFi connected.");
-
             fbm.init();
         }
     }
