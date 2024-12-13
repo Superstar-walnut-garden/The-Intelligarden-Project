@@ -11,12 +11,14 @@
 #include "Pump.hpp"
 #include <SPIFFS.h>
 #include "WifiHotspotData.hpp"
+#include "FBData.hpp"
 
 constexpr auto pumpFileAddress = "/schedule.txt";
 constexpr auto wifiFileAddress = "/wifi_credentials.txt";
 constexpr auto hotspotFileAddress = "/hotspot_credentials.txt";
 constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
+constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
@@ -49,10 +51,12 @@ public:
     void setPumpSchedule(String start, String duration);
     void setWifiCredentials(WifiHotspotData data);
     void setHotspotCredentials(WifiHotspotData data);
+    void setFirebaseData(FBData data);
     PumpSchedule getPumpSchedule();
     SchedulerList getSchedulerList();
     WifiHotspotData getWifiCredentials();
     WifiHotspotData getHotspotCredentials();
+    FBData getFirebaseData();
     void setSchedulerList(const char *json, int length = 1024);
     void update(SystemTime *systemTime);
     std::vector<TempSensorNode> getSensorList();

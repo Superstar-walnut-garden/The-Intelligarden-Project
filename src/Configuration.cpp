@@ -204,6 +204,34 @@ SchedulerList Configuration::getSchedulerList()
     }
     return schedulerList;
 }
+void Configuration::setFirebaseData(FBData data)
+{
+    File file = SPIFFS.open(firebaseDataFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(data.toJsonString().c_str());
+        file.close();
+        Serial.println("firebase data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+FBData Configuration::getFirebaseData()
+{
+    auto file = SPIFFS.open(firebaseDataFileAddress, FILE_READ);
+    if(file)
+    {
+        auto json = file.readString(); // read raw data from file
+        auto firebaseData = FBData(json.c_str());
+        file.close();
+        return firebaseData;
+    }
+    return FBData();
+}
+    
+
 void Configuration::update(SystemTime *systemTime)
 {
     currentTime = systemTime->getTime();
