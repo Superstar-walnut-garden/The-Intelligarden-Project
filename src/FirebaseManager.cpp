@@ -13,13 +13,13 @@ void FirebaseManager::init()
         return;
         
     // Assign the api key (required)
-    config.api_key = fbData.getApiKey();
+    config.api_key = fbData.getApiKey().c_str();
     // Assign the RTDB URL (required) 
-    config.database_url = fbData.getDatabaseURL();
+    config.database_url = fbData.getDatabaseURL().c_str();
     // Assign the user sign in credentials
-    auth.user.email = fbData.getUserEmail();
+    auth.user.email = fbData.getUserEmail().c_str();
 
-    auth.user.password = fbData.getUserPassword();
+    auth.user.password = fbData.getUserPassword().c_str();
 
     fbdo.setResponseSize(4096);
     // Assign the callback function for the long running token generation task
