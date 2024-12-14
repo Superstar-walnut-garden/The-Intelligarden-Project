@@ -161,7 +161,7 @@ WebInterface::WebInterface() : server(80)
         for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
         {
             Serial.println("Before pushback");
-            list.push_back(TempSensorNode(std::stoll(jNode.key().c_str())
+            list.push_back(TempSensorNode(std::stoull(std::string(jNode.key().c_str()))
                 , std::string(jNode.value().as<String>().c_str())));
             Serial.println("After pushback");
             Serial.print(jNode.key().c_str()); // Print data
