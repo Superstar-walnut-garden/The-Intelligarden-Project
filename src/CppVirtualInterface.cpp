@@ -92,15 +92,15 @@ int virtualMain()
         delay(100);
 
         temperature->read(true); // read and notify the observers
-        auto *cfg = Configuration::getInstance();
-        auto list = cfg->getSensorList();
-        Serial.println("Sensor Data:");
-        for(auto sensor : list)
-        {
-            const auto name = sensor.getName();
-            const auto data = temperature->getData(name);
-            Serial.print((name + "= " + std::to_string(data) + "C").c_str());
-        }
+        // auto *cfg = Configuration::getInstance();
+        // auto list = cfg->getSensorList();
+        // Serial.println("Sensor Data:");
+        // for(auto sensor : list)
+        // {
+        //     const auto name = sensor.getName();
+        //     const auto data = temperature->getData(name);
+        //     Serial.print((name + "= " + std::to_string(data) + "C").c_str());
+        // }
         if(systemTime->isTimeUpdated())
         {
             fbm.update(systemTime);
