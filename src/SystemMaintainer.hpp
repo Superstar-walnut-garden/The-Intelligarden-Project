@@ -5,7 +5,8 @@
 #include <mutex>
 #include <chrono>
 
-class SystemMaintainer {
+class SystemMaintainer 
+{
 public:
   static SystemMaintainer& getInstance();
 
@@ -13,6 +14,7 @@ public:
   void stop();
   void setAbnormalCondition(bool condition);
   void postponeRestart(int minutes);
+  void monitorCycle();
 
 private:
   SystemMaintainer();
@@ -28,6 +30,7 @@ private:
   bool running;
   bool abnormalCondition;
   std::chrono::steady_clock::time_point nextRestartTime;
+  std::chrono::steady_clock::time_point lastCycleTime;
 };
 
 #endif // SYSTEMMAINTAINER_HPP

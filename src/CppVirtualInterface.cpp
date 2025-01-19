@@ -61,7 +61,7 @@ int virtualMain()
             fbm->update(systemTime);
         }
     }
-    
+
     if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
     {
         SystemMaintainer::getInstance().setAbnormalCondition(true); // system abnormality reported!
@@ -70,6 +70,8 @@ int virtualMain()
 
     while(true)
     {
+        SystemMaintainer::getInstance().monitorCycle(); // software implemented watchdog
+        
         delay(1); // For other threads to work.this should be 1ms in the main setup
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
         display->drawUI();

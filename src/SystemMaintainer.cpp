@@ -6,7 +6,7 @@ SystemMaintainer& SystemMaintainer::getInstance() {
   return instance;
 }
 
-SystemMaintainer::SystemMaintainer() : running(false), abnormalCondition(false), nextRestartTime(std::chrono::steady_clock::now() + std::chrono::minutes(3)) {}
+SystemMaintainer::SystemMaintainer() : running(false), abnormalCondition(false), nextRestartTime(std::chrono::steady_clock::now() + std::chrono::minutes(3)), lastCycleTime(std::chrono::steady_clock::now()) {}
 
 SystemMaintainer::~SystemMaintainer() 
 {
@@ -49,8 +49,21 @@ void SystemMaintainer::postponeRestart(int minutes)
   }
 }
 
-void SystemMaintainer::loop() {
-  while (running) {
+void SystemMaintainer::monitorCycle() 
+{
+  std::lock_guard<std::mutex> lock(mtx);
+  auto now = std::chrono::steady_clock::now();
+  if (now - lastCycleTime > std::chrono::minutes(2)) 
+  {
+    ESP.restart();
+  }
+  lastCycleTime = now;
+}
+
+void SystemMaintainer::loop() 
+{
+  while (running) 
+  {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     if (std::chrono::steady_clock::now() >= nextRestartTime) 
     {
