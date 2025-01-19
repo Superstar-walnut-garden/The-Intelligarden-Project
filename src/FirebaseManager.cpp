@@ -2,7 +2,7 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(true)
+FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false)
 {
     this->fbData = fbData;
 }
@@ -11,7 +11,8 @@ void FirebaseManager::init()
 {
     if(fbData.isNull() or !fbData.isEnabled())
         return;
-        
+    
+    firebaseOK = true;
     // Assign the api key (required)
     config.api_key = fbData.getApiKey().c_str();
     // Assign the RTDB URL (required) 
@@ -56,8 +57,8 @@ void FirebaseManager::update(SystemTime *systemTime)
     auto hour = systemTime->getHour();
     auto minute = systemTime->getMinute();
     Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
-    systemTime->notifierEngine();
-    if((minute % 10) == 0)
+    // systemTime->notifierEngine();
+    // if((minute % 10) == 0)
     {
         if(firebaseOK)
         {
@@ -82,7 +83,7 @@ void FirebaseManager::update(SystemTime *systemTime)
             // Convert std::string to Arduino String
             //String databasePathStr = String(databasePath.c_str());
 
-            if(Firebase.RTDB.getJSON(&fbdo, databasePath) != NULL) return; // skip sensor
+            if(Firebase.RTDB.getJSON(&fbdo, databasePath) != NULL) return; // skip data upload
             
             Serial.println("new data is about to be registered on the database!");
             if (Firebase.RTDB.setJSON(&fbdo, databasePath + "/", &fbJson))
