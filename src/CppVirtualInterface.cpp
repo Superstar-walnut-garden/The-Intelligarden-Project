@@ -50,12 +50,6 @@ int virtualMain()
 
     
 
-    if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
-    {
-        SystemMaintainer::getInstance().setAbnormalCondition(true); // system abnormality reported!
-        Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
-    }
-
     if(wifiSetup->isConnected())
     {
         systemTime->obtainTime();
@@ -66,6 +60,12 @@ int virtualMain()
             fbm->init();
             fbm->update(systemTime);
         }
+    }
+    
+    if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
+    {
+        SystemMaintainer::getInstance().setAbnormalCondition(true); // system abnormality reported!
+        Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
     }
 
     while(true)
