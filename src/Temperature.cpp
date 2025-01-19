@@ -53,7 +53,7 @@ auto Temperature::getSensorList()
 // Update the configuration with sensors
 void Temperature::update(Configuration *cfg)
 {
-    Serial.println("Sys-info: Temperature class notified");
+    // Serial.println("Sys-info: Temperature class notified");
     cfg->setSensorList(obtainSensors());
 }
 
@@ -83,6 +83,6 @@ std::vector<TempSensorNode> Temperature::obtainSensors()
         // Serial.println(devList.at(0).getAddress(), HEX);
     }
     oneWireBus.reset_search();
-    Serial.println("Sys-Ok: Obtaining sensors completed!");
+    // Serial.println("Sys-Ok: Obtaining sensors completed!");
     return devList;
 }

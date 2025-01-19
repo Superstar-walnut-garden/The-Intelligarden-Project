@@ -29,7 +29,7 @@ void Configuration::retriveSavedSensorList()
     }
 
     file.close();
-    Serial.println("Sys-Ok: Retrived saved sensor list from SPIFFS");
+    // Serial.println("Sys-Ok: Retrived saved sensor list from SPIFFS");
 }
 
 void Configuration::setPumpSchedule(Time start, Time duration)
