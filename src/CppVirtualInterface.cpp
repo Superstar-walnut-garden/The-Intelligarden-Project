@@ -20,39 +20,19 @@
 #include "Display.hpp"
 
 #include "FirebaseManager.hpp"
-
-constexpr double nightTemp = 23.0, dayTemp = 25.0;
-constexpr double threshold = 0.05;
-
-FirebaseAuth auth;
-FirebaseConfig config;
-// Variable to save USER UID
-String uid;
-
-bool signupOK = false;
-bool firebaseOK = true;
-
-
-//FirebaseManager fbm(Configuration::getInstance()->getFirebaseData());
+#include "SystemMaintainer.hpp"
 
 int virtualMain()
 {
-    delay(500);
+    delay(500); // delay for hardware stablization
     pinMode(25, OUTPUT);
     if (!SPIFFS.begin(true))
-    {
         Serial.println("Fatal Error: An Error has occurred while mounting SPIFFS!");
-    }
-    // while(true) // TEST the moc and triak
-    // {
-    //     digitalWrite(25, HIGH);
-    //     delay(5000);
-    //     digitalWrite(25, LOW);
-    //     delay(5000);
-    // }
+    
+    SystemMaintainer::getInstance().start();
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
-    delay(500);
+    delay(500); // waiting utill reaching system stability
     auto *systemTime = SystemTime::getInstance();
     auto *pump = Pump::getInstance();
     auto *temperature = Temperature::getInstance();
@@ -65,9 +45,16 @@ int virtualMain()
     display->drawUI();
     
     webInterface->init();
-    Serial.println("Sensors and web interface are initialized!");
+    SystemMaintainer::getInstance().postponeRestart(480);
+    Serial.println("Sys-OK: All of the system components are initialized and the next restart postponed to 8 hours later!");
+
     
-    
+
+    if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
+    {
+        SystemMaintainer::getInstance().setAbnormalCondition(true); // system abnormality reported!
+        Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
+    }
 
     if(wifiSetup->isConnected())
     {
@@ -84,27 +71,11 @@ int virtualMain()
     while(true)
     {
         delay(1); // For other threads to work.this should be 1ms in the main setup
-        static int cnt = 20;
-        static int softdog = 0;
-        if(softdog ++ > 150)
-        {
-            softdog = 0;
-            // esp_restart(); // Continuesly reset to support the system stability;
-        }
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
         display->drawUI();
         delay(100);
 
         temperature->read(true); // read and notify the observers
-        // auto *cfg = Configuration::getInstance();
-        // auto list = cfg->getSensorList();
-        // Serial.println("Sensor Data:");
-        // for(auto sensor : list)
-        // {
-        //     const auto name = sensor.getName();
-        //     const auto data = temperature->getData(name);
-        //     Serial.print((name + "= " + std::to_string(data) + "C").c_str());
-        // }
         systemTime->notifierEngine();
         if(systemTime->isTimeUpdated())
         {
