@@ -37,7 +37,7 @@ bool firebaseOK = true;
 
 int virtualMain()
 {
-    
+    delay(500);
     pinMode(25, OUTPUT);
     if (!SPIFFS.begin(true))
     {
@@ -52,19 +52,22 @@ int virtualMain()
     // }
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
+    delay(500);
     auto *systemTime = SystemTime::getInstance();
     auto *pump = Pump::getInstance();
     auto *temperature = Temperature::getInstance();
     auto *configuration = Configuration::getInstance();
     auto *display = Display::getInstance();
+    auto *fbm = new FirebaseManager(Configuration::getInstance()->getFirebaseData());
     configuration->attach(temperature); // attach temperature as an observer
     temperature->attach(display); // attach display as an observer
+    systemTime->attach(fbm);
     display->drawUI();
     
     webInterface->init();
     Serial.println("Sensors and web interface are initialized!");
     
-    FirebaseManager fbm(Configuration::getInstance()->getFirebaseData());
+    
 
     if(wifiSetup->isConnected())
     {
@@ -73,7 +76,8 @@ int virtualMain()
         {
             Serial.println("");
             Serial.println("WiFi connected.");
-            fbm.init();
+            fbm->init();
+            fbm->update(systemTime);
         }
     }
 
@@ -82,7 +86,7 @@ int virtualMain()
         delay(1); // For other threads to work.this should be 1ms in the main setup
         static int cnt = 20;
         static int softdog = 0;
-        if(softdog ++ > 80)
+        if(softdog ++ > 150)
         {
             softdog = 0;
             // esp_restart(); // Continuesly reset to support the system stability;
@@ -101,9 +105,10 @@ int virtualMain()
         //     const auto data = temperature->getData(name);
         //     Serial.print((name + "= " + std::to_string(data) + "C").c_str());
         // }
+        systemTime->notifierEngine();
         if(systemTime->isTimeUpdated())
         {
-            fbm.update(systemTime);
+            //fbm->update(systemTime);
         }
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");
