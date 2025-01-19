@@ -53,7 +53,7 @@ auto Temperature::getSensorList()
 // Update the configuration with sensors
 void Temperature::update(Configuration *cfg)
 {
-    Serial.println("notified");
+    // Serial.println("Sys-info: Temperature class notified");
     cfg->setSensorList(obtainSensors());
 }
 
@@ -64,25 +64,25 @@ std::vector<TempSensorNode> Temperature::obtainSensors()
     oneWireBus.reset();
     std::vector<TempSensorNode> devList;
     byte addr[8];
-    Serial.println("obtaining sensors");
+    // Serial.println("obtaining sensors");
     while (oneWireBus.search(addr))
     {
-        for (uint8_t i = 0; i < 8; i++)
-        {
-            Serial.print("0x");
-            if (addr[i] < 0x10)
-                Serial.print("0");
-            Serial.print(addr[i], HEX);
-            if (i < 7)
-                Serial.print(", ");
-        }
-        Serial.println("\n an address found!");
+        // for (uint8_t i = 0; i < 8; i++)
+        // {
+        //     Serial.print("0x");
+        //     if (addr[i] < 0x10)
+        //         Serial.print("0");
+        //     Serial.print(addr[i], HEX);
+        //     if (i < 7)
+        //         Serial.print(", ");
+        // }
+        // Serial.println("\n an address found!");
         uint64_t addr64;
         std::memcpy(&addr64, addr, sizeof(addr64));
         devList.push_back(TempSensorNode(addr64, "", true));
-        Serial.println(devList.at(0).getAddress(), HEX);
+        // Serial.println(devList.at(0).getAddress(), HEX);
     }
     oneWireBus.reset_search();
-    Serial.println("obtaining sensors completed");
+    // Serial.println("Sys-Ok: Obtaining sensors completed!");
     return devList;
 }
