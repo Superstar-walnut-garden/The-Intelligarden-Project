@@ -2,7 +2,7 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false)
+FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false), updateTimestamp(-1)
 {
     this->fbData = fbData;
 }
@@ -41,6 +41,7 @@ void FirebaseManager::init()
         {
             localCounter = 0;
             Serial.println("Error: Couldn't get user's UID");
+            SystemMaintainer::getInstance().setAbnormalCondition(true); // report abnormal condition
             firebaseOK = false;
             break;
         }
@@ -57,51 +58,48 @@ void FirebaseManager::update(SystemTime *systemTime)
     auto hour = systemTime->getHour();
     auto minute = systemTime->getMinute();
     Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
-    // systemTime->notifierEngine();
-    // if((minute % 10) == 0)
+    if(firebaseOK and hour != updateTimestamp) // if firebase is ok and the data for this hour is not already uploaded
     {
-        if(firebaseOK)
+        auto sensorList = Configuration::getInstance()->getSensorList();
+        auto temperature = Temperature::getInstance();
+        auto databasePath = fbData.getDatabaseRootName() + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
+                        + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
+
+        temperature->read();
+        DynamicJsonDocument doc(1024); // Adding sensor data to JSON 
+        for(auto sensor : sensorList) 
+        { 
+            doc[sensor.getName()] = temperature->getData(sensor.getName()); 
+        } 
+        // Serialize JSON to string and print 
+        String mergedSensorData; 
+        serializeJson(doc, mergedSensorData); 
+        Serial.println(mergedSensorData.c_str());
+
+        FirebaseJson fbJson(mergedSensorData.c_str());
+
+        // Convert std::string to Arduino String
+        //String databasePathStr = String(databasePath.c_str());
+
+        if (!Firebase.RTDB.get(&fbdo, databasePath)) 
         {
-            auto sensorList = Configuration::getInstance()->getSensorList();
-            auto temperature = Temperature::getInstance();
-            auto databasePath = fbData.getDatabaseRootName() + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
-                            + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
-            std::string mergedSensorData;
-            JsonDocument doc;
-            JsonArray array = doc.to<JsonArray>();
-            temperature->read();
-            for(auto sensor : sensorList)
+            Serial.println("New data is about to be registered on the database!");
+            if (Firebase.RTDB.setJSON(&fbdo, databasePath, &fbJson)) 
             {
-                JsonObject obj = array.createNestedObject();
-                auto sensorName = sensor.getName();
-                obj[sensorName.c_str()] = temperature->getData(sensorName);
-
-            }
-            serializeJson(doc, mergedSensorData);
-            FirebaseJson fbJson(mergedSensorData);
-
-            // Convert std::string to Arduino String
-            //String databasePathStr = String(databasePath.c_str());
-
-            if(Firebase.RTDB.getJSON(&fbdo, databasePath) != NULL) return; // skip data upload
-            
-            Serial.println("new data is about to be registered on the database!");
-            if (Firebase.RTDB.setJSON(&fbdo, databasePath + "/", &fbJson))
-            {
+                updateTimestamp = hour;
                 Serial.println("PASSED");
                 Serial.println("PATH: " + fbdo.dataPath());
                 Serial.println("TYPE: " + fbdo.dataType());
-            }
-            else
+            } else 
             {
                 Serial.println("FAILED");
                 Serial.println("REASON: " + fbdo.errorReason());
+                SystemMaintainer::getInstance().setAbnormalCondition(true); // report abnormal condition
             }
-            // else
-            // {
-            //     Serial.println("warning: the data for the current time and date is already registered on the database!");
-            // }
-            
+        } else 
+        {
+            updateTimestamp = hour;
+            Serial.println("Warning: The data for the current time and date is already registered on the database!");
         }
     }
 }
