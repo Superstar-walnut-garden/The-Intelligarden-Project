@@ -8,6 +8,7 @@
 #include "IObserver.hpp"
 #include "Configuration.hpp"
 #include "Temperature.hpp"
+#include "SystemMaintainer.hpp"
 
 
 class FirebaseManager: public IObserver<SystemTime>
@@ -24,6 +25,7 @@ class FirebaseManager: public IObserver<SystemTime>
     String uid; // Variable to save USER UID
     bool signupOK;
     bool firebaseOK;
+    signed updateTimestamp;
 };
 
 #endif

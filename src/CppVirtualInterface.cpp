@@ -45,7 +45,7 @@ int virtualMain()
     display->drawUI();
     
     webInterface->init();
-    SystemMaintainer::getInstance().postponeRestart(480);
+    SystemMaintainer::getInstance().postponeRestart(480); // set maintenance periodic restart to 8 hours later
     Serial.println("Sys-OK: All of the system components are initialized and the next restart postponed to 8 hours later!");
 
     
@@ -70,7 +70,7 @@ int virtualMain()
 
     while(true)
     {
-        SystemMaintainer::getInstance().monitorCycle(); // software implemented watchdog
+        SystemMaintainer::getInstance().refreshCycleTime(); // software implemented watchdog
         
         delay(1); // For other threads to work.this should be 1ms in the main setup
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
