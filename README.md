@@ -1,4 +1,4 @@
-# Opensourse smart gardening system
+# Opensource smart gardening system
 
 * Multi-sensor temperature data logging
 * Advanced irrigation pump scheduler
