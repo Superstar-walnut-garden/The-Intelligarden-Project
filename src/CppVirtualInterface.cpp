@@ -45,7 +45,7 @@ int virtualMain()
     display->drawUI();
     
     webInterface->init();
-    SystemMaintainer::getInstance().postponeRestart(480);
+    SystemMaintainer::getInstance().postponeRestart(480); // set maintenance periodic restart to 8 hours later
     Serial.println("Sys-OK: All of the system components are initialized and the next restart postponed to 8 hours later!");
 
     
