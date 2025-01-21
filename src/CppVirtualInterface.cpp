@@ -70,7 +70,7 @@ int virtualMain()
 
     while(true)
     {
-        SystemMaintainer::getInstance().monitorCycle(); // software implemented watchdog
+        SystemMaintainer::getInstance().refreshCycleTime(); // software implemented watchdog
         
         delay(1); // For other threads to work.this should be 1ms in the main setup
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
