@@ -26,6 +26,7 @@ class FirebaseManager: public IObserver<SystemTime>
     bool signupOK;
     bool firebaseOK;
     signed updateTimestamp;
+    int firebaseAbnormalityID;
 };
 
 #endif

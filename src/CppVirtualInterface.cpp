@@ -28,8 +28,9 @@ int virtualMain()
     pinMode(25, OUTPUT);
     if (!SPIFFS.begin(true))
         Serial.println("Fatal Error: An Error has occurred while mounting SPIFFS!");
-    
-    SystemMaintainer::getInstance().start();
+    auto &systemMaintainer = SystemMaintainer::getInstance();
+    systemMaintainer.start();
+    systemMaintainer.refreshCycleTime(); // software implemented watchdog
     WifiSetup *wifiSetup = WifiSetup::getInstance();
     WebInterface *webInterface = new WebInterface();
     delay(500); // waiting utill reaching system stability
@@ -43,10 +44,10 @@ int virtualMain()
     temperature->attach(display); // attach display as an observer
     systemTime->attach(fbm);
     display->drawUI();
+    systemMaintainer.refreshCycleTime(); // software implemented watchdog
     
     webInterface->init();
-    SystemMaintainer::getInstance().postponeRestart(480); // set maintenance periodic restart to 8 hours later
-    Serial.println("Sys-OK: All of the system components are initialized and the next restart postponed to 8 hours later!");
+    
 
     
 
@@ -61,17 +62,17 @@ int virtualMain()
             fbm->update(systemTime);
         }
     }
+    Serial.println("Sys-OK: All of the system components are initialized!");
 
     if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
     {
-        SystemMaintainer::getInstance().setAbnormalCondition(true); // system abnormality reported!
+        auto networkAbnormalityID = systemMaintainer.createTrackableAbnormality("network issue", 2); // system abnormality reported!
         Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
     }
 
     while(true)
     {
-        SystemMaintainer::getInstance().refreshCycleTime(); // software implemented watchdog
-        
+        systemMaintainer.refreshCycleTime(); // software implemented watchdog
         delay(1); // For other threads to work.this should be 1ms in the main setup
         Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
         display->drawUI();

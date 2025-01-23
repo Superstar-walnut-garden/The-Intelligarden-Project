@@ -2,7 +2,7 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false), updateTimestamp(-1)
+FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false), updateTimestamp(-1), firebaseAbnormalityID(-1)
 {
     this->fbData = fbData;
 }
@@ -41,7 +41,10 @@ void FirebaseManager::init()
         {
             localCounter = 0;
             Serial.println("Error: Couldn't get user's UID");
-            SystemMaintainer::getInstance().setAbnormalCondition(true); // report abnormal condition
+            if (firebaseAbnormalityID == -1) // Abnormality not yet reported 
+            { 
+                firebaseAbnormalityID = SystemMaintainer::getInstance().createTrackableAbnormality("firebase uid Issue", 2); // Trigger restart in 2 minutes 
+            }
             firebaseOK = false;
             break;
         }
@@ -88,13 +91,21 @@ void FirebaseManager::update(SystemTime *systemTime)
             {
                 updateTimestamp = hour;
                 Serial.println("PASSED");
-                Serial.println("PATH: " + fbdo.dataPath());
-                Serial.println("TYPE: " + fbdo.dataType());
+                Serial.printf("PATH: %s\n", fbdo.dataPath().c_str());
+                Serial.printf("TYPE:  %s\n", fbdo.dataType().c_str());
+                if (firebaseAbnormalityID != -1) // Reported abnormality now resolved 
+                { 
+                    SystemMaintainer::getInstance().resolveAbnormality(firebaseAbnormalityID); 
+                    Serial.println(firebaseAbnormalityID); 
+                }
             } else 
             {
                 Serial.println("FAILED");
-                Serial.println("REASON: " + fbdo.errorReason());
-                SystemMaintainer::getInstance().setAbnormalCondition(true); // report abnormal condition
+                Serial.printf("REASON:  %s\n", fbdo.errorReason().c_str());
+                if (firebaseAbnormalityID == -1) // Abnormality not yet reported 
+                { 
+                    firebaseAbnormalityID = SystemMaintainer::getInstance().createTrackableAbnormality("firebase data upload Issue", 2); // Trigger restart in 2 minutes 
+                }
             }
         } else 
         {
