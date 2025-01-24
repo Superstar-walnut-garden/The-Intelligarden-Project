@@ -43,6 +43,7 @@ int virtualMain()
     configuration->attach(temperature); // attach temperature as an observer
     temperature->attach(display); // attach display as an observer
     systemTime->attach(fbm);
+    systemTime->attach(pump);
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
     
