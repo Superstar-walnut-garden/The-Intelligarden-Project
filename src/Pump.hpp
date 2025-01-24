@@ -6,7 +6,7 @@
 #include "SystemTime.hpp"
 #include "IObserver.hpp"
 
-class Pump
+class Pump: public IObserver<SystemTime>
 {
 private:
     static Pump *instance;

@@ -13,17 +13,17 @@ void Scheduler::determineStatusofItems()
     {
         if(systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday()))) // check weekday
         {
-            const Time untilTime = item.getStartTime() + item.getDuration();
+            Time untilTime = item.getStartTime() + item.getDuration();
             auto &itemRef = list.getItem(item.getId());
             if(currentTime >= item.getStartTime() and currentTime <= untilTime)
             {
                 itemRef.powerOn(); // get a reference to item (because getList() returns a copy of the list)
-                Serial.printf("item %d is on (with schedule)", item.getId());
+                Serial.printf("item %d is on (with schedule)\n", item.getId());
             }
             else
             {
                 itemRef.powerOff(); // get a reference to item (because getList() returns a copy of the list)
-                Serial.printf("item %d is on (with schedule)", item.getId());
+                Serial.printf("item %d is off (with schedule)\n", item.getId());
             }
         }
     }

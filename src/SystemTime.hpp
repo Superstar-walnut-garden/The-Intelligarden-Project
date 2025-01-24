@@ -42,7 +42,8 @@ public:
     }
     int getWeekday()
     {
-        return rtc.getDayofWeek();
+        int weekbit = (1 << rtc.getDayofWeek());
+        return weekbit;
     }
     bool isCurrentWeekdayPresentIn(int selectedWeekdays)
     {
@@ -51,9 +52,16 @@ public:
         return false;
     }
     static int parseWeekday(const std::string& weekdayString)
-    {
-        std::bitset<7> bits(weekdayString);
-        return static_cast<int>(bits.to_ulong());
+    {   
+        int index = 0;
+        uint8_t parsedWeekday = 0;
+        for(auto &letter : weekdayString)
+        {
+            if(letter == '1')
+                parsedWeekday |= (1 << index);
+            index++;
+        }
+        return parsedWeekday;
     }
     Time getTime()
     {
