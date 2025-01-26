@@ -1,4 +1,5 @@
 #include "Configuration.hpp"
+#include <SPIFFS.h>
 
 Configuration* Configuration::instance = nullptr;
 
@@ -236,4 +237,27 @@ void Configuration::update(SystemTime *systemTime)
 {
     currentTime = systemTime->getTime();
     currentWeekday = systemTime->getWeekday();
+}
+
+std::string Configuration::getEventList() {
+    File file = SPIFFS.open("/eventList.json", "r");
+    if (!file) {
+        Serial.println("Failed to open state file for reading");
+        return "";
+    }
+
+    std::string state = file.readString().c_str();
+    file.close();
+    return state;
+}
+
+void Configuration::setEventList(const std::string& state) {
+    File file = SPIFFS.open("/eventList.json", "w");
+    if (!file) {
+        Serial.println("Failed to open state file for writing");
+        return;
+    }
+
+    file.print(state.c_str());
+    file.close();
 }

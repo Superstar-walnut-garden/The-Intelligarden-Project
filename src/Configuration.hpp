@@ -12,6 +12,7 @@
 #include <SPIFFS.h>
 #include "WifiHotspotData.hpp"
 #include "FBData.hpp"
+#include <string>
 
 constexpr auto pumpFileAddress = "/schedule.txt";
 constexpr auto wifiFileAddress = "/wifi_credentials.txt";
@@ -62,6 +63,9 @@ public:
     std::vector<TempSensorNode> getSensorList();
     void setSensorList(std::vector<TempSensorNode> devList);
     void storeSensorNames(std::vector<TempSensorNode>& list);
+
+    std::string getEventList();
+    void setEventList(const std::string& state);
 };
 
 #endif // CONFIGURATION_HPP
