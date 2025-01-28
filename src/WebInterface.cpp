@@ -1,4 +1,6 @@
 #include "WebInterface.hpp"
+#include "Configuration.hpp"
+#include "EventManager.hpp"
 
 // Constructor implementation
 WebInterface::WebInterface() : server(80)
@@ -139,7 +141,6 @@ WebInterface::WebInterface() : server(80)
         {
             // pump->manualSwitch(); // turn off the pump
         }
-        request->send(SPIFFS, "/pumpSetting.html", "text/html");
     });
 
     server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -185,6 +186,63 @@ WebInterface::WebInterface() : server(80)
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Configuration::getInstance()->setFirebaseData(FBData((char *) data));
+    });
+
+    // Endpoint to create an event
+    server.on("/createEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Serial.println((char*)data);
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        std::string name = json["name"].as<std::string>();
+        bool flag = json["flag"];
+        bool occupied = json["occupied"];
+        EventManager::getInstance()->createEvent(id, name, flag, occupied);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to delete an event
+    server.on("/deleteEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        EventManager::getInstance()->removeEvent(id);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to modify an event
+    server.on("/modifyEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        std::string name = json["name"].as<std::string>();
+        bool flag = json["flag"];
+        bool occupied = json["occupied"];
+        EventItem newItem(id, name, flag, occupied);
+        EventManager::getInstance()->modifyEvent(id, newItem);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to get the entire list of events
+    server.on("/getEventList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string eventListJson = EventManager::getInstance()->getEventListJson();
+        request->send(200, "application/json", eventListJson.c_str());
     });
 }
 
