@@ -199,8 +199,6 @@ SchedulerList Configuration::getSchedulerList()
     {
         auto json = file.readString(); // read raw data from file
         schedulerList.repopulateWith(json.c_str(), json.length()); // parse data and repopulate the SchedulerList
-        Scheduler scheduler(schedulerList);
-        scheduler.determineStatusofItems(); // check with current date and time to indicate which item is on
         file.close();
     }
     return schedulerList;

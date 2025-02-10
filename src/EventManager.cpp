@@ -22,18 +22,21 @@ void EventManager::createEvent(int id, const std::string& name, bool flag, bool 
     EventItem newItem(id, name, flag, occupied);
     eventList.addItem(newItem);
     previousFlags[id] = flag;
+    saveState();
     notify();
 }
 
 void EventManager::removeEvent(int id) {
     eventList.deleteItem(id);
     previousFlags.erase(id);
+    saveState();
     notify();
 }
 
 void EventManager::modifyEvent(int id, const EventItem& newItem) {
     eventList.modifyItem(id, newItem);
     previousFlags[id] = newItem.getFlag();
+    saveState();
     notify();
 }
 

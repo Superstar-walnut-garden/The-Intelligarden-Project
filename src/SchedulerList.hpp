@@ -18,6 +18,8 @@ class SchedulerList // SchedulerItem Manager Class
     void addItem(SchedulerItem Item);
     void repopulateWith(const char* json, int length);
     void printList(); // not tested
+    void modifyItem(int id, SchedulerItem& newItem);
+    void deleteItem(int id);
     private:
     std::vector<SchedulerItem> list;
 };

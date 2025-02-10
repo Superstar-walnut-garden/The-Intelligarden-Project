@@ -22,7 +22,7 @@ SchedulerList::SchedulerList(const char* json, int length)
 */
 SchedulerItem &SchedulerList::getItem(int id)
 {
-    static SchedulerItem nullItem(-1, Time(0, 0), Time(0, 0), "", false, false); // item with id = -1
+    static SchedulerItem nullItem(-1, -1, "", Time(0, 0), Time(0, 0), "", false, false); // item with id = -1
     for(auto &item : list)
     {
         if(item.getId() == id)
@@ -49,6 +49,8 @@ std::string SchedulerList::getListJson()
     {
         JsonObject obj = array.createNestedObject();
         obj["id"] = item.getId();
+        obj["event_id"] = item.getEventId();
+        obj["name"] = item.getName();
         obj["start"] = item.getStartTime().toString();
         obj["duration"] = item.getDuration().toString();
         obj["weekday"] = item.getWeekday();
@@ -83,13 +85,15 @@ void SchedulerList::repopulateWith(const char* json, int length)
     for (JsonObject item : doc.as<JsonArray>()) 
     {
         short id = item["id"];
+        short event_id = item["event_id"];
+        std::string name = item["name"];
         Time start = Time::parse(item["start"].as<const char*>());
         Time duration = Time::parse(item["duration"].as<const char*>());
         std::string weekday = item["weekday"].as<std::string>();
         bool enabled = item["enabled"];
         bool on = item["on"];
 
-        list.emplace_back(id, start, duration, weekday, enabled, on); // add parsed items
+        list.emplace_back(id, event_id, name, start, duration, weekday, enabled, on); // add parsed items
     }
 }
 /*!
@@ -100,9 +104,29 @@ void SchedulerList::printList()
     for(auto & item : list)
         std::cout <<
             "ID: " << item.getId() << "\n" <<
+            "event_ID: " << item.getEventId() << "\n" <<
             "Start: " << item.getStartTime().toString() << "\n" <<
             "Duration: " << item.getDuration().toString() << "\n" <<
             "Weekday: " << item.getWeekday() << "\n" <<
             "enabled: " << item.isEnabled() << "\n" <<
             "Current Status: " << item.isOn() << "\n\n";
+}
+
+void SchedulerList::modifyItem(int id, SchedulerItem& newItem)
+{
+    for (auto& item : list)
+    {
+        if (item.getId() == id)
+        {
+            item = newItem;
+            return;
+        }
+    }
+}
+
+void SchedulerList::deleteItem(int id)
+{
+    list.erase(std::remove_if(list.begin(), list.end(), [id](SchedulerItem& item) {
+        return item.getId() == id;
+    }), list.end());
 }

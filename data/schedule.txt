@@ -1,6 +1,8 @@
 [
     {
         "id": 0,
+        "event_id": -1,
+        "name": "Schedule 0",
         "start": "18:00",
         "duration": "01:15",
         "weekday": "1111111",
@@ -9,6 +11,8 @@
     },
     {
         "id": 1,
+        "event_id": -1,
+        "name": "Schedule 1",
         "start": "08:00",
         "duration": "01:15",
         "weekday": "1111111",

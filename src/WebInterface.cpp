@@ -30,24 +30,6 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", json);
     });
 
-    server.on("/getPumpSchedule", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        String startTime, duration;
-        auto *cfg = Configuration::getInstance();
-        cfg->getSchedulerList().printList();
-        auto scheduleJson = cfg->getSchedulerList().getListJson().c_str();
-        request->send(200, "application/json", scheduleJson);
-    });
-
-    server.on("/getPumpStatus", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        auto *pumpObject = Pump::getInstance();
-
-        String json = "{\"state\": \"" + String(pumpObject->getPumpState()) +
-            "\" , \"rTime\": \"" + String("0:00") + "\"}";
-        request->send(200, "application/json", json);
-    });
-
     server.on("/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         JsonDocument doc; // creating a json doc
@@ -91,56 +73,6 @@ WebInterface::WebInterface() : server(80)
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Configuration::getInstance()->setHotspotCredentials(WifiHotspotData((char *) data));
-    });
-
-    server.on("/setPumpSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
-    {
-        Serial.println("setPumpSchedule request handled!////////////////////////");
-        request->send(200, "text/plain", "pump schedule set!"); // Response to client
-    }, NULL
-    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-    {
-        auto *cfg = Configuration::getInstance();
-        Serial.println();
-        // Parse JSON payload
-        JsonDocument json;
-        deserializeJson(json, data);
-        Serial.println("Payload elements:");
-        for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
-        {
-            Serial.print(jNode.key().c_str()); // Print data
-            Serial.print(": ");
-            Serial.println(jNode.value().as<String>());
-        }
-        cfg->setSchedulerList((char *)(data));
-    });
-
-    server.on("/sendCommand", HTTP_POST, [](AsyncWebServerRequest *request){}, NULL,
-        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total)
-    {
-        for (size_t i = 0; i < len; i++) {
-            Serial.write(data[i]);
-        }
-
-        Serial.println();
-        // Parse JSON payload
-        DynamicJsonDocument json(128);
-        deserializeJson(json, data);
-        String command = json["command"].as<String>();
-
-        Serial.print("Command received: ");
-        Serial.println(command);
-
-        auto *pump = Pump::getInstance();
-        if(command.equals("turn_on"))
-        {
-            int duration = std::stoi(std::string(json["duration"].as<String>().c_str()));
-            // pump->manualSwitch(duration);
-        }
-        if(command.equals("turn_off"))
-        {
-            // pump->manualSwitch(); // turn off the pump
-        }
     });
 
     server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -243,6 +175,71 @@ WebInterface::WebInterface() : server(80)
     {
         std::string eventListJson = EventManager::getInstance()->getEventListJson();
         request->send(200, "application/json", eventListJson.c_str());
+    });
+
+    // Endpoint to create a schedule
+    server.on("/createSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Serial.println((char*)data);
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        int eventId = json["event_id"];
+        std::string name = json["name"].as<std::string>();
+        std::string start = json["start"].as<std::string>();
+        std::string duration = json["duration"].as<std::string>();
+        std::string weekday = json["weekday"].as<std::string>();
+        bool enabled = json["enabled"];
+        bool on = json["on"];
+        Scheduler::getInstance()->createSchedule(id, eventId, name, start, duration, weekday, enabled, on);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to delete a schedule
+    server.on("/deleteSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        Scheduler::getInstance()->removeSchedule(id);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to modify a schedule
+    server.on("/modifySchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        int eventId = json["event_id"];
+        std::string name = json["name"].as<std::string>();
+        std::string start = json["start"].as<std::string>();
+        std::string duration = json["duration"].as<std::string>();
+        std::string weekday = json["weekday"].as<std::string>();
+        bool enabled = json["enabled"];
+        bool on = json["on"];
+        SchedulerItem newItem(id, eventId, name, Time::parse(start.c_str()), Time::parse(duration.c_str()), weekday, enabled, on);
+        Scheduler::getInstance()->modifySchedule(id, newItem);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to get the entire list of schedules
+    server.on("/getScheduleList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().getListJson();
+        request->send(200, "application/json", scheduleListJson.c_str());
     });
 }
 
