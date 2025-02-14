@@ -1,7 +1,12 @@
 #include "EventItem.hpp"
 
+EventItem::EventItem() 
+    : BaseItem() 
+{
+}
+
 EventItem::EventItem(int id, std::string name, bool flag, bool occupied) 
-    : id(id), name(name), flag(flag), occupied(occupied) 
+    : BaseItem(id, 0, name, flag), occupied(occupied) 
 {
 }
 
@@ -9,29 +14,14 @@ EventItem::~EventItem()
 {
 }
 
-int EventItem::getId() const 
-{
-    return id;
-}
-
-std::string EventItem::getName() const 
-{
-    return name;
-}
-
-void EventItem::setName(std::string name)
-{
-    this->name = name;
-}
-
 bool EventItem::getFlag() const 
 {
-    return flag;
+    return getStatus();
 }
 
 void EventItem::setFlag(bool flag) 
 {
-    this->flag = flag;
+    setStatus(flag);
 }
 
 bool EventItem::isOccupied() const 
@@ -42,4 +32,26 @@ bool EventItem::isOccupied() const
 void EventItem::setOccupied(bool occupied) 
 {
     this->occupied = occupied;
+}
+
+void EventItem::populateFromJson(std::string json) 
+{
+    DynamicJsonDocument doc(1024);
+    deserializeJson(doc, json);
+    setId(doc["id"]);
+    setName(doc["name"]);
+    setFlag(doc["status"]);
+    setOccupied(doc["occupied"]);
+}
+
+std::string EventItem::toJson() 
+{
+    DynamicJsonDocument doc(1024);
+    doc["id"] = getId();
+    doc["name"] = getName();
+    doc["status"] = getFlag();
+    doc["occupied"] = isOccupied();
+    std::string output;
+    serializeJson(doc, output);
+    return output;
 }

@@ -1,27 +1,28 @@
 #ifndef EVENTITEM_HPP
 #define EVENTITEM_HPP
+
+#include "BaseItem.hpp"
 #include <string>
 
-class EventItem 
+class EventItem : public BaseItem
 {
 public:
+    EventItem();
     EventItem(int id, std::string name, bool flag, bool occupied);
     ~EventItem();
 
-    int getId() const;
-    std::string getName() const;
-    void setName(std::string name);
     bool getFlag() const;
     void setFlag(bool flag);
 
     bool isOccupied() const;
     void setOccupied(bool occupied);
 
+    void populateFromJson(std::string json) override;
+    std::string toJson() override;
+
 private:
-    int id;
-    std::string name;
-    bool flag;
     bool occupied;
+    using BaseItem::setEventId; // making setEventId private (because it's not needed)
 };
 
 #endif // EVENTITEM_HPP
