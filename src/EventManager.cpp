@@ -3,22 +3,48 @@
 
 EventManager* EventManager::instance = nullptr;
 
-EventManager::EventManager() {
-    loadState();
+/** 
+ * @brief Construct a new EventManager object.
+ * 
+ */
+EventManager::EventManager() 
+{
+    loadState(); // load the state from the internal storage (SPIFFS)
 }
 
-EventManager::~EventManager() {
-    saveState();
+/** 
+ * @brief Destroy the EventManager object.
+ * 
+ */
+EventManager::~EventManager() 
+{
+    saveState(); // save the state before deleting the instance
+    delete instance;
 }
 
-EventManager* EventManager::getInstance() {
+/** 
+ * @brief Get the instance of the EventManager (singleton pattern).
+ * 
+ * @return EventManager* The instance of the EventManager.
+ */
+EventManager* EventManager::getInstance() 
+{
     if (!instance) {
         instance = new EventManager();
     }
     return instance;
 }
 
-void EventManager::createEvent(int id, const std::string& name, bool flag, bool occupied) {
+/** 
+ * @brief Create a new event and add it to the event list.
+ * 
+ * @param id The ID of the event.
+ * @param name The name of the event.
+ * @param flag The flag(status) of the event.
+ * @param occupied The occupied status of the event.
+ */
+void EventManager::createEvent(int id, std::string& name, bool flag, bool occupied) 
+{
     EventItem newItem(id, name, flag, occupied);
     eventList.addItem(newItem);
     previousFlags[id] = flag;
@@ -26,104 +52,123 @@ void EventManager::createEvent(int id, const std::string& name, bool flag, bool 
     notify();
 }
 
-void EventManager::removeEvent(int id) {
+/** 
+ * @brief Remove an event from the event list.
+ * 
+ * @param id The ID of the event to remove.
+ */
+void EventManager::removeEvent(int id) 
+{
     eventList.deleteItem(id);
     previousFlags.erase(id);
     saveState();
-    notify();
 }
 
-void EventManager::modifyEvent(int id, const EventItem& newItem) {
+/** 
+ * @brief Modify an event in the event list.
+ * 
+ * @param id The ID of the event to modify.
+ * @param newItem The new item to replace the old one.
+ */
+void EventManager::modifyEvent(int id, EventItem& newItem) 
+{
     eventList.modifyItem(id, newItem);
     previousFlags[id] = newItem.getFlag();
     saveState();
-    notify();
 }
 
-void EventManager::modifyEventFlag(int id, bool flag) {
+/** 
+ * @brief Modify the flag of an event in the event list. Broadcasters must only use this method to update the event status (flag).
+ * 
+ * 
+ * @param id The ID of the event to modify.
+ * @param flag The new flag of the event.
+ */
+void EventManager::modifyEventFlag(int id, bool flag) 
+{
     EventItem& item = eventList.getItem(id);
-    if (item.getId() != -1) { // Check if the item exists
+    if (item.getId() != -1) // Check if the item exists
+    { 
         item.setFlag(flag);
-        previousFlags[id] = flag;
         notify();
+        previousFlags[id] = flag;
     }
 }
 
-std::string EventManager::getEventListJson() {
-    return eventList.getListJson();
-}
-
-void EventManager::registerListener(IObserver<EventManager>* listener) {
-    attach(listener);
-}
-
-void EventManager::registerBroadcaster(int eventId, std::function<void(bool)> broadcaster) {
-    if (broadcaster) {
-        broadcasters[eventId] = broadcaster;
-    } else {
-        broadcasters.erase(eventId);
-    }
-}
-
-bool EventManager::hasEventFlagChanged(int id, bool& newFlag) {
+/** 
+ * @brief Check if the flag of an event has changed (Listeners must use this method to check if their desired event is triggered or not).
+ * 
+ * @param id The ID of the event.
+ * @param newFlag The new flag of the event.
+ * @return true If the flag has changed.
+ * @return false If the flag has not changed.
+ */
+bool EventManager::hasEventFlagChanged(int id, bool& newFlag) 
+{
     auto it = previousFlags.find(id);
-    if (it != previousFlags.end()) {
+    if (it != previousFlags.end()) 
+    {
         newFlag = eventList.getItem(id).getFlag();
         return it->second != newFlag;
     }
     return false;
 }
 
-void EventManager::saveState() {
-    DynamicJsonDocument doc(2048);
-    JsonArray events = doc.createNestedArray("events");
-
-    for (const auto& item : eventList.getList()) {
-        JsonObject event = events.createNestedObject();
-        event["id"] = item.getId();
-        event["name"] = item.getName();
-        event["flag"] = item.getFlag();
-        event["occupied"] = item.isOccupied();
-    }
-
-    JsonObject broadcastersJson = doc.createNestedObject("broadcasters");
-    for (const auto& broadcaster : broadcasters) {
-        broadcastersJson[String(broadcaster.first)] = true; // Just a placeholder to indicate the broadcaster is registered
-    }
-
-    std::string output;
-    serializeJson(doc, output);
-    Configuration::getInstance()->setEventList(output);
+/** 
+ * @brief Get the realtime event list in JSON format.
+ * 
+ * @return std::string The event list in JSON format.
+ */
+std::string EventManager::getEventListJson() 
+{
+    return eventList.toJson();
 }
 
-void EventManager::loadState() {
+/** 
+ * @brief Register a listener to the event manager (same as the "attach" method).
+ * @param listener The listener to register.
+ */
+void EventManager::registerListener(IObserver<EventManager>* listener) 
+{
+    attach(listener);
+}
+
+/**
+ * @brief save the state of the event list to the internal storage (SPIFFS).
+ * 
+ */
+void EventManager::saveState() 
+{
+    std::string jsonList = eventList.toJson();
+    Configuration::getInstance()->setEventList(jsonList);
+}
+
+/**
+ * @brief Load the state of the event list from the internal storage (SPIFFS).
+ * 
+ */
+void EventManager::loadState() 
+{
     std::string state = Configuration::getInstance()->getEventList();
     if (state.empty()) return;
 
-    DynamicJsonDocument doc(2048);
-    deserializeJson(doc, state);
-
-    JsonArray events = doc["events"];
-    for (JsonObject event : events) {
-        int id = event["id"];
-        std::string name = event["name"].as<std::string>();
-        bool flag = event["flag"];
-        bool occupied = event["occupied"];
-        createEvent(id, name, flag, occupied);
-    }
-
-    JsonObject broadcastersJson = doc["broadcasters"];
-    for (JsonPair kv : broadcastersJson) {
-        int id = atoi(kv.key().c_str());
-        registerBroadcaster(id, nullptr); // Placeholder, actual function should be set dynamically
-    }
+    eventList.repopulateWith(state);
+    for (auto& item : eventList.getList()) // Save the flags to the previousFlags map
+        previousFlags[item.getId()] = item.getFlag();
 }
 
-void EventManager::loop() {
-    for (auto& item : eventList.getList()) {
+/**
+ * @brief Loop through the event list and check if any events are triggered.
+ * 
+ */
+void EventManager::loop() 
+{
+    for (auto& item : eventList.getList()) 
+    {
         bool currentFlag = item.getFlag();
         // Check if the flag has changed
-        if (currentFlag != previousFlags[item.getId()]) {
+        if (currentFlag != previousFlags[item.getId()]) 
+        {
             previousFlags[item.getId()] = currentFlag;
             // Notify all listeners
             notify();

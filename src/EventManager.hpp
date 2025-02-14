@@ -12,14 +12,14 @@ class EventManager : public Subject<EventManager> {
 public:
     static EventManager* getInstance();
 
-    void createEvent(int id, const std::string& name, bool flag, bool occupied);
+    void createEvent(int id, std::string& name, bool flag, bool occupied);
     void removeEvent(int id);
-    void modifyEvent(int id, const EventItem& newItem);
+    void modifyEvent(int id, EventItem& newItem);
     void modifyEventFlag(int id, bool flag);
     std::string getEventListJson();
 
     void registerListener(IObserver<EventManager>* listener);
-    void registerBroadcaster(int eventId, std::function<void(bool)> broadcaster);
+    // void registerBroadcaster(int eventId, std::function<void(bool)> broadcaster);
 
     bool hasEventFlagChanged(int id, bool& newFlag);
 
@@ -36,7 +36,6 @@ private:
 
     static EventManager* instance;
     EventList eventList;
-    std::unordered_map<int, std::function<void(bool)>> broadcasters;
     std::unordered_map<int, bool> previousFlags;
 };
 
