@@ -259,3 +259,30 @@ void Configuration::setEventList(const std::string& state) {
     file.print(state.c_str());
     file.close();
 }
+
+void Configuration::setGPIOList(std::string json)
+{
+    File file = SPIFFS.open(gpioFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json.c_str());
+        file.close();
+        Serial.println("GPIO data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+
+std::string Configuration::getGPIOList()
+{
+    auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
+    if (file)
+    {
+        auto json = file.readString(); // read raw data from file
+        file.close();
+        return json.c_str();
+    }
+    return ""; // return empty
+}

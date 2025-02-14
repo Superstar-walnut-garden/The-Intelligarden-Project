@@ -20,6 +20,7 @@ constexpr auto hotspotFileAddress = "/hotspot_credentials.txt";
 constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
 constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
+constexpr auto gpioFileAddress = "/gpio.json";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
@@ -63,6 +64,8 @@ public:
     std::vector<TempSensorNode> getSensorList();
     void setSensorList(std::vector<TempSensorNode> devList);
     void storeSensorNames(std::vector<TempSensorNode>& list);
+    void setGPIOList(std::string json);
+    std::string getGPIOList();
 
     std::string getEventList();
     void setEventList(const std::string& state);
