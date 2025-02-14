@@ -3,16 +3,12 @@
 #include "Time.hpp"
 #include <ArduinoJson.h>
 #include <string>
+#include "BaseItem.hpp"
 
-class SchedulerItem
+class SchedulerItem: public BaseItem
 {
     public:
     SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on);
-    int getId();
-    int getEventId();
-    void setEventId(int event_id);
-    std::string getName();
-    void setName(std::string name);
     Time getStartTime();
     Time getDuration();
     void setStartTime(Time start);
@@ -22,18 +18,14 @@ class SchedulerItem
     bool isEnabled();
     void setEnabled(bool enabled);
     std::string toJson();
-
-    void enable();
-    void disable();
-    void powerOn();
-    void powerOff();
+    
+    void powerOn(); // same as setStatus(true) for backward compatibility
+    void powerOff(); // same as setStatus(fase) for backward compatibility
     private:
-    short id, event_id;
-    std::string name;
     Time start;
     Time duration;
     std::string weekday;
-    bool enabled, on;
+    bool enabled;
 };
 
 #endif
