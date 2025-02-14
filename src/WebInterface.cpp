@@ -241,6 +241,63 @@ WebInterface::WebInterface() : server(80)
         std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().getListJson();
         request->send(200, "application/json", scheduleListJson.c_str());
     });
+
+    // Endpoint to create a GPIO item
+    server.on("/createGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        int eventId = json["event_id"];
+        std::string name = json["name"].as<std::string>();
+        bool status = json["status"];
+        short mode = json["mode"];
+        std::string extraParameters = json["extraParameters"].as<std::string>();
+        GPIOManager::getInstance()->createIO(GPIOItem(id, eventId, name, status, mode, extraParameters));
+    });
+
+    // Endpoint to delete a GPIO item
+    server.on("/deleteGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        GPIOManager::getInstance()->removeIO(id);
+    });
+
+    // Endpoint to modify a GPIO item
+    server.on("/modifyGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        DynamicJsonDocument json(256);
+        deserializeJson(json, data);
+        int id = json["id"];
+        int eventId = json["event_id"];
+        std::string name = json["name"].as<std::string>();
+        bool status = json["status"];
+        short mode = json["mode"];
+        std::string extraParameters = json["extraParameters"].as<std::string>();
+        GPIOItem newItem(id, eventId, name, status, mode, extraParameters);
+        GPIOManager::getInstance()->modifyIO(id, newItem);
+    });
+
+    // Endpoint to get the entire list of GPIO items
+    server.on("/getGPIOList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string gpioListJson = GPIOManager::getInstance()->getGPIOListJson();
+        request->send(200, "application/json", gpioListJson.c_str());
+    });
 }
 
 // Method to start the web server

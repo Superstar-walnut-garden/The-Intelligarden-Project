@@ -11,6 +11,7 @@
 #include "Pump.hpp"
 #include "IObserver.hpp"
 #include "SystemTime.hpp"
+#include "GPIOManager.hpp"
 
 class WebInterface
 {
