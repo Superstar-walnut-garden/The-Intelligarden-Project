@@ -2,27 +2,27 @@
 #define EVENTLIST_HPP
 
 #include "EventItem.hpp"
+#include "BaseList.hpp"
 #include <ArduinoJson.h>
 #include <string>
 #include <vector>
 #include <iostream>
 
-class EventList // EventItem Manager Class
+/**
+ * @brief EventList class
+ * 
+ */
+class EventList: public BaseList<EventItem>
 {
 public:
     EventList();
-    EventList(const char* json, int length);
-    EventItem &getItem(int id);
-    std::vector<EventItem> getList();
-    std::string getListJson();
-    void addItem(EventItem item);
-    void repopulateWith(const char* json, int length);
-    void printList(); // not tested
-    void modifyItem(int id, const EventItem& newItem);
-    void deleteItem(int id);
+    EventList(std::string json);
+
+    std::string toJson() override;
+    void repopulateWith(std::string json) override;
+    void printList() override;
 
 private:
-    std::vector<EventItem> list;
 };
 
 #endif // EVENTLIST_HPP
