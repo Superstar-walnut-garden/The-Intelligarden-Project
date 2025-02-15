@@ -10,8 +10,6 @@ public:
     GPIOList();
     GPIOList(std::string json);
 
-    std::string toJson() override;
-    void repopulateWith(std::string json) override;
     void printList() override;
 };
 
