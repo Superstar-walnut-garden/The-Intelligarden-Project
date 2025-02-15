@@ -8,20 +8,22 @@
 class SchedulerItem: public BaseItem
 {
     public:
-    SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on);
+    SchedulerItem();
+    SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode = "weekly");
     Time getStartTime();
     Time getDuration();
     void setStartTime(Time start);
     void setDuration(Time duration);
     std::string getWeekday();
-    bool isOn();
     bool isEnabled();
     void setEnabled(bool enabled);
-    std::string toJson();
+    std::string toJson() override;
+    void populateFromJson(std::string json) override;
+    void setMode(std::string mode);
+    std::string getMode();
     
-    void powerOn(); // same as setStatus(true) for backward compatibility
-    void powerOff(); // same as setStatus(fase) for backward compatibility
     private:
+    std::string mode;
     Time start;
     Time duration;
     std::string weekday;
