@@ -41,11 +41,13 @@ int virtualMain()
     auto *fbm = new FirebaseManager(Configuration::getInstance()->getFirebaseData());
     auto *eventManager = EventManager::getInstance();
     auto *scheduler = Scheduler::getInstance();
+    auto *ioManager = GPIOManager::getInstance();
 
     configuration->attach(temperature); // attach temperature as an observer
     temperature->attach(display); // attach display as an observer
     systemTime->attach(fbm); // attach firebase-manager as an observer
     systemTime->attach(scheduler); // attach scheduler as an observer
+    eventManager->registerListener(ioManager); // attach GPIOManager as an observer
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
@@ -93,6 +95,7 @@ int virtualMain()
             Serial.println("warning: time is not available due to connection error at the system startup!");
         
         eventManager->loop();
+        Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
     }
     return 0;
 }
