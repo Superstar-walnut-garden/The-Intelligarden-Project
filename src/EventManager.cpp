@@ -86,7 +86,7 @@ void EventManager::modifyEvent(int id, EventItem& newItem)
  */
 void EventManager::modifyEventFlag(int id, bool flag) 
 {
-    EventItem& item = eventList.getItem(id);
+    EventItem& item = eventList.getItem(id); // get a reference to the item
     if (item.getId() != -1) // Check if the item exists
     { 
         item.setFlag(flag);
