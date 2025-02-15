@@ -69,7 +69,7 @@ void FirebaseManager::update(SystemTime *systemTime)
                         + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
 
         temperature->read();
-        DynamicJsonDocument doc(1024); // Adding sensor data to JSON 
+        JsonDocument doc; // Adding sensor data to JSON 
         for(auto sensor : sensorList) 
         { 
             doc[sensor.getName()] = temperature->getData(sensor.getName()); 
