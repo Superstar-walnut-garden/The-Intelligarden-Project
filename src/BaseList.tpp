@@ -35,7 +35,7 @@ BaseList<T>::BaseList(std::string json)
 template <class T>
 T &BaseList<T>::getItem(int id)
 {
-    auto nullItem = T(); // item with default parameters (id = -1)
+    static auto nullItem = T(); // item with default parameters (id = -1)
     for(auto &item : list)
     {
         if(item.getId() == id)
@@ -65,7 +65,7 @@ std::vector<T> BaseList<T>::getList()
 template <class T>
 std::string BaseList<T>::toJson()
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     JsonArray array = doc.to<JsonArray>();
 
     for (auto& item : list) 
@@ -100,7 +100,7 @@ void BaseList<T>::addItem(T item)
 template <class T>
 void BaseList<T>::repopulateWith(std::string json)
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     deserializeJson(doc, json);
     list.clear(); // delete the old items before adding new ones
 
