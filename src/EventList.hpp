@@ -18,8 +18,6 @@ public:
     EventList();
     EventList(std::string json);
 
-    std::string toJson() override;
-    void repopulateWith(std::string json) override;
     void printList() override;
 
 private:
