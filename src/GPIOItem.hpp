@@ -17,10 +17,10 @@ public:
     void setMode(short mode);
     void setExtraParameters(std::string extraParameters);
 
+private:
     void populateDerivedClassFromJson(JsonDocument &json) override;
     void derivedClassToJson(JsonDocument &doc) override;
-
-private:
+    
     std::string extraParameters;
     short mode;
 
