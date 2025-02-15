@@ -171,9 +171,9 @@ void GPIOManager::update(EventManager* eventManager)
             bool flag = false;
             if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
             {
-                item.setStatus(flag);
+                list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
             }
         }
     }
-    saveState();
+    syncHardware();
 }
