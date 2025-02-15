@@ -32,23 +32,48 @@ void Scheduler::determineStatusofItems()
 {
     auto systemTime = SystemTime::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
-    for (auto& item : list.getList()) 
+    for (auto& item : list.getList()) // iterate over the list of items
     {
-        if (systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday()))) // check weekday
+        auto& itemRef = list.getItem(item.getId());
+        if(item.getMode() == "weekly")
         {
-            Time untilTime = item.getStartTime() + item.getDuration();
-            auto& itemRef = list.getItem(item.getId());
-            if (currentTime >= item.getStartTime() && currentTime <= untilTime) 
+            auto untilTime = item.getStartTime() + item.getDuration();
+            auto isCurrentTimeBetweenStartAndEnd = currentTime >= item.getStartTime() && currentTime <= untilTime;
+            if (systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd) // check weekday and time
             {
-                itemRef.powerOn(); // get a reference to item (because getList() returns a copy of the list)
+                itemRef.setStatus(true);
                 Serial.printf("item %d is on (with schedule)\n", item.getId());
-            } else 
+            } 
+            else
             {
-                itemRef.powerOff(); // get a reference to item (because getList() returns a copy of the list)
+                itemRef.setStatus(false);
                 Serial.printf("item %d is off (with schedule)\n", item.getId());
             }
-            if(item.getEventId() != -1) // if the item is associated with an event
-                EventManager::getInstance()->modifyEventFlag(item.getEventId(), item.isOn()); // broadcast the status of the item
+            broadcastItem(itemRef); // broadcast the real item (because only the reference gets updated in this "for" statement)
+        }
+        else if(item.getMode() == "hourly")
+        {
+            auto interval = item.getStartTime().getTimeInMinutes(), duration = item.getDuration().getTimeInMinutes();
+            auto ctime = currentTime.getTimeInMinutes(); // current time in minutes
+            int cyclePosition = 0;
+            if(interval != 0) // prevent division by zero
+                cyclePosition = ctime % interval;
+    
+            if (cyclePosition <= duration)
+            {
+                itemRef.setStatus(true);
+                Serial.printf("item %d is on (hourly schedule)\n", item.getId());
+            }
+            else
+            {
+                itemRef.setStatus(false);
+                Serial.printf("item %d is off (hourly schedule)\n", item.getId());
+            }
+            broadcastItem(itemRef);
+        }
+        else
+        {
+            Serial.println("Unsupported mode");
         }
     }
 }
@@ -56,15 +81,15 @@ void Scheduler::determineStatusofItems()
 bool Scheduler::isAnyItemOn() 
 {
     for (SchedulerItem& item : list.getList())
-        if (item.isOn())
+        if (item.getStatus())
             return true;
     return false;
 }
 
-void Scheduler::createSchedule(int id, int eventId, std::string& name, const std::string& start, const std::string& duration, std::string& weekday, bool enabled, bool on) 
+void Scheduler::createSchedule(int id, SchedulerItem schedulerItem) 
 {
-    SchedulerItem newItem(id, eventId, name, Time::parse(start.c_str()), Time::parse(duration.c_str()), weekday, enabled, on);
-    list.addItem(newItem);
+    
+    list.addItem(schedulerItem);
     Serial.printf("Schedule %d created\n", id);
     saveState();
 }
@@ -85,17 +110,23 @@ void Scheduler::modifySchedule(int id, SchedulerItem& newItem)
 
 void Scheduler::saveState()
 {
-    Configuration::getInstance()->setSchedulerList(list.getListJson().c_str());
+    Configuration::getInstance()->setSchedulerList(list.toJson());
 }
 
 void Scheduler::loadState() 
 {
-    std::string state = Configuration::getInstance()->getSchedulerList().getListJson();
-    if (state.empty()) return;
-        list.repopulateWith(state.c_str(), state.length());
+    auto data = Configuration::getInstance()->getSchedulerList();
+    if (data.empty()) return;
+        list.repopulateWith(data);
 }
 
 SchedulerList Scheduler::getSchedulerList()
 {
     return list;
+}
+
+void Scheduler::broadcastItem(SchedulerItem &item)
+{
+    if(item.getEventId() != -1) // if the item is associated with an event
+        EventManager::getInstance()->modifyEventFlag(item.getEventId(), item.getStatus()); // broadcast the status of the item
 }

@@ -16,7 +16,7 @@ public:
     bool isAnyItemOn();
     void update(SystemTime* systemTime) override;
 
-    void createSchedule(int id, int eventId, std::string& name, const std::string& start, const std::string& duration, std::string& weekday, bool enabled, bool on);
+    void createSchedule(int id, SchedulerItem newItem);
     void removeSchedule(int id);
     void modifySchedule(int id, SchedulerItem& newItem);
 
@@ -31,6 +31,7 @@ private:
     Scheduler(const Scheduler&) = delete;
     Scheduler& operator=(const Scheduler&) = delete;
     void determineStatusofItems();
+    void broadcastItem(SchedulerItem &item);
 
     static Scheduler* instance;
     SchedulerList list;
