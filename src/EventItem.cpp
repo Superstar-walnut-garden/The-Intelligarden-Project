@@ -34,24 +34,12 @@ void EventItem::setOccupied(bool occupied)
     this->occupied = occupied;
 }
 
-void EventItem::populateFromJson(std::string json) 
+void EventItem::populateDerivedClassFromJson(JsonDocument &doc) 
 {
-    JsonDocument doc;
-    deserializeJson(doc, json);
-    setId(doc["id"]);
-    setName(doc["name"]);
-    setFlag(doc["status"]);
     setOccupied(doc["occupied"]);
 }
 
-std::string EventItem::toJson() 
+void EventItem::derivedClassToJson(JsonDocument &doc) 
 {
-    JsonDocument doc;
-    doc["id"] = getId();
-    doc["name"] = getName();
-    doc["status"] = getFlag();
     doc["occupied"] = isOccupied();
-    std::string output;
-    serializeJson(doc, output);
-    return output;
 }

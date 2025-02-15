@@ -17,10 +17,10 @@ public:
     bool isOccupied() const;
     void setOccupied(bool occupied);
 
-    void populateFromJson(std::string json) override;
-    std::string toJson() override;
-
 private:
+    void populateDerivedClassFromJson(JsonDocument &doc) override;
+    void derivedClassToJson(JsonDocument &doc) override;
+    
     bool occupied;
     using BaseItem::setEventId; // making setEventId private (because it's not needed)
 };
