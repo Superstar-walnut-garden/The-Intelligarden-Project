@@ -138,14 +138,14 @@ void GPIOManager::loadState()
 }
 
 /**
- * @brief Update the hardware of the GPIO items.
+ * @brief sync the actual GPIO pins to the status of the items and vice versa.
  * 
  */
 void GPIOManager::syncHardware()
 {
     for (auto& item : list.getList())
     {
-        if (item.getMode() == 0) // if the item is an output pin
+        if (item.getMode() == 1) // if the item is an output pin
         {
             pinMode(item.getPin(), OUTPUT);
             digitalWrite(item.getPin(), item.getStatus()); // update the pin from item status
