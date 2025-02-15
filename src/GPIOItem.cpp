@@ -34,3 +34,15 @@ void GPIOItem::setExtraParameters(std::string extraParameters)
 {
     this->extraParameters = extraParameters;
 }
+
+void GPIOItem::populateDerivedClassFromJson(JsonDocument &doc)
+{
+    this->extraParameters = doc["extraParameters"].as<std::string>();
+    this->mode = doc["mode"].as<short>();
+}
+
+void GPIOItem::derivedClassToJson(JsonDocument &doc)
+{
+    doc["extraParameters"] = this->extraParameters;
+    doc["mode"] = this->mode;
+}
