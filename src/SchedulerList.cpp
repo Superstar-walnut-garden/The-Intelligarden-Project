@@ -16,22 +16,6 @@ SchedulerList::SchedulerList(std::string json)
 }
 
 /*!
-    @brief get a reference to the desired item
-    @param id the id of the desired item
-    @return returns an item with an id = -1 if couldn't find a match
-*/
-SchedulerItem &SchedulerList::getItem(int id)
-{
-    auto nullItem = SchedulerItem(); // item with id = -1
-    for(auto &item : getListRef())
-    {
-        if(item.getId() == id)
-            return item;
-    }
-    return nullItem;
-}
-
-/*!
     @brief prints the entire items of the list via std::cout
 */
 void SchedulerList::printList()

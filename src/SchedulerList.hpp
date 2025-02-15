@@ -13,7 +13,6 @@ class SchedulerList: public BaseList<SchedulerItem> // SchedulerItem Manager Cla
     public:
     SchedulerList();
     SchedulerList(std::string json);
-    SchedulerItem &getItem(int id);
     void printList() override;
     private:
 };
