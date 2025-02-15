@@ -50,34 +50,20 @@ std::string SchedulerItem::getMode()
     return mode;
 }
 
-std::string SchedulerItem::toJson()
+void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
-    JsonDocument doc;
-    doc["id"] = getId();
+    this->start = Time::parse(doc["start"].as<std::string>().c_str());
+    this->duration = Time::parse(doc["duration"].as<std::string>().c_str());
+    this->weekday = doc["weekday"].as<std::string>();
+    this->enabled = doc["enabled"].as<bool>();
+    this->mode = doc["mode"].as<std::string>();
+}
+
+void SchedulerItem::derivedClassToJson(JsonDocument &doc)
+{
     doc["start"] = getStartTime().toString();
     doc["duration"] = getDuration().toString();
     doc["weekday"] = getWeekday();
     doc["enabled"] = isEnabled();
-    doc["status"] = getStatus();
-    doc["name"] = getName();
     doc["mode"] = getMode();
-    doc["event_id"] = getEventId();
-    std::string output;
-    serializeJson(doc, output);
-    return output;
-}
-
-void SchedulerItem::populateFromJson(std::string json)
-{
-    JsonDocument doc;
-    deserializeJson(doc, json);
-    this->setId(doc["id"].as<int>()); 
-    this->setEventId(doc["event_id"].as<int>());
-    this->setName(doc["name"].as<std::string>());
-    this->setStatus(doc["status"].as<bool>());
-    this->setStartTime(Time::parse(doc["start"].as<std::string>().c_str()));
-    this->setDuration(Time::parse(doc["duration"].as<std::string>().c_str()));
-    this->weekday = doc["weekday"].as<std::string>();
-    this->enabled = doc["enabled"].as<bool>();
-    this->mode = doc["mode"].as<std::string>();
 }

@@ -17,12 +17,13 @@ class SchedulerItem: public BaseItem
     std::string getWeekday();
     bool isEnabled();
     void setEnabled(bool enabled);
-    std::string toJson() override;
-    void populateFromJson(std::string json) override;
     void setMode(std::string mode);
     std::string getMode();
     
     private:
+    void populateDerivedClassFromJson(JsonDocument &doc) override;
+    void derivedClassToJson(JsonDocument &doc) override;
+
     std::string mode;
     Time start;
     Time duration;
