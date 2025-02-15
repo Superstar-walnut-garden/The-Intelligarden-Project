@@ -21,6 +21,10 @@ public:
     virtual void populateFromJson(std::string json);
     virtual std::string toJson();
 
+protected:
+    virtual void populateDerivedClassFromJson(JsonDocument &doc) {};
+    virtual void derivedClassToJson(JsonDocument &doc) {};
+
 private:
     int id, event_id;
     std::string name;

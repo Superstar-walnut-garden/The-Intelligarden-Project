@@ -101,12 +101,13 @@ void BaseItem::setStatus(bool status)
  */
 void BaseItem::populateFromJson(std::string json)
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     deserializeJson(doc, json);
     this->id = doc["id"].as<int>(); 
     this->event_id = doc["event_id"].as<int>();
     this->name = doc["name"].as<std::string>();
     this->status = doc["status"].as<bool>();
+    populateDerivedClassFromJson(doc); // in case of this method is overrided by the derrived class
 }
 
 /**
@@ -115,11 +116,12 @@ void BaseItem::populateFromJson(std::string json)
  */ 
 std::string BaseItem::toJson()
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     doc["id"] = this->id;
     doc["event_id"] = this->event_id;
     doc["name"] = this->name;
     doc["status"] = this->status;
+    derivedClassToJson(doc); // in case of this method is overrided by the derrived class
     std::string output;
     serializeJson(doc, output);
     return output;
