@@ -88,7 +88,7 @@ WebInterface::WebInterface() : server(80)
 
         Serial.println();
         // Parse JSON payload
-        DynamicJsonDocument json(len);
+        JsonDocument json;
         deserializeJson(json, data);
         Serial.println("Payload elements:");
         for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
@@ -128,11 +128,11 @@ WebInterface::WebInterface() : server(80)
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Serial.println((char*)data);
-        DynamicJsonDocument json(256);
+        JsonDocument json;
         deserializeJson(json, data);
         int id = json["id"];
         std::string name = json["name"].as<std::string>();
-        bool flag = json["flag"];
+        bool flag = json["status"];
         bool occupied = json["occupied"];
         EventManager::getInstance()->createEvent(id, name, flag, occupied);
         EventManager::getInstance()->saveState();
@@ -145,7 +145,7 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
+        JsonDocument json;
         deserializeJson(json, data);
         int id = json["id"];
         EventManager::getInstance()->removeEvent(id);
@@ -159,11 +159,11 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
+        JsonDocument json;
         deserializeJson(json, data);
         int id = json["id"];
         std::string name = json["name"].as<std::string>();
-        bool flag = json["flag"];
+        bool flag = json["status"];
         bool occupied = json["occupied"];
         EventItem newItem(id, name, flag, occupied);
         EventManager::getInstance()->modifyEvent(id, newItem);
@@ -185,17 +185,9 @@ WebInterface::WebInterface() : server(80)
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Serial.println((char*)data);
-        DynamicJsonDocument json(256);
-        deserializeJson(json, data);
-        int id = json["id"];
-        int eventId = json["event_id"];
-        std::string name = json["name"].as<std::string>();
-        std::string start = json["start"].as<std::string>();
-        std::string duration = json["duration"].as<std::string>();
-        std::string weekday = json["weekday"].as<std::string>();
-        bool enabled = json["enabled"];
-        bool on = json["on"];
-        Scheduler::getInstance()->createSchedule(id, eventId, name, start, duration, weekday, enabled, on);
+        auto newItem = SchedulerItem();
+        newItem.populateFromJson((char*)data);
+        Scheduler::getInstance()->createSchedule(newItem.getId(), newItem);
         Scheduler::getInstance()->saveState();
     });
 
@@ -206,7 +198,7 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
+        JsonDocument json;
         deserializeJson(json, data);
         int id = json["id"];
         Scheduler::getInstance()->removeSchedule(id);
@@ -220,25 +212,16 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
-        deserializeJson(json, data);
-        int id = json["id"];
-        int eventId = json["event_id"];
-        std::string name = json["name"].as<std::string>();
-        std::string start = json["start"].as<std::string>();
-        std::string duration = json["duration"].as<std::string>();
-        std::string weekday = json["weekday"].as<std::string>();
-        bool enabled = json["enabled"];
-        bool on = json["on"];
-        SchedulerItem newItem(id, eventId, name, Time::parse(start.c_str()), Time::parse(duration.c_str()), weekday, enabled, on);
-        Scheduler::getInstance()->modifySchedule(id, newItem);
+        auto newItem = SchedulerItem();
+        newItem.populateFromJson((char*)data);
+        Scheduler::getInstance()->modifySchedule(newItem.getId(), newItem);
         Scheduler::getInstance()->saveState();
     });
 
     // Endpoint to get the entire list of schedules
     server.on("/getScheduleList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().getListJson();
+        std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().toJson();
         request->send(200, "application/json", scheduleListJson.c_str());
     });
 
@@ -249,15 +232,9 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
-        deserializeJson(json, data);
-        int id = json["id"];
-        int eventId = json["event_id"];
-        std::string name = json["name"].as<std::string>();
-        bool status = json["status"];
-        short mode = json["mode"];
-        std::string extraParameters = json["extraParameters"].as<std::string>();
-        GPIOManager::getInstance()->createIO(GPIOItem(id, eventId, name, status, mode, extraParameters));
+        auto newItem = GPIOItem();
+        newItem.populateFromJson((char*)data);
+        GPIOManager::getInstance()->createIO(newItem);
     });
 
     // Endpoint to delete a GPIO item
@@ -267,7 +244,7 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
+        JsonDocument json;
         deserializeJson(json, data);
         int id = json["id"];
         GPIOManager::getInstance()->removeIO(id);
@@ -280,16 +257,9 @@ WebInterface::WebInterface() : server(80)
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
-        DynamicJsonDocument json(256);
-        deserializeJson(json, data);
-        int id = json["id"];
-        int eventId = json["event_id"];
-        std::string name = json["name"].as<std::string>();
-        bool status = json["status"];
-        short mode = json["mode"];
-        std::string extraParameters = json["extraParameters"].as<std::string>();
-        GPIOItem newItem(id, eventId, name, status, mode, extraParameters);
-        GPIOManager::getInstance()->modifyIO(id, newItem);
+        auto newItem = GPIOItem();
+        newItem.populateFromJson((char*)data);
+        GPIOManager::getInstance()->modifyIO(newItem.getId(), newItem);
     });
 
     // Endpoint to get the entire list of GPIO items
