@@ -59,7 +59,7 @@ std::string Time::toString()
         oss << std::setw(2) << std::setfill('0') << number;
         return oss.str();
     };
-    return std::to_string(hour) + ":" + std::to_string(minute);
+    return toStringTwoDigits(hour) + ":" + toStringTwoDigits(minute);
 }
 Time Time::parse(const char* timeStr)
 {
