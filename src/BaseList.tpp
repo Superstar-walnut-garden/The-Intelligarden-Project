@@ -70,7 +70,7 @@ std::string BaseList<T>::toJson()
 
     for (auto& item : list) 
     {
-        JsonObject obj = array.createNestedObject();
+        JsonObject obj = array.add<JsonObject>();
         deserializeJson(obj, item.toJson()); // add items
     }
 
