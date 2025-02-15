@@ -176,13 +176,13 @@ void Configuration::storeSensorNames(std::vector<TempSensorNode>& list)
     file.close();
     Serial.println("Sensor Data saved to SPIFFS");
 }
-void Configuration::setSchedulerList(const char *json, int length)
+void Configuration::setSchedulerList(std::string json)
 {
     //auto schedulerList = SchedulerList(json, length);
     File file = SPIFFS.open(pumpFileAddress, FILE_WRITE);
     if (file)
     {
-        file.println(json);
+        file.println(json.c_str());
         file.close();
         Serial.println("scheduling data saved successfully.");
     } 
@@ -191,17 +191,16 @@ void Configuration::setSchedulerList(const char *json, int length)
         Serial.println("Failed to open file for writing.");
     }
 }
-SchedulerList Configuration::getSchedulerList()
+std::string Configuration::getSchedulerList()
 {
-    auto schedulerList = SchedulerList();
     auto file = SPIFFS.open(pumpFileAddress, FILE_READ);
+    std::string json;
     if(file)
     {
-        auto json = file.readString(); // read raw data from file
-        schedulerList.repopulateWith(json.c_str(), json.length()); // parse data and repopulate the SchedulerList
+        json = file.readString().c_str(); // read raw data from file
         file.close();
     }
-    return schedulerList;
+    return json;
 }
 void Configuration::setFirebaseData(FBData data)
 {
@@ -237,8 +236,9 @@ void Configuration::update(SystemTime *systemTime)
     currentWeekday = systemTime->getWeekday();
 }
 
-std::string Configuration::getEventList() {
-    File file = SPIFFS.open("/eventList.json", "r");
+std::string Configuration::getEventList() 
+{
+    File file = SPIFFS.open("/eventList.txt", FILE_READ);
     if (!file) {
         Serial.println("Failed to open state file for reading");
         return "";
@@ -249,8 +249,9 @@ std::string Configuration::getEventList() {
     return state;
 }
 
-void Configuration::setEventList(const std::string& state) {
-    File file = SPIFFS.open("/eventList.json", "w");
+void Configuration::setEventList(const std::string& state) 
+{
+    File file = SPIFFS.open("/eventList.txt", FILE_WRITE);
     if (!file) {
         Serial.println("Failed to open state file for writing");
         return;
@@ -280,9 +281,9 @@ std::string Configuration::getGPIOList()
     auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
     if (file)
     {
-        auto json = file.readString(); // read raw data from file
+        auto jsonData = file.readString().c_str(); // read raw data from file
         file.close();
-        return json.c_str();
+        return jsonData;
     }
     return ""; // return empty
 }
