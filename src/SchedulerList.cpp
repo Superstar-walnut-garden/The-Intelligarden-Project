@@ -9,10 +9,10 @@ SchedulerList::SchedulerList()
     @param json string of json 
     @param length length of the json string
 */
-SchedulerList::SchedulerList(const char* json, int length)
+SchedulerList::SchedulerList(std::string json)
 {
-    this->repopulateWith(json, length);
-    Serial.println(json);
+    this->repopulateWith(json);
+    Serial.println(json.c_str()); // for debug porpuses
 }
 
 /*!
@@ -22,86 +22,21 @@ SchedulerList::SchedulerList(const char* json, int length)
 */
 SchedulerItem &SchedulerList::getItem(int id)
 {
-    static SchedulerItem nullItem(-1, -1, "", Time(0, 0), Time(0, 0), "", false, false); // item with id = -1
-    for(auto &item : list)
+    auto nullItem = SchedulerItem(); // item with id = -1
+    for(auto &item : getListRef())
     {
         if(item.getId() == id)
             return item;
     }
     return nullItem;
 }
-/*!
-    @brief get a copy of the list
-*/
-std::vector<SchedulerItem> SchedulerList::getList()
-{
-    return list;
-}
-/*!
-    @brief get list in json format
-*/
-std::string SchedulerList::getListJson()
-{
-    JsonDocument doc;
-    JsonArray array = doc.to<JsonArray>();
 
-    for (auto& item : list) 
-    {
-        JsonObject obj = array.createNestedObject();
-        obj["id"] = item.getId();
-        obj["event_id"] = item.getEventId();
-        obj["name"] = item.getName();
-        obj["start"] = item.getStartTime().toString();
-        obj["duration"] = item.getDuration().toString();
-        obj["weekday"] = item.getWeekday();
-        obj["enabled"] = item.isEnabled();
-        obj["on"] = item.isOn();
-    }
-
-    std::string output;
-    serializeJson(doc, output);
-    return output;
-}
-
-/*!
-    @brief add a new item to the end of the item-list
-*/
-void SchedulerList::addItem(SchedulerItem item)
-{
-    list.push_back(item);
-}
-
-/*!
-    @brief get the time and date as an Arduino String object
-    @param json string of json 
-    @param length length of the json string
-*/
-void SchedulerList::repopulateWith(const char* json, int length)
-{
-    JsonDocument doc;
-    deserializeJson(doc, json);
-    list.clear(); // delete the old items before adding new ones
-
-    for (JsonObject item : doc.as<JsonArray>()) 
-    {
-        short id = item["id"];
-        short event_id = item["event_id"];
-        std::string name = item["name"];
-        Time start = Time::parse(item["start"].as<const char*>());
-        Time duration = Time::parse(item["duration"].as<const char*>());
-        std::string weekday = item["weekday"].as<std::string>();
-        bool enabled = item["enabled"];
-        bool on = item["on"];
-
-        list.emplace_back(id, event_id, name, start, duration, weekday, enabled, on); // add parsed items
-    }
-}
 /*!
     @brief prints the entire items of the list via std::cout
 */
 void SchedulerList::printList()
 {
-    for(auto & item : list)
+    for(auto & item : getList())
         std::cout <<
             "ID: " << item.getId() << "\n" <<
             "event_ID: " << item.getEventId() << "\n" <<
@@ -109,24 +44,6 @@ void SchedulerList::printList()
             "Duration: " << item.getDuration().toString() << "\n" <<
             "Weekday: " << item.getWeekday() << "\n" <<
             "enabled: " << item.isEnabled() << "\n" <<
-            "Current Status: " << item.isOn() << "\n\n";
-}
-
-void SchedulerList::modifyItem(int id, SchedulerItem& newItem)
-{
-    for (auto& item : list)
-    {
-        if (item.getId() == id)
-        {
-            item = newItem;
-            return;
-        }
-    }
-}
-
-void SchedulerList::deleteItem(int id)
-{
-    list.erase(std::remove_if(list.begin(), list.end(), [id](SchedulerItem& item) {
-        return item.getId() == id;
-    }), list.end());
+            "Current Status: " << item.getStatus() <<
+            "Mode: " << item.getMode() << "\n\n";
 }
