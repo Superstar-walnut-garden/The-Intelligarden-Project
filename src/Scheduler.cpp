@@ -59,7 +59,7 @@ void Scheduler::determineStatusofItems()
             if(interval != 0) // prevent division by zero
                 cyclePosition = ctime % interval;
     
-            if (cyclePosition <= duration)
+            if (cyclePosition < duration)
             {
                 itemRef.setStatus(true);
                 Serial.printf("item %d is on (hourly schedule)\n", item.getId());
