@@ -36,7 +36,7 @@ void EventItem::setOccupied(bool occupied)
 
 void EventItem::populateFromJson(std::string json) 
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     deserializeJson(doc, json);
     setId(doc["id"]);
     setName(doc["name"]);
@@ -46,7 +46,7 @@ void EventItem::populateFromJson(std::string json)
 
 std::string EventItem::toJson() 
 {
-    DynamicJsonDocument doc(1024);
+    JsonDocument doc;
     doc["id"] = getId();
     doc["name"] = getName();
     doc["status"] = getFlag();
