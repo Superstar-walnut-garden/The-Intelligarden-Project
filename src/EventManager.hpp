@@ -12,7 +12,7 @@ class EventManager : public Subject<EventManager> {
 public:
     static EventManager* getInstance();
 
-    void createEvent(int id, std::string& name, bool flag, bool occupied);
+    void createEvent(EventItem eventItem);
     void removeEvent(int id);
     void modifyEvent(int id, EventItem& newItem);
     void modifyEventFlag(int id, bool flag);
@@ -22,6 +22,7 @@ public:
     // void registerBroadcaster(int eventId, std::function<void(bool)> broadcaster);
 
     bool hasEventFlagChanged(int id, bool& newFlag);
+    void initializeListeners();
 
     void saveState();
     void loadState();

@@ -43,11 +43,10 @@ EventManager* EventManager::getInstance()
  * @param flag The flag(status) of the event.
  * @param occupied The occupied status of the event.
  */
-void EventManager::createEvent(int id, std::string& name, bool flag, bool occupied) 
+void EventManager::createEvent(EventItem eventItem) 
 {
-    EventItem newItem(id, name, flag, occupied);
-    eventList.addItem(newItem);
-    previousFlags[id] = flag;
+    eventList.addItem(eventItem);
+    previousFlags[eventItem.getId()] = eventItem.getStatus();
     saveState();
     notify();
 }
@@ -109,9 +108,24 @@ bool EventManager::hasEventFlagChanged(int id, bool& newFlag)
     if (it != previousFlags.end()) 
     {
         newFlag = eventList.getItem(id).getFlag();
-        return it->second != newFlag;
+        auto realFlag = newFlag; // copy flag 
+        if(eventList.getItem(id).isInvert())
+            newFlag = !newFlag; // invert the flag ref that is returned through the method arg
+        return it->second != realFlag;
     }
     return false;
+}
+
+/** 
+ * @brief Initialize the listeners by triggering a dummy event change (by inverting the previous event status) to notify all the listeners.
+ * 
+ */
+void EventManager::initializeListeners()
+{
+    for (auto& item : eventList.getList()) 
+    {
+        previousFlags[item.getId()] = !item.getFlag(); // make flags opposite to trigger all the listeners at startup
+    }
 }
 
 /** 
