@@ -123,9 +123,10 @@ bool EventManager::hasEventFlagChanged(int id, bool& newFlag)
 void EventManager::initializeListeners()
 {
     for (auto& item : eventList.getList()) 
-    {
         previousFlags[item.getId()] = !item.getFlag(); // make flags opposite to trigger all the listeners at startup
-    }
+    notify();
+    for (auto& item : eventList.getList()) 
+        previousFlags[item.getId()] = item.getFlag(); // revert to their original state
 }
 
 /** 
@@ -180,8 +181,10 @@ void EventManager::loop()
     for (auto& item : eventList.getList()) 
     {
         bool currentFlag = item.getFlag();
-        // Check if the flag has changed
-        if (currentFlag != previousFlags[item.getId()]) 
+        if(item.getEventId() != -1) // if mated to another event
+            eventList.getItem(item.getId()).setFlag(eventList.getItem(item.getEventId()).getFlag()); // link (mate) to another event status
+
+        if (currentFlag != previousFlags[item.getId()]) // Check if the flag has changed
         {
             previousFlags[item.getId()] = currentFlag;
             // Notify all listeners
