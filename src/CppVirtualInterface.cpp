@@ -48,6 +48,7 @@ int virtualMain()
     systemTime->attach(fbm); // attach firebase-manager as an observer
     systemTime->attach(scheduler); // attach scheduler as an observer
     eventManager->registerListener(ioManager); // attach GPIOManager as an observer
+    eventManager->initializeListeners(); // initialize the listeners
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
