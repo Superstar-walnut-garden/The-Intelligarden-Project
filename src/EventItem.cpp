@@ -5,8 +5,8 @@ EventItem::EventItem()
 {
 }
 
-EventItem::EventItem(int id, std::string name, bool flag, bool occupied) 
-    : BaseItem(id, 0, name, flag), occupied(occupied) 
+EventItem::EventItem(int id, int event_id, std::string name, bool flag, bool occupied, bool invert) 
+    : BaseItem(id, event_id, name, flag), occupied(occupied), invert(invert)
 {
 }
 
@@ -24,6 +24,16 @@ void EventItem::setFlag(bool flag)
     setStatus(flag);
 }
 
+bool EventItem::isInvert() const
+{
+    return invert;
+}
+
+void EventItem::setInvert(bool invert)
+{
+    this->invert = invert;
+}
+
 bool EventItem::isOccupied() const 
 {
     return occupied;
@@ -37,9 +47,11 @@ void EventItem::setOccupied(bool occupied)
 void EventItem::populateDerivedClassFromJson(JsonDocument &doc) 
 {
     setOccupied(doc["occupied"]);
+    setInvert(doc["invert"]);
 }
 
 void EventItem::derivedClassToJson(JsonDocument &doc) 
 {
     doc["occupied"] = isOccupied();
+    doc["invert"] = isInvert();
 }
