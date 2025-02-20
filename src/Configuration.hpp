@@ -12,6 +12,7 @@
 #include <SPIFFS.h>
 #include "WifiHotspotData.hpp"
 #include "FBData.hpp"
+#include <string>
 
 constexpr auto pumpFileAddress = "/schedule.txt";
 constexpr auto wifiFileAddress = "/wifi_credentials.txt";
@@ -19,6 +20,7 @@ constexpr auto hotspotFileAddress = "/hotspot_credentials.txt";
 constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
 constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
+constexpr auto gpioFileAddress = "/gpio.txt";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
@@ -53,15 +55,20 @@ public:
     void setHotspotCredentials(WifiHotspotData data);
     void setFirebaseData(FBData data);
     PumpSchedule getPumpSchedule();
-    SchedulerList getSchedulerList();
+    std::string getSchedulerList();
     WifiHotspotData getWifiCredentials();
     WifiHotspotData getHotspotCredentials();
     FBData getFirebaseData();
-    void setSchedulerList(const char *json, int length = 1024);
+    void setSchedulerList(std::string json);
     void update(SystemTime *systemTime);
     std::vector<TempSensorNode> getSensorList();
     void setSensorList(std::vector<TempSensorNode> devList);
     void storeSensorNames(std::vector<TempSensorNode>& list);
+    void setGPIOList(std::string json);
+    std::string getGPIOList();
+
+    std::string getEventList();
+    void setEventList(const std::string& state);
 };
 
 #endif // CONFIGURATION_HPP

@@ -13,7 +13,6 @@
 #include "WifiSetup.hpp"
 #include "WebInterface.hpp"
 #include "SystemTime.hpp"
-#include "Pump.hpp"
 #include <Wire.h>
 #include <U8g2lib.h>
 #include "Temperature.hpp"
@@ -21,6 +20,7 @@
 
 #include "FirebaseManager.hpp"
 #include "SystemMaintainer.hpp"
+#include "EventManager.hpp"
 
 int virtualMain()
 {
@@ -35,15 +35,21 @@ int virtualMain()
     WebInterface *webInterface = new WebInterface();
     delay(500); // waiting utill reaching system stability
     auto *systemTime = SystemTime::getInstance();
-    auto *pump = Pump::getInstance();
     auto *temperature = Temperature::getInstance();
     auto *configuration = Configuration::getInstance();
     auto *display = Display::getInstance();
     auto *fbm = new FirebaseManager(Configuration::getInstance()->getFirebaseData());
+    auto *eventManager = EventManager::getInstance();
+    auto *scheduler = Scheduler::getInstance();
+    auto *ioManager = GPIOManager::getInstance();
+
     configuration->attach(temperature); // attach temperature as an observer
     temperature->attach(display); // attach display as an observer
-    systemTime->attach(fbm);
-    systemTime->attach(pump);
+    systemTime->attach(fbm); // attach firebase-manager as an observer
+    systemTime->attach(scheduler); // attach scheduler as an observer
+    eventManager->registerListener(ioManager); // attach GPIOManager as an observer
+    eventManager->initializeListeners(); // initialize the listeners
+
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
     
@@ -84,10 +90,13 @@ int virtualMain()
         if(systemTime->isTimeUpdated())
         {
             //fbm->update(systemTime);
+            Scheduler::getInstance()->update(systemTime); // manualy updating the scheduler for debug purposes
         }
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");
-
+        
+        eventManager->loop();
+        Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
     }
     return 0;
 }

@@ -1,4 +1,6 @@
 #include "WebInterface.hpp"
+#include "Configuration.hpp"
+#include "EventManager.hpp"
 
 // Constructor implementation
 WebInterface::WebInterface() : server(80)
@@ -15,7 +17,7 @@ WebInterface::WebInterface() : server(80)
     // Serve HTML page to enter WiFi credentials
     server.serveStatic("/", SPIFFS, "/dist/").setDefaultFile("index.html");
 
-    server.on("/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         String json;
         auto *cfg = Configuration::getInstance();
@@ -28,25 +30,7 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", json);
     });
 
-    server.on("/getPumpSchedule", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        String startTime, duration;
-        auto *cfg = Configuration::getInstance();
-        cfg->getSchedulerList().printList();
-        auto scheduleJson = cfg->getSchedulerList().getListJson().c_str();
-        request->send(200, "application/json", scheduleJson);
-    });
-
-    server.on("/getPumpStatus", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        auto *pumpObject = Pump::getInstance();
-
-        String json = "{\"state\": \"" + String(pumpObject->getPumpState()) +
-            "\" , \"rTime\": \"" + String("0:00") + "\"}";
-        request->send(200, "application/json", json);
-    });
-
-    server.on("/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         JsonDocument doc; // creating a json doc
         doc["time"] = SystemTime::getInstance()->getTime().toString(); // get time and add to json
@@ -57,7 +41,7 @@ WebInterface::WebInterface() : server(80)
     });
 
     // Handle form submission and save credentials
-    server.on("/getWifiState", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/getWifiState", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         
         auto wifiCred = Configuration::getInstance()->getWifiCredentials();
@@ -65,7 +49,7 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", wifiCred.toJsonString().c_str());
     });
 
-    server.on("/getHotspotConfig", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/getHotspotConfig", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         
         auto hotspotCred = Configuration::getInstance()->getHotspotCredentials();
@@ -73,7 +57,7 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", hotspotCred.toJsonString().c_str());
     });
 
-    server.on("/setWifiConfig", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/api/setWifiConfig", HTTP_POST, [](AsyncWebServerRequest *request)
     {
         request->send(200, "text/plain", ""); // Response to client
     }, NULL
@@ -82,7 +66,7 @@ WebInterface::WebInterface() : server(80)
         Configuration::getInstance()->setWifiCredentials(WifiHotspotData((char *) data));
     });
 
-    server.on("/setHotspotConfig", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/api/setHotspotConfig", HTTP_POST, [](AsyncWebServerRequest *request)
     {
         request->send(200, "text/plain", ""); // Response to client
     }, NULL
@@ -91,58 +75,7 @@ WebInterface::WebInterface() : server(80)
         Configuration::getInstance()->setHotspotCredentials(WifiHotspotData((char *) data));
     });
 
-    server.on("/setPumpSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
-    {
-        Serial.println("setPumpSchedule request handled!////////////////////////");
-        request->send(200, "text/plain", "pump schedule set!"); // Response to client
-    }, NULL
-    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-    {
-        auto *cfg = Configuration::getInstance();
-        Serial.println();
-        // Parse JSON payload
-        JsonDocument json;
-        deserializeJson(json, data);
-        Serial.println("Payload elements:");
-        for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
-        {
-            Serial.print(jNode.key().c_str()); // Print data
-            Serial.print(": ");
-            Serial.println(jNode.value().as<String>());
-        }
-        cfg->setSchedulerList((char *)(data));
-    });
-
-    server.on("/sendCommand", HTTP_POST, [](AsyncWebServerRequest *request){}, NULL,
-        [](AsyncWebServerRequest * request, uint8_t *data, size_t len, size_t index, size_t total)
-    {
-        for (size_t i = 0; i < len; i++) {
-            Serial.write(data[i]);
-        }
-
-        Serial.println();
-        // Parse JSON payload
-        DynamicJsonDocument json(128);
-        deserializeJson(json, data);
-        String command = json["command"].as<String>();
-
-        Serial.print("Command received: ");
-        Serial.println(command);
-
-        auto *pump = Pump::getInstance();
-        if(command.equals("turn_on"))
-        {
-            int duration = std::stoi(std::string(json["duration"].as<String>().c_str()));
-            // pump->manualSwitch(duration);
-        }
-        if(command.equals("turn_off"))
-        {
-            // pump->manualSwitch(); // turn off the pump
-        }
-        request->send(SPIFFS, "/pumpSetting.html", "text/html");
-    });
-
-    server.on("/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/api/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
     {
         request->send(200); // Response to client
     }, NULL
@@ -155,7 +88,7 @@ WebInterface::WebInterface() : server(80)
 
         Serial.println();
         // Parse JSON payload
-        DynamicJsonDocument json(len);
+        JsonDocument json;
         deserializeJson(json, data);
         Serial.println("Payload elements:");
         for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
@@ -171,20 +104,160 @@ WebInterface::WebInterface() : server(80)
         cfg->storeSensorNames(list);
     });
 
-    server.on("/getFirebaseData", HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on("/api/getFirebaseData", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         auto firebaseData = Configuration::getInstance()->getFirebaseData();
         Serial.println("FirebaseData get request handled.");
         request->send(200, "application/json", firebaseData.toJsonString().c_str());
     });
 
-    server.on("/setFirebaseData", HTTP_POST, [](AsyncWebServerRequest *request)
+    server.on("/api/setFirebaseData", HTTP_POST, [](AsyncWebServerRequest *request)
     {
         request->send(200, "text/plain", ""); // Response to client
     }, NULL
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Configuration::getInstance()->setFirebaseData(FBData((char *) data));
+    });
+
+    // Endpoint to create an event
+    server.on("/api/createEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Serial.println((char*)data);
+        auto eventItem = EventItem();
+        eventItem.populateFromJson((char *)data);
+        EventManager::getInstance()->createEvent(eventItem);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to delete an event
+    server.on("/api/deleteEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        JsonDocument json;
+        deserializeJson(json, data);
+        int id = json["id"];
+        EventManager::getInstance()->removeEvent(id);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to modify an event
+    server.on("/api/modifyEvent", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = EventItem();
+        newItem.populateFromJson((char *)data);
+        EventManager::getInstance()->modifyEvent(newItem.getId(), newItem);
+        EventManager::getInstance()->saveState();
+    });
+
+    // Endpoint to get the entire list of events
+    server.on("/api/getEventList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string eventListJson = EventManager::getInstance()->getEventListJson();
+        request->send(200, "application/json", eventListJson.c_str());
+    });
+
+    // Endpoint to create a schedule
+    server.on("/api/createSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Serial.println((char*)data);
+        auto newItem = SchedulerItem();
+        newItem.populateFromJson((char*)data);
+        Scheduler::getInstance()->createSchedule(newItem.getId(), newItem);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to delete a schedule
+    server.on("/api/deleteSchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        JsonDocument json;
+        deserializeJson(json, data);
+        int id = json["id"];
+        Scheduler::getInstance()->removeSchedule(id);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to modify a schedule
+    server.on("/api/modifySchedule", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = SchedulerItem();
+        newItem.populateFromJson((char*)data);
+        Scheduler::getInstance()->modifySchedule(newItem.getId(), newItem);
+        Scheduler::getInstance()->saveState();
+    });
+
+    // Endpoint to get the entire list of schedules
+    server.on("/api/getScheduleList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().toJson();
+        request->send(200, "application/json", scheduleListJson.c_str());
+    });
+
+    // Endpoint to create a GPIO item
+    server.on("/api/createGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = GPIOItem();
+        newItem.populateFromJson((char*)data);
+        GPIOManager::getInstance()->createIO(newItem);
+    });
+
+    // Endpoint to delete a GPIO item
+    server.on("/api/deleteGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        JsonDocument json;
+        deserializeJson(json, data);
+        int id = json["id"];
+        GPIOManager::getInstance()->removeIO(id);
+    });
+
+    // Endpoint to modify a GPIO item
+    server.on("/api/modifyGPIO", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = GPIOItem();
+        newItem.populateFromJson((char*)data);
+        GPIOManager::getInstance()->modifyIO(newItem.getId(), newItem);
+    });
+
+    // Endpoint to get the entire list of GPIO items
+    server.on("/api/getGPIOList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string gpioListJson = GPIOManager::getInstance()->getGPIOListJson();
+        request->send(200, "application/json", gpioListJson.c_str());
     });
 }
 
