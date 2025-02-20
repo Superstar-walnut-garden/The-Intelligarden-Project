@@ -1,10 +1,11 @@
 # Opensource smart gardening system
 
 * Multi-sensor temperature data logging
-* Advanced irrigation pump scheduler
+* Advanced multi-purpose scheduler (can used for irrigation pump, solenoid valves and etc...)
 * Cloud-based (Firebase) data storing
-* Manual pump control with timer
-* Based on Arduino platfrom (On the verge of transitioning to PlatformIO)
+* Manual GPIO control (e.g. Can be used for turning on a pump manualy)
+* Remote direct connection between nodes (Coming soon)
+* Based on PlatformIO
 
 
 # How to contribute
