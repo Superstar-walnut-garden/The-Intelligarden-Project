@@ -5,6 +5,10 @@ Display* Display::instance = nullptr;
 Display::Display()
     : oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(0x3F, 2, 16), displayType("char")
 {
+    JsonDocument doc;
+    deserializeJson(doc, Configuration::getInstance()->getDisplayConfig());
+    displayType = doc["type"].as<std::string>();
+    Serial.println(displayType.c_str());
     if(displayType == "oled")
     {
         oled.begin();

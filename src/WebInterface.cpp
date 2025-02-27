@@ -259,6 +259,23 @@ WebInterface::WebInterface() : server(80)
         std::string gpioListJson = GPIOManager::getInstance()->getGPIOListJson();
         request->send(200, "application/json", gpioListJson.c_str());
     });
+
+    // Endpoint to get the display config
+    server.on("/api/getDisplayConfig", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string config = Configuration::getInstance()->getDisplayConfig();
+        request->send(200, "application/json", config.c_str());
+    });
+
+    // Endpoint to set display config
+    server.on("/api/setDisplayConfig", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        Configuration::getInstance()->setDisplayConfig((char*)data);
+    });
 }
 
 // Method to start the web server
