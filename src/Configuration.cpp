@@ -279,9 +279,10 @@ void Configuration::setGPIOList(std::string json)
 std::string Configuration::getGPIOList()
 {
     auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
+    std::string jsonData;
     if (file)
     {
-        auto jsonData = file.readString().c_str(); // read raw data from file
+        jsonData = file.readString().c_str(); // read raw data from file
         file.close();
         return jsonData;
     }
