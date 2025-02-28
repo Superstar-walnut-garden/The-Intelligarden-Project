@@ -21,6 +21,7 @@ constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
 constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
 constexpr auto gpioFileAddress = "/gpio.txt";
+constexpr auto displayFileAddress = "/display.json";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
@@ -69,6 +70,9 @@ public:
 
     std::string getEventList();
     void setEventList(const std::string& state);
+
+    std::string getDisplayConfig();
+    void setDisplayConfig(const std::string& config);
 };
 
 #endif // CONFIGURATION_HPP

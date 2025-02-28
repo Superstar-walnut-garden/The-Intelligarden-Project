@@ -279,9 +279,38 @@ void Configuration::setGPIOList(std::string json)
 std::string Configuration::getGPIOList()
 {
     auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
+    std::string jsonData;
     if (file)
     {
-        auto jsonData = file.readString().c_str(); // read raw data from file
+        jsonData = file.readString().c_str(); // read raw data from file
+        file.close();
+        return jsonData;
+    }
+    return ""; // return empty
+}
+
+void Configuration::setDisplayConfig(const std::string& config)
+{
+    File file = SPIFFS.open(displayFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(config.c_str());
+        file.close();
+        Serial.println("Display data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+
+std::string Configuration::getDisplayConfig()
+{
+    auto file = SPIFFS.open(displayFileAddress, FILE_READ);
+    std::string jsonData;
+    if (file)
+    {
+        jsonData = file.readString().c_str(); // read raw data from file
         file.close();
         return jsonData;
     }

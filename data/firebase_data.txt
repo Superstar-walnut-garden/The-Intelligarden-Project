@@ -4,5 +4,5 @@
     "userEmail":"IntelligardenNodeAznab@walnut.garden",
     "userPassword":"ThisIsThePasscode",
     "databaseRootName":"AznabNode1/",
-    "enabled":true
+    "enabled":false
 }
