@@ -17,19 +17,6 @@ WebInterface::WebInterface() : server(80)
     // Serve HTML page to enter WiFi credentials
     server.serveStatic("/", SPIFFS, "/dist/").setDefaultFile("index.html");
 
-    server.on("/api/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        String json;
-        auto *cfg = Configuration::getInstance();
-        json += "{";
-        for(auto dev : cfg->getSensorList())
-            json += "\"" + String(std::to_string((uint64_t)dev.getAddress()).c_str()) +
-                "\": \"" + String(dev.getName().c_str()) + "\",";
-        json.remove(json.length() - 1); // remove the final ","
-        json += "}";
-        request->send(200, "application/json", json);
-    });
-
     server.on("/api/getCurrentTime", HTTP_GET, [](AsyncWebServerRequest *request)
     {
         JsonDocument doc; // creating a json doc
@@ -73,35 +60,6 @@ WebInterface::WebInterface() : server(80)
     , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
     {
         Configuration::getInstance()->setHotspotCredentials(WifiHotspotData((char *) data));
-    });
-
-    server.on("/api/setSensorList", HTTP_POST, [](AsyncWebServerRequest *request)
-    {
-        request->send(200); // Response to client
-    }, NULL
-    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-    {
-        auto *cfg = Configuration::getInstance();
-        std::vector<TempSensorNode> list;
-        for (size_t i = 0; i < len; i++)
-            Serial.write(data[i]);
-
-        Serial.println();
-        // Parse JSON payload
-        JsonDocument json;
-        deserializeJson(json, data);
-        Serial.println("Payload elements:");
-        for (JsonPair jNode : json.as<JsonObject>()) // Extract data from JSON payload
-        {
-            Serial.println("Before pushback");
-            list.push_back(TempSensorNode(std::stoull(std::string(jNode.key().c_str()))
-                , std::string(jNode.value().as<String>().c_str())));
-            Serial.println("After pushback");
-            Serial.print(jNode.key().c_str()); // Print data
-            Serial.print(": ");
-            Serial.println(jNode.value().as<String>());
-        }
-        cfg->storeSensorNames(list);
     });
 
     server.on("/api/getFirebaseData", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -260,6 +218,50 @@ WebInterface::WebInterface() : server(80)
         request->send(200, "application/json", gpioListJson.c_str());
     });
 
+    // Endpoint to create a Thermostat item
+    server.on("/api/createThermostat", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = ThermostatItem();
+        newItem.populateFromJson((char*)data);
+        ThermostatManager::getInstance()->create(newItem);
+    });
+
+    // Endpoint to delete a Thermostat item
+    server.on("/api/deleteThermostat", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        JsonDocument json;
+        deserializeJson(json, data);
+        int id = json["id"];
+        ThermostatManager::getInstance()->remove(id);
+    });
+
+    // Endpoint to modify a Thermostat item
+    server.on("/api/modifyThermostat", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = ThermostatItem();
+        newItem.populateFromJson((char*)data);
+        ThermostatManager::getInstance()->modify(newItem.getId(), newItem);
+    });
+
+    // Endpoint to get the entire list of Thermostat items
+    server.on("/api/getThermostatList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string listJson = ThermostatManager::getInstance()->getListJson();
+        request->send(200, "application/json", listJson.c_str());
+    });
+
     // Endpoint to get the display config
     server.on("/api/getDisplayConfig", HTTP_GET, [](AsyncWebServerRequest *request)
     {
@@ -276,6 +278,40 @@ WebInterface::WebInterface() : server(80)
     {
         Configuration::getInstance()->setDisplayConfig((char*)data);
     });
+
+    // Endpoint to get the temperature sensor list
+    server.on("/api/getSensorList", HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        std::string json = Temperature::getInstance()->getListJson();
+        request->send(200, "application/json", json.c_str());
+    });
+
+    // Endpoint to modify a temperature sensor
+    server.on("/api/modifySensor", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        auto newItem = TempSensorItem();
+        newItem.populateFromJson((char*)data);
+        Temperature::getInstance()->modify(newItem.getId(), newItem);
+    });
+
+    // Endpoint to delete a temperature sensor
+    server.on("/api/deleteSensor", HTTP_POST, [](AsyncWebServerRequest *request)
+    {
+        request->send(200, "text/plain", ""); // Response to client
+    }, NULL
+    , [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+    {
+        JsonDocument json;
+        deserializeJson(json, data);
+        uint64_t id = std::stoull(json["id"].as<std::string>());
+        Serial.println(id);
+        Temperature::getInstance()->remove(id);
+    });
+
 }
 
 // Method to start the web server
