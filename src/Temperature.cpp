@@ -141,6 +141,11 @@ void Temperature::obtainSensors()
 void Temperature::saveState()
 {
     auto *cfg = Configuration::getInstance();
+    for(auto item : registeredSensorList.getList())
+    {
+        registeredSensorList.getItem(item.getId()).setTemp(-127);
+        registeredSensorList.getItem(item.getId()).setStatus(false);
+    }
     cfg->setRegisteredTempSensorList(registeredSensorList.toJson());
 }
 
