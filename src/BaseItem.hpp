@@ -7,11 +7,11 @@ class BaseItem
 {
 public:
     BaseItem();
-    BaseItem(int id, int event_id, std::string name, bool status);
+    BaseItem(uint64_t id, int event_id, std::string name, bool status);
     virtual ~BaseItem();
 
-    virtual int getId() const;
-    virtual void setId(int id);
+    virtual uint64_t getId() const;
+    virtual void setId(uint64_t id);
     virtual int getEventId() const;
     virtual void setEventId(int event_id);
     virtual std::string getName() const;
@@ -26,7 +26,8 @@ protected:
     virtual void derivedClassToJson(JsonDocument &doc) {};
 
 private:
-    int id, event_id;
+    uint64_t id;
+    int event_id;
     std::string name;
     bool status;
 };

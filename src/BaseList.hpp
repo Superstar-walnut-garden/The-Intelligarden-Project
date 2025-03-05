@@ -16,14 +16,14 @@ class BaseList
 public:
     BaseList();
     BaseList(std::string json);
-    virtual T &getItem(int id);
+    virtual T &getItem(uint64_t id);
     virtual std::vector<T> getList();
     virtual std::string toJson();
     virtual void addItem(T Item);
     virtual void repopulateWith(std::string json);
     virtual void printList();
-    virtual void modifyItem(int id, T& newItem);
-    virtual void deleteItem(int id);
+    virtual void modifyItem(uint64_t id, T& newItem);
+    virtual void deleteItem(uint64_t id);
 
 protected:
     virtual std::vector<T> &getListRef();

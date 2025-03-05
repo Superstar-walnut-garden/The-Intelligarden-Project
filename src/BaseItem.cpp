@@ -18,7 +18,7 @@ BaseItem::BaseItem() : id(-1), event_id(-1), name(""), status(false) {}
  * @param name The name of the item.
  * @param status The status of the item.
  */
-BaseItem::BaseItem(int id, int event_id, std::string name, bool status) 
+BaseItem::BaseItem(uint64_t id, int event_id, std::string name, bool status) 
     : id(id), event_id(event_id), name(name), status(status) {}
 
 /**
@@ -30,12 +30,12 @@ BaseItem::~BaseItem() {}
  * @brief Getter for the ID of the item.
  * @return The ID of the item.
  */
-int BaseItem::getId() const 
+uint64_t BaseItem::getId() const 
 {
     return id;
 }
 
-void BaseItem::setId(int id)
+void BaseItem::setId(uint64_t id)
 {
     this->id = id;
 }
@@ -103,7 +103,7 @@ void BaseItem::populateFromJson(std::string json)
 {
     JsonDocument doc;
     deserializeJson(doc, json);
-    this->id = doc["id"].as<int>(); 
+    this->id = doc["id"].as<uint64_t>(); 
     this->event_id = doc["event_id"].as<int>();
     this->name = doc["name"].as<std::string>();
     this->status = doc["status"].as<bool>();
