@@ -12,6 +12,9 @@
 #include "IObserver.hpp"
 #include "SystemTime.hpp"
 #include "GPIOManager.hpp"
+#include "ThermostatManager.hpp"
+#include "ThermostatItem.hpp"
+#include "Scheduler.hpp"
 
 class WebInterface
 {

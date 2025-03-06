@@ -84,13 +84,11 @@ void Display::drawUI()
 
 void Display::update(Temperature *temp)
 {
-    auto *cfg = Configuration::getInstance();
-    auto sensorList = cfg->getSensorList();
     Serial.println("display got an update!");
     text.clear();
-    for (auto sensor : sensorList)
+    temp->forEachSensor([this](TempSensorItem sensor) 
     {
         auto name = sensor.getName();
-        text += name + ": " + to_string_with_precision(temp->getData(name), 2) + "\n";
-    }
+        text += name + ": " + to_string_with_precision(sensor.getTemp(), 2) + "\n";
+    }, false);
 }

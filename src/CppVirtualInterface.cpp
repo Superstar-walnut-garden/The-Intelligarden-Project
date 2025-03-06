@@ -21,6 +21,8 @@
 #include "FirebaseManager.hpp"
 #include "SystemMaintainer.hpp"
 #include "EventManager.hpp"
+#include "ThermostatManager.hpp"
+
 
 int virtualMain()
 {
@@ -42,13 +44,14 @@ int virtualMain()
     auto *eventManager = EventManager::getInstance();
     auto *scheduler = Scheduler::getInstance();
     auto *ioManager = GPIOManager::getInstance();
+    auto *thermostatManager = ThermostatManager::getInstance();
 
-    configuration->attach(temperature); // attach temperature as an observer
     temperature->attach(display); // attach display as an observer
+    temperature->attach(thermostatManager); // attach ThermostatManager as an observer
     systemTime->attach(fbm); // attach firebase-manager as an observer
     systemTime->attach(scheduler); // attach scheduler as an observer
     eventManager->registerListener(ioManager); // attach GPIOManager as an observer
-    eventManager->initializeListeners(); // initialize the listeners
+    eventManager->registerListener(thermostatManager); // attach ThermostatManager as an observer
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
@@ -77,6 +80,8 @@ int virtualMain()
         Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
     }
 
+    eventManager->initializeListeners(); // initialize the listeners (should be after time retrival to ensure schedulers are correctly initialized).
+
     while(true)
     {
         systemMaintainer.refreshCycleTime(); // software implemented watchdog
@@ -89,7 +94,6 @@ int virtualMain()
         systemTime->notifierEngine();
         if(systemTime->isTimeUpdated())
         {
-            //fbm->update(systemTime);
             Scheduler::getInstance()->update(systemTime); // manualy updating the scheduler for debug purposes
         }
         else

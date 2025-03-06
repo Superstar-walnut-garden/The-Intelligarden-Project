@@ -33,7 +33,7 @@ BaseList<T>::BaseList(std::string json)
  * @return T& 
  */
 template <class T>
-T &BaseList<T>::getItem(int id)
+T &BaseList<T>::getItem(uint64_t id)
 {
     static auto nullItem = T(); // item with default parameters (id = -1)
     for(auto &item : list)
@@ -138,7 +138,7 @@ void BaseList<T>::printList()
  * @param newItem new item to replace the old one
  */
 template <class T>
-void BaseList<T>::modifyItem(int id, T& newItem)
+void BaseList<T>::modifyItem(uint64_t id, T& newItem)
 {
     for (auto& item : list)
     {
@@ -157,7 +157,7 @@ void BaseList<T>::modifyItem(int id, T& newItem)
  * @param id  id of the item to delete
  */
 template <class T>
-void BaseList<T>::deleteItem(int id)
+void BaseList<T>::deleteItem(uint64_t id)
 {
     list.erase(std::remove_if(list.begin(), list.end(), [id](T& item) {
         return item.getId() == id;

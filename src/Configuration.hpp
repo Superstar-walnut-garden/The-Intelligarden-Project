@@ -4,11 +4,7 @@
 #include "Time.hpp"
 #include "SystemTime.hpp"
 #include "Subject.hpp"
-#include "TempSensorNode.hpp"
 #include <vector>
-#include "SchedulerList.hpp"
-#include "Scheduler.hpp"
-#include "Pump.hpp"
 #include <SPIFFS.h>
 #include "WifiHotspotData.hpp"
 #include "FBData.hpp"
@@ -22,15 +18,14 @@ constexpr auto sensorFileAddress = "/sensors.txt";
 constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
 constexpr auto gpioFileAddress = "/gpio.txt";
 constexpr auto displayFileAddress = "/display.json";
+constexpr auto thermostatFileAddress = "/thermostat.json";
+constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
 private:
     Configuration();
     static Configuration *instance;
-    std::vector<TempSensorNode> devList;
-    std::vector<TempSensorNode> savedDevList;
-    SchedulerList schedulerList;
     Time currentTime;
     int currentWeekday;
 
@@ -49,30 +44,35 @@ public:
         String ssid;
         String pwd;
     };
-
-    void setPumpSchedule(Time start, Time duration);
-    void setPumpSchedule(String start, String duration);
-    void setWifiCredentials(WifiHotspotData data);
-    void setHotspotCredentials(WifiHotspotData data);
-    void setFirebaseData(FBData data);
-    PumpSchedule getPumpSchedule();
-    std::string getSchedulerList();
     WifiHotspotData getWifiCredentials();
+    void setWifiCredentials(WifiHotspotData data);
+
     WifiHotspotData getHotspotCredentials();
+    void setHotspotCredentials(WifiHotspotData data);
+
     FBData getFirebaseData();
-    void setSchedulerList(std::string json);
+    void setFirebaseData(FBData data);
+    
     void update(SystemTime *systemTime);
-    std::vector<TempSensorNode> getSensorList();
-    void setSensorList(std::vector<TempSensorNode> devList);
-    void storeSensorNames(std::vector<TempSensorNode>& list);
-    void setGPIOList(std::string json);
+
+    std::string getSchedulerList();
+    void setSchedulerList(std::string json);
+
     std::string getGPIOList();
+    void setGPIOList(std::string json);
 
     std::string getEventList();
     void setEventList(const std::string& state);
 
     std::string getDisplayConfig();
     void setDisplayConfig(const std::string& config);
+
+    std::string getThermostatList();
+    void setThermostatList(const std::string& json);
+
+    std::string getRegisteredTempSensorList();
+    void setRegisteredTempSensorList(const std::string& json);
+
 };
 
 #endif // CONFIGURATION_HPP

@@ -63,17 +63,16 @@ void FirebaseManager::update(SystemTime *systemTime)
     Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
     if(firebaseOK and hour != updateTimestamp) // if firebase is ok and the data for this hour is not already uploaded
     {
-        auto sensorList = Configuration::getInstance()->getSensorList();
         auto temperature = Temperature::getInstance();
         auto databasePath = fbData.getDatabaseRootName() + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
                         + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
 
         temperature->read();
         JsonDocument doc; // Adding sensor data to JSON 
-        for(auto sensor : sensorList) 
+        temperature->forEachSensor([&doc, temperature](TempSensorItem sensor)
         { 
             doc[sensor.getName()] = temperature->getData(sensor.getName()); 
-        } 
+        }, true);
         // Serialize JSON to string and print 
         String mergedSensorData; 
         serializeJson(doc, mergedSensorData); 
