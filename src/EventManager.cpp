@@ -43,7 +43,7 @@ EventManager* EventManager::getInstance()
  * @param flag The flag(status) of the event.
  * @param occupied The occupied status of the event.
  */
-void EventManager::createEvent(EventItem eventItem) 
+void EventManager::create(EventItem eventItem) 
 {
     eventList.addItem(eventItem);
     previousFlags[eventItem.getId()] = eventItem.getStatus();
@@ -56,7 +56,7 @@ void EventManager::createEvent(EventItem eventItem)
  * 
  * @param id The ID of the event to remove.
  */
-void EventManager::removeEvent(int id) 
+void EventManager::remove(uint64_t id) 
 {
     eventList.deleteItem(id);
     previousFlags.erase(id);
@@ -69,7 +69,7 @@ void EventManager::removeEvent(int id)
  * @param id The ID of the event to modify.
  * @param newItem The new item to replace the old one.
  */
-void EventManager::modifyEvent(int id, EventItem& newItem) 
+void EventManager::modify(uint64_t id, EventItem newItem) 
 {
     eventList.modifyItem(id, newItem);
     previousFlags[id] = newItem.getFlag();
@@ -83,7 +83,7 @@ void EventManager::modifyEvent(int id, EventItem& newItem)
  * @param id The ID of the event to modify.
  * @param flag The new flag of the event.
  */
-void EventManager::modifyEventFlag(int id, bool flag) 
+void EventManager::modifyEventFlag(uint64_t id, bool flag) 
 {
     EventItem& item = eventList.getItem(id); // get a reference to the item
     if (item.getId() != -1) // Check if the item exists
@@ -102,7 +102,7 @@ void EventManager::modifyEventFlag(int id, bool flag)
  * @return true If the flag has changed.
  * @return false If the flag has not changed.
  */
-bool EventManager::hasEventFlagChanged(int id, bool& newFlag) 
+bool EventManager::hasEventFlagChanged(uint64_t id, bool& newFlag) 
 {
     auto it = previousFlags.find(id);
     if (it != previousFlags.end()) 
@@ -134,7 +134,7 @@ void EventManager::initializeListeners()
  * 
  * @return std::string The event list in JSON format.
  */
-std::string EventManager::getEventListJson() 
+std::string EventManager::getListJson() 
 {
     return eventList.toJson();
 }

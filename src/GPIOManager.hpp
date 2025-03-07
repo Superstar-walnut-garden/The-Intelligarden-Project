@@ -4,20 +4,21 @@
 #include "GPIOList.hpp"
 #include "EventManager.hpp"
 #include "IObserver.hpp"
+#include "IManager.hpp"
 
-class GPIOManager: public IObserver<EventManager>
+class GPIOManager: public IManager<GPIOItem>, public IObserver<EventManager>
 {
 public:
     static GPIOManager* getInstance();
     ~GPIOManager();
-    void createIO(GPIOItem newItem);
-    void removeIO(int id);
-    void modifyIO(int id, GPIOItem newItem);
-    void modifyIOStatus(int id, bool status);
-    void modifyIOExtraParameters(int id, std::string extraParameters);
-    std::string getGPIOListJson();
-    void saveState();
-    void loadState();
+    void create(GPIOItem newItem) override;
+    void remove(uint64_t id) override;
+    void modify(uint64_t id, GPIOItem newItem) override;
+    void modifyIOStatus(uint64_t id, bool status);
+    void modifyIOExtraParameters(uint64_t id, std::string extraParameters);
+    std::string getListJson() override;
+    void saveState() override;
+    void loadState() override;
 
     void syncHardware();
     void update(EventManager* eventManager) override;

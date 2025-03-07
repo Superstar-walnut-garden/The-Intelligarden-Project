@@ -54,7 +54,7 @@ void ThermostatManager::create(ThermostatItem newItem)
  * 
  * @param id The ID of the Thermostat item to remove.
  */
-void ThermostatManager::remove(int id)
+void ThermostatManager::remove(uint64_t id)
 {
     list.deleteItem(id);
     saveState();
@@ -66,7 +66,7 @@ void ThermostatManager::remove(int id)
  * @param id The ID of the Thermostat item to modify.
  * @param newItem The new Thermostat item to replace the old one.
  */
-void ThermostatManager::modify(int id, ThermostatItem newItem)
+void ThermostatManager::modify(uint64_t id, ThermostatItem newItem)
 {
     list.modifyItem(id, newItem);
     saveState();
