@@ -1,9 +1,16 @@
 #include "Temperature.hpp"
 
-// Initialize the static member variable
+/**
+ * @brief Initialize the instance of the Temperature to null.
+ * 
+ */
 Temperature *Temperature::instance = nullptr;
 
-// Singleton instance getter
+/**
+ * @brief Get the singleton instance of the Temperature.
+ * 
+ * @return Temperature* The singleton instance of the Temperature.
+ */
 Temperature *Temperature::getInstance()
 {
     if (!instance)
@@ -11,14 +18,32 @@ Temperature *Temperature::getInstance()
     return instance;
 }
 
-// Constructor
+/**
+ * @brief Construct a new Temperature object.
+ * 
+ */
 Temperature::Temperature() : oneWireBus(15), sensors(&oneWireBus)
 {
     loadState();
     sensors.begin();
 }
 
-// Modify a sensor
+/**
+ * @brief It's not possible to create a sensor directly.
+ * 
+ * @param newItem The new sensor to create.
+ */
+void Temperature::create(TempSensorItem newItem)
+{
+    Serial.println("Error: Cannot create a sensor!");
+}
+
+/**
+ * @brief Modify a sensor.
+ * 
+ * @param id id of the desired sensor.
+ * @param newItem new sensor data.
+ */
 void Temperature::modify(uint64_t id, TempSensorItem newItem)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
@@ -29,7 +54,11 @@ void Temperature::modify(uint64_t id, TempSensorItem newItem)
     saveState();
 }
 
-// Remove a sensor
+/**
+ * @brief Remove a sensor.
+ * 
+ * @param id id of the desired sensor.
+ */
 void Temperature::remove(uint64_t id)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
@@ -37,6 +66,12 @@ void Temperature::remove(uint64_t id)
     saveState();
 }
 
+/**
+ * @brief Iterate over each sensor.
+ * 
+ * @param callback The callback function to call for each sensor.
+ * @param onlyRegisteredSensors If true, only iterate over registered sensors.
+ */
 void Temperature::forEachSensor(std::function<void(TempSensorItem)> callback, bool onlyRegisteredSensors)
 {
     TempSensorList list;
@@ -51,7 +86,11 @@ void Temperature::forEachSensor(std::function<void(TempSensorItem)> callback, bo
     }
 }
 
-// Read temperature data from sensors
+/**
+ * @brief Request a temperature conversion from sensors.
+ * 
+ * @param doNotify If true, notify the observers when data is ready (through observer pattern).
+ */
 void Temperature::read(bool doNotify)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
@@ -66,6 +105,12 @@ void Temperature::read(bool doNotify)
         notify(); // notify the observers when data is ready
 }
 
+/**
+ * @brief Get the temperature from a sensor.
+ * 
+ * @param address The address(id) of the sensor.
+ * @return double The temperature of the sensor.
+ */
 double Temperature::getTempFromSensor(uint64_t address)
 {
     uint8_t formattedAddress[8];
@@ -79,14 +124,25 @@ double Temperature::getTempFromSensor(uint64_t address)
         return -127; // an error code
 }
 
-// Get temperature data by sensor name
+/**
+ * @brief Get temperature data by sensor name.
+ * 
+ * @param name The name of the sensor.
+ * @return double The temperature of the sensor.
+ */
 double Temperature::getData(std::string name)
 {
     auto list = getCompleteList();
     auto item = list.getItem(name);
     return item.getTemp();
 }
-// Get temperature data by sensor address
+
+/**
+ * @brief Get temperature data by sensor id.
+ * 
+ * @param id The id of the sensor.
+ * @return double The temperature of the sensor.
+ */
 double Temperature::getData(uint64_t id)
 {
     auto list = getCompleteList();
@@ -94,6 +150,11 @@ double Temperature::getData(uint64_t id)
     return item.getTemp();
 }
 
+/**
+ * @brief Get a complete list of sensors (merged names from registered sensors into live sensors list).
+ * 
+ * @return TempSensorList The complete list of sensors.
+ */
 TempSensorList Temperature::getCompleteList()
 {
     auto completeList = liveSensorList; // take a copy of the live list
@@ -101,15 +162,21 @@ TempSensorList Temperature::getCompleteList()
     return completeList;
 }
 
-// get the list in json format
+/**
+ * @brief Get the list of sensors in JSON format.
+ * 
+ * @return std::string The list of sensors in JSON format.
+ */
 std::string Temperature::getListJson()
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
-    Serial.println(getCompleteList().getItem(721432011450663464).getTemp());
     return getCompleteList().toJson();
 }
 
-// Obtain the list of sensors connected to the bus
+/**
+ * @brief Scan for ds18b20 sensors on the 1wire bus.
+ * 
+ */
 void Temperature::obtainSensors()
 {
     oneWireBus.begin(15); // restart the bus
@@ -138,6 +205,10 @@ void Temperature::obtainSensors()
     // Serial.println("Sys-Ok: Obtaining sensors completed!");
 }
 
+/**
+ * @brief Save the registered sensors in SPIFFS.
+ * 
+ */
 void Temperature::saveState()
 {
     auto *cfg = Configuration::getInstance();
@@ -149,6 +220,10 @@ void Temperature::saveState()
     cfg->setRegisteredTempSensorList(registeredSensorList.toJson());
 }
 
+/**
+ * @brief Load the registered sensors from SPIFFS.
+ * 
+ */
 void Temperature::loadState()
 {
     auto *cfg = Configuration::getInstance();

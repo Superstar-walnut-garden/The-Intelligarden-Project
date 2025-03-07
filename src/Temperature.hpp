@@ -13,22 +13,23 @@
 #include <Arduino.h>
 #include "TempSensorList.hpp"
 #include <mutex>
+#include "IManager.hpp"
 
-class Temperature : public Subject<Temperature>
+class Temperature : public IManager<TempSensorItem>, public Subject<Temperature>
 {
 public:
     static Temperature *getInstance(); // get singleton instance
     void read(bool doNotify = false); // request a temp conversion from sensors
     double getData(std::string name); // returns sensor data from a registered sensor
     double getData(uint64_t id); // returns sensor data from a registered sensor
-
-    void modify(uint64_t id, TempSensorItem newItem); // modify a sensor
-    void remove(uint64_t id); // delete a sensor
+    void create(TempSensorItem newItem) override;
+    void modify(uint64_t id, TempSensorItem newItem) override; // modify a sensor
+    void remove(uint64_t id) override; // delete a sensor
     void forEachSensor(std::function<void(TempSensorItem)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
 
-    std::string getListJson(); // get a complete list (registered and live sensors) in JSON format
-    void saveState();
-    void loadState();
+    std::string getListJson() override; // get a complete list (registered and live sensors) in JSON format
+    void saveState() override;
+    void loadState() override;
 
 private:
     Temperature(); // private constructor for singleton pattern
