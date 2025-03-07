@@ -1,5 +1,5 @@
-#ifndef WEBINTERFACE_HPP
-#define WEBINTERFACE_HPP
+#ifndef WEBAPIMANAGER_HPP
+#define WEBAPIMANAGER_HPP
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -15,15 +15,21 @@
 #include "ThermostatManager.hpp"
 #include "ThermostatItem.hpp"
 #include "Scheduler.hpp"
+#include "IManager.hpp"
 
-class WebInterface
+class WebApiManager
 {
 public:
-    WebInterface(); // Constructor declaration
+    WebApiManager(); // Constructor declaration
     void init();    // Method to start the web server
+    
 
 private:
+    void createEndpoint(std::string uri, std::function<std::string(std::string)> handler, bool post = false);
+    template <typename ItemType>
+    void createIManagerEndpoints(std::string uri, IManager<ItemType>* manager);
     AsyncWebServer server; // Server object
+    std::string baseUrl;
 };
 
-#endif // WEBINTERFACE_HPP
+#endif
