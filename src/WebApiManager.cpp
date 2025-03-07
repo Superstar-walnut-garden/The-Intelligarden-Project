@@ -171,7 +171,9 @@ void WebApiManager::createIManagerEndpoints(std::string uri, IManager<ItemType>*
     }, true);
     createEndpoint(uri + "/delete", [manager, populator] (std::string data) -> std::string
     {
-        manager->remove(populator(data).getId());
+        auto item = BaseItem(); // only use BaseItem because it only needs the ID
+        item.populateFromJson(data);
+        manager->remove(item.getId());
         return "";
     }, true);
 }
