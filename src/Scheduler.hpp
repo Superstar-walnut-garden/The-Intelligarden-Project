@@ -8,22 +8,23 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "IManager.hpp"
 
-class Scheduler: public IObserver<SystemTime> // SchedulerItem Manager Class
+class Scheduler: public IManager<SchedulerItem>, public IObserver<SystemTime> // SchedulerItem Manager Class
 {
 public:
     static Scheduler* getInstance();
     bool isAnyItemOn();
     void update(SystemTime* systemTime) override;
 
-    void createSchedule(int id, SchedulerItem newItem);
-    void removeSchedule(int id);
-    void modifySchedule(int id, SchedulerItem& newItem);
+    void create(SchedulerItem newItem) override;
+    void remove(uint64_t id) override;
+    void modify(uint64_t id, SchedulerItem newItem) override;
 
-    void saveState();
-    void loadState();
+    void saveState() override;
+    void loadState() override;
 
-    SchedulerList getSchedulerList();
+    std::string getListJson() override;
 
 private:
     Scheduler();

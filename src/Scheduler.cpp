@@ -86,22 +86,21 @@ bool Scheduler::isAnyItemOn()
     return false;
 }
 
-void Scheduler::createSchedule(int id, SchedulerItem schedulerItem) 
+void Scheduler::create(SchedulerItem schedulerItem) 
 {
-    
     list.addItem(schedulerItem);
-    Serial.printf("Schedule %d created\n", id);
+    Serial.printf("Schedule %d created\n", schedulerItem.getId());
     saveState();
 }
 
-void Scheduler::removeSchedule(int id) 
+void Scheduler::remove(uint64_t id) 
 {
     list.deleteItem(id);
     Serial.printf("Schedule %d removed\n", id);
     saveState();
 }
 
-void Scheduler::modifySchedule(int id, SchedulerItem& newItem) 
+void Scheduler::modify(uint64_t id, SchedulerItem newItem) 
 {
     list.modifyItem(id, newItem);
     Serial.printf("Schedule %d modified\n", id);
@@ -120,9 +119,9 @@ void Scheduler::loadState()
         list.repopulateWith(data);
 }
 
-SchedulerList Scheduler::getSchedulerList()
+std::string Scheduler::getListJson()
 {
-    return list;
+    return list.toJson();
 }
 
 void Scheduler::broadcastItem(SchedulerItem &item)
