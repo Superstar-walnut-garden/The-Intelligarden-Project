@@ -88,7 +88,7 @@ WebInterface::WebInterface() : server(80)
         Serial.println((char*)data);
         auto eventItem = EventItem();
         eventItem.populateFromJson((char *)data);
-        EventManager::getInstance()->createEvent(eventItem);
+        EventManager::getInstance()->create(eventItem);
         EventManager::getInstance()->saveState();
     });
 
@@ -101,8 +101,8 @@ WebInterface::WebInterface() : server(80)
     {
         JsonDocument json;
         deserializeJson(json, data);
-        int id = json["id"];
-        EventManager::getInstance()->removeEvent(id);
+        uint64_t id = json["id"];
+        EventManager::getInstance()->remove(id);
         EventManager::getInstance()->saveState();
     });
 
@@ -115,14 +115,14 @@ WebInterface::WebInterface() : server(80)
     {
         auto newItem = EventItem();
         newItem.populateFromJson((char *)data);
-        EventManager::getInstance()->modifyEvent(newItem.getId(), newItem);
+        EventManager::getInstance()->modify(newItem.getId(), newItem);
         EventManager::getInstance()->saveState();
     });
 
     // Endpoint to get the entire list of events
     server.on("/api/getEventList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        std::string eventListJson = EventManager::getInstance()->getEventListJson();
+        std::string eventListJson = EventManager::getInstance()->getListJson();
         request->send(200, "application/json", eventListJson.c_str());
     });
 
@@ -136,7 +136,7 @@ WebInterface::WebInterface() : server(80)
         Serial.println((char*)data);
         auto newItem = SchedulerItem();
         newItem.populateFromJson((char*)data);
-        Scheduler::getInstance()->createSchedule(newItem.getId(), newItem);
+        Scheduler::getInstance()->create(newItem);
         Scheduler::getInstance()->saveState();
     });
 
@@ -149,8 +149,8 @@ WebInterface::WebInterface() : server(80)
     {
         JsonDocument json;
         deserializeJson(json, data);
-        int id = json["id"];
-        Scheduler::getInstance()->removeSchedule(id);
+        uint64_t id = json["id"];
+        Scheduler::getInstance()->remove(id);
         Scheduler::getInstance()->saveState();
     });
 
@@ -163,14 +163,14 @@ WebInterface::WebInterface() : server(80)
     {
         auto newItem = SchedulerItem();
         newItem.populateFromJson((char*)data);
-        Scheduler::getInstance()->modifySchedule(newItem.getId(), newItem);
+        Scheduler::getInstance()->modify(newItem.getId(), newItem);
         Scheduler::getInstance()->saveState();
     });
 
     // Endpoint to get the entire list of schedules
     server.on("/api/getScheduleList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        std::string scheduleListJson = Scheduler::getInstance()->getSchedulerList().toJson();
+        std::string scheduleListJson = Scheduler::getInstance()->getListJson();
         request->send(200, "application/json", scheduleListJson.c_str());
     });
 
@@ -183,7 +183,7 @@ WebInterface::WebInterface() : server(80)
     {
         auto newItem = GPIOItem();
         newItem.populateFromJson((char*)data);
-        GPIOManager::getInstance()->createIO(newItem);
+        GPIOManager::getInstance()->create(newItem);
     });
 
     // Endpoint to delete a GPIO item
@@ -195,8 +195,8 @@ WebInterface::WebInterface() : server(80)
     {
         JsonDocument json;
         deserializeJson(json, data);
-        int id = json["id"];
-        GPIOManager::getInstance()->removeIO(id);
+        uint64_t id = json["id"];
+        GPIOManager::getInstance()->remove(id);
     });
 
     // Endpoint to modify a GPIO item
@@ -208,13 +208,13 @@ WebInterface::WebInterface() : server(80)
     {
         auto newItem = GPIOItem();
         newItem.populateFromJson((char*)data);
-        GPIOManager::getInstance()->modifyIO(newItem.getId(), newItem);
+        GPIOManager::getInstance()->modify(newItem.getId(), newItem);
     });
 
     // Endpoint to get the entire list of GPIO items
     server.on("/api/getGPIOList", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        std::string gpioListJson = GPIOManager::getInstance()->getGPIOListJson();
+        std::string gpioListJson = GPIOManager::getInstance()->getListJson();
         request->send(200, "application/json", gpioListJson.c_str());
     });
 
@@ -239,7 +239,7 @@ WebInterface::WebInterface() : server(80)
     {
         JsonDocument json;
         deserializeJson(json, data);
-        int id = json["id"];
+        uint64_t id = json["id"];
         ThermostatManager::getInstance()->remove(id);
     });
 
