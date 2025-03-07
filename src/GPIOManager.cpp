@@ -43,7 +43,7 @@ GPIOManager* GPIOManager::getInstance()
  * 
  * @param newItem The new GPIO item to add.
  */
-void GPIOManager::createIO(GPIOItem newItem)
+void GPIOManager::create(GPIOItem newItem)
 {
     list.addItem(newItem);
     saveState();
@@ -54,7 +54,7 @@ void GPIOManager::createIO(GPIOItem newItem)
  * 
  * @param id The ID of the GPIO item to remove.
  */
-void GPIOManager::removeIO(int id)
+void GPIOManager::remove(uint64_t id)
 {
     list.deleteItem(id);
     saveState();
@@ -66,7 +66,7 @@ void GPIOManager::removeIO(int id)
  * @param id The ID of the GPIO item to modify.
  * @param newItem The new GPIO item to replace the old one.
  */
-void GPIOManager::modifyIO(int id, GPIOItem newItem)
+void GPIOManager::modify(uint64_t id, GPIOItem newItem)
 {
     list.modifyItem(id, newItem);
     saveState();
@@ -78,7 +78,7 @@ void GPIOManager::modifyIO(int id, GPIOItem newItem)
  * @param id The ID of the GPIO item to modify.
  * @param status The new status of the GPIO item.
  */
-void GPIOManager::modifyIOStatus(int id, bool status)
+void GPIOManager::modifyIOStatus(uint64_t id, bool status)
 {
     GPIOItem& item = list.getItem(id);
     if (item.getId() != -1) // Check if the item exists
@@ -94,7 +94,7 @@ void GPIOManager::modifyIOStatus(int id, bool status)
  * @param id The ID of the GPIO item to modify.
  * @param extraParameters The new extra parameters of the GPIO item.
  */
-void GPIOManager::modifyIOExtraParameters(int id, std::string extraParameters)
+void GPIOManager::modifyIOExtraParameters(uint64_t id, std::string extraParameters)
 {
     GPIOItem& item = list.getItem(id);
     if (item.getId() != -1) // Check if the item exists
@@ -109,7 +109,7 @@ void GPIOManager::modifyIOExtraParameters(int id, std::string extraParameters)
  * 
  * @return std::string The GPIO list in JSON format.
  */
-std::string GPIOManager::getGPIOListJson()
+std::string GPIOManager::getListJson()
 {
     return list.toJson();
 }
