@@ -11,7 +11,7 @@
 #include <SPIFFS.h>
 
 #include "WifiSetup.hpp"
-#include "WebInterface.hpp"
+#include "WebApiManager.hpp"
 #include "SystemTime.hpp"
 #include <Wire.h>
 #include <U8g2lib.h>
@@ -33,8 +33,8 @@ int virtualMain()
     auto &systemMaintainer = SystemMaintainer::getInstance();
     systemMaintainer.start();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
-    WifiSetup *wifiSetup = WifiSetup::getInstance();
-    WebInterface *webInterface = new WebInterface();
+    auto *wifiSetup = WifiSetup::getInstance();
+    auto *webApiManager = new WebApiManager();
     delay(500); // waiting utill reaching system stability
     auto *systemTime = SystemTime::getInstance();
     auto *temperature = Temperature::getInstance();
@@ -56,7 +56,7 @@ int virtualMain()
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
     
-    webInterface->init();
+    webApiManager->init();
     
 
     
