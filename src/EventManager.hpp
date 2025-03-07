@@ -7,25 +7,26 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include "IManager.hpp"
 
-class EventManager : public Subject<EventManager> {
+class EventManager : public IManager<EventItem>, public Subject<EventManager> {
 public:
     static EventManager* getInstance();
 
-    void createEvent(EventItem eventItem);
-    void removeEvent(int id);
-    void modifyEvent(int id, EventItem& newItem);
-    void modifyEventFlag(int id, bool flag);
-    std::string getEventListJson();
+    void create(EventItem eventItem) override;
+    void remove(uint64_t id) override;
+    void modify(uint64_t id, EventItem newItem) override;
+    void modifyEventFlag(uint64_t id, bool flag);
+    std::string getListJson() override;
 
     void registerListener(IObserver<EventManager>* listener);
     // void registerBroadcaster(int eventId, std::function<void(bool)> broadcaster);
 
-    bool hasEventFlagChanged(int id, bool& newFlag);
+    bool hasEventFlagChanged(uint64_t id, bool& newFlag);
     void initializeListeners();
 
-    void saveState();
-    void loadState();
+    void saveState() override;
+    void loadState() override;
 
     void loop();
 
