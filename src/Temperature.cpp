@@ -76,7 +76,13 @@ void Temperature::forEachSensor(std::function<void(TempSensorItem)> callback, bo
 {
     TempSensorList list;
     if(onlyRegisteredSensors)
-        list = registeredSensorList;
+    {
+        forEachSensor([this, &list](TempSensorItem item) // search for registered sensors in the live list
+        { 
+            if(registeredSensorList.doesExist(item)) 
+                list.addItem(item); // add only sensors that have a registered name in "registeredSensorList"
+        }, false);
+    }
     else
         list = getCompleteList();
 
