@@ -28,27 +28,41 @@ void Scheduler::update(SystemTime* systemTime)
     determineStatusofItems();
 }
 
+void Scheduler::update(EventManager* eventManager) 
+{
+    for (auto& item : list.getList())
+    {
+        if(item.getSkipEventId() != -1) // if the item is associated with an event.
+        {
+            bool flag = false;
+            if (eventManager->hasEventFlagChanged(item.getSkipEventId(), flag)) // if the event flag has changed update the status of the item
+            {
+                list.getItem(item.getId()).setSkipped(flag); // use reference to set the status of the actual item.
+            }
+        }
+    }
+}
+
 void Scheduler::determineStatusofItems() 
 {
     auto systemTime = SystemTime::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
     for (auto& item : list.getList()) // iterate over the list of items
     {
+        auto setItemStatus = [](SchedulerItem& item, bool status) // lambda to set the status of item
+        { 
+            if(!status) // if the item is off, cancell the skip
+                item.setSkipped(false);
+            item.setStatus(status and !item.isSkipped()); 
+            Serial.println(("item" + std::to_string(item.getId()) + ": is" + std::to_string(item.getStatus())).c_str());
+        };
         auto& itemRef = list.getItem(item.getId());
         if(item.getMode() == "weekly")
         {
             auto untilTime = item.getStartTime() + item.getDuration();
             auto isCurrentTimeBetweenStartAndEnd = currentTime >= item.getStartTime() && currentTime <= untilTime;
-            if (systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd) // check weekday and time
-            {
-                itemRef.setStatus(true);
-                Serial.printf("item %d is on (with schedule)\n", item.getId());
-            } 
-            else
-            {
-                itemRef.setStatus(false);
-                Serial.printf("item %d is off (with schedule)\n", item.getId());
-            }
+            auto newStatus = (systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd); // check weekday and time
+            setItemStatus(itemRef, newStatus);
             broadcastItem(itemRef); // broadcast the real item (because only the reference gets updated in this "for" statement)
         }
         else if(item.getMode() == "hourly")
@@ -58,17 +72,9 @@ void Scheduler::determineStatusofItems()
             int cyclePosition = 0;
             if(interval != 0) // prevent division by zero
                 cyclePosition = ctime % interval;
-    
-            if (cyclePosition < duration)
-            {
-                itemRef.setStatus(true);
-                Serial.printf("item %d is on (hourly schedule)\n", item.getId());
-            }
-            else
-            {
-                itemRef.setStatus(false);
-                Serial.printf("item %d is off (hourly schedule)\n", item.getId());
-            }
+            
+            auto newStatus = (cyclePosition < duration);
+            setItemStatus(itemRef, newStatus);
             broadcastItem(itemRef);
         }
         else
