@@ -52,6 +52,7 @@ int virtualMain()
     systemTime->attach(scheduler); // attach scheduler as an observer
     eventManager->registerListener(ioManager); // attach GPIOManager as an observer
     eventManager->registerListener(thermostatManager); // attach ThermostatManager as an observer
+    eventManager->registerListener(scheduler); // attach scheduler as an observer
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
