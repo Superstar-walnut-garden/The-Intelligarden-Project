@@ -34,6 +34,7 @@ WifiSetup::WifiSetup()
     Serial.println(password.c_str());
 
     // Connect to WiFi with the stored credentials
+    WiFi.setAutoReconnect(false);
     WiFi.setSleep(false);
     WiFi.mode(WIFI_AP_STA);
     WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
@@ -47,6 +48,8 @@ WifiSetup::WifiSetup()
         {
             localCounter = 0;
             Serial.println(" Failed to connect!");
+            WiFi.setAutoReconnect(false);
+            WiFi.disconnect();
             break;
         }
     }
