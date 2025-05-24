@@ -121,7 +121,6 @@ std::string GPIOManager::getListJson()
 void GPIOManager::saveState()
 {
     Configuration::getInstance()->setGPIOList(list.toJson());
-    syncHardware();
 }
 
 /**
@@ -145,6 +144,7 @@ void GPIOManager::syncHardware()
 {
     for (auto& item : list.getList())
     {
+        auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
             pinMode(item.getPin(), OUTPUT);
@@ -152,7 +152,9 @@ void GPIOManager::syncHardware()
         } else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
-            item.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
+            itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
+            if(item.getEventId() != -1)
+                EventManager::getInstance()->modifyEventFlag(item.getEventId(), itemRef.getStatus());
         }
     }
 }
@@ -175,5 +177,4 @@ void GPIOManager::update(EventManager* eventManager)
             }
         }
     }
-    syncHardware();
 }
