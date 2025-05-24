@@ -101,6 +101,7 @@ int virtualMain()
             Serial.println("warning: time is not available due to connection error at the system startup!");
         
         eventManager->loop();
+        ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
     }
     return 0;
