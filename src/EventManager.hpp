@@ -23,6 +23,7 @@ public:
     // void registerBroadcaster(int eventId, std::function<void(bool)> broadcaster);
 
     bool hasEventFlagChanged(uint64_t id, bool& newFlag);
+    bool getEventFlag(uint64_t id);
     void initializeListeners();
 
     void saveState() override;

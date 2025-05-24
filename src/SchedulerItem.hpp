@@ -9,7 +9,7 @@ class SchedulerItem: public BaseItem
 {
     public:
     SchedulerItem();
-    SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode = "weekly");
+    SchedulerItem(uint64_t id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode = "weekly", bool skipped = false);
     Time getStartTime();
     Time getDuration();
     void setStartTime(Time start);
@@ -19,7 +19,9 @@ class SchedulerItem: public BaseItem
     void setEnabled(bool enabled);
     void setMode(std::string mode);
     std::string getMode();
-    
+    void setSkipped(bool skipped);
+    bool isSkipped();
+    short getSkipEventId();
     private:
     void populateDerivedClassFromJson(JsonDocument &doc) override;
     void derivedClassToJson(JsonDocument &doc) override;
@@ -29,6 +31,8 @@ class SchedulerItem: public BaseItem
     Time duration;
     std::string weekday;
     bool enabled;
+    short skipEvent_id;
+    bool skipped;
 };
 
 #endif

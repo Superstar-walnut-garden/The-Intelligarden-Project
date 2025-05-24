@@ -1,10 +1,10 @@
 #include "SchedulerItem.hpp"
 
 SchedulerItem::SchedulerItem() 
-    : BaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode("") {}
+    : BaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) {}
 
-SchedulerItem::SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode)
-    :BaseItem(id, event_id, name, on), start(start), duration(duration), weekday(weekday), enabled(enabled), mode(mode) {}
+SchedulerItem::SchedulerItem(uint64_t id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode, bool skipped)
+    :BaseItem(id, event_id, name, on), start(start), duration(duration), weekday(weekday), enabled(enabled), mode(mode), skipped(skipped) {}
 
 Time SchedulerItem::getStartTime() 
 {
@@ -50,6 +50,21 @@ std::string SchedulerItem::getMode()
     return mode;
 }
 
+void SchedulerItem::setSkipped(bool skipped)
+{
+    this->skipped = skipped;
+}
+
+bool SchedulerItem::isSkipped()
+{
+    return skipped;
+}
+
+short SchedulerItem::getSkipEventId()
+{
+    return skipEvent_id;
+}
+
 void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     this->start = Time::parse(doc["start"].as<std::string>().c_str());
@@ -57,6 +72,8 @@ void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
     this->weekday = doc["weekday"].as<std::string>();
     this->enabled = doc["enabled"].as<bool>();
     this->mode = doc["mode"].as<std::string>();
+    this->skipped = doc["skipped"].as<bool>();
+    this->skipEvent_id = doc["skipEvent_id"].as<short>();
 }
 
 void SchedulerItem::derivedClassToJson(JsonDocument &doc)
@@ -66,4 +83,6 @@ void SchedulerItem::derivedClassToJson(JsonDocument &doc)
     doc["weekday"] = getWeekday();
     doc["enabled"] = isEnabled();
     doc["mode"] = getMode();
+    doc["skipped"] = isSkipped();
+    doc["skipEvent_id"] = skipEvent_id;
 }
