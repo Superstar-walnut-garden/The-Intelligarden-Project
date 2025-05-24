@@ -101,7 +101,7 @@ short SystemTime::getDay()
 // Get the current month
 short SystemTime::getMonth()
 {
-    return rtc.getMonth();
+    return rtc.getMonth() + 1;
 }
 
 // Get the current year

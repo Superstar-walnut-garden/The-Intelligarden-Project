@@ -1,23 +1,41 @@
 #ifndef SCHEDULER_HPP
 #define SCHEDULER_HPP
+
 #include "SchedulerList.hpp"
+#include "EventManager.hpp"
 #include "Time.hpp"
 #include "SystemTime.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
+#include "IManager.hpp"
 
-class Scheduler // SchedulerItem Manager Class
+class Scheduler: public IManager<SchedulerItem>, public IObserver<SystemTime> // SchedulerItem Manager Class
 {
-    public:
-    Scheduler(SchedulerList &list);
-    void determineStatusofItems();
+public:
+    static Scheduler* getInstance();
     bool isAnyItemOn();
+    void update(SystemTime* systemTime) override;
 
-    private:
-    SchedulerList &list;
-    Time time;
-    int weekday;
+    void create(SchedulerItem newItem) override;
+    void remove(uint64_t id) override;
+    void modify(uint64_t id, SchedulerItem newItem) override;
+
+    void saveState() override;
+    void loadState() override;
+
+    std::string getListJson() override;
+
+private:
+    Scheduler();
+    ~Scheduler();
+    Scheduler(const Scheduler&) = delete;
+    Scheduler& operator=(const Scheduler&) = delete;
+    void determineStatusofItems();
+    void broadcastItem(SchedulerItem &item);
+
+    static Scheduler* instance;
+    SchedulerList list;
 };
 
-#endif
+#endif // SCHEDULER_HPP

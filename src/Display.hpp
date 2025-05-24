@@ -2,6 +2,7 @@
 #define DISPLAY_HPP
 
 #include <U8g2lib.h>
+#include <LiquidCrystal_I2C.h>
 #include "Configuration.hpp"
 #include "Temperature.hpp"
 #include <iostream>
@@ -25,7 +26,9 @@ private:
     Display();
     std::string text;
     OLedPanel oled;
+    LiquidCrystal_I2C charLcd;
     static Display *instance;
+    std::string displayType;
 };
 
 #endif // DISPLAY_HPP

@@ -4,28 +4,28 @@
 #include "Time.hpp"
 #include "SystemTime.hpp"
 #include "Subject.hpp"
-#include "TempSensorNode.hpp"
 #include <vector>
-#include "SchedulerList.hpp"
-#include "Scheduler.hpp"
-#include "Pump.hpp"
 #include <SPIFFS.h>
 #include "WifiHotspotData.hpp"
+#include "FBData.hpp"
+#include <string>
 
 constexpr auto pumpFileAddress = "/schedule.txt";
 constexpr auto wifiFileAddress = "/wifi_credentials.txt";
 constexpr auto hotspotFileAddress = "/hotspot_credentials.txt";
 constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
+constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
+constexpr auto gpioFileAddress = "/gpio.txt";
+constexpr auto displayFileAddress = "/display.json";
+constexpr auto thermostatFileAddress = "/thermostat.json";
+constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
 private:
     Configuration();
     static Configuration *instance;
-    std::vector<TempSensorNode> devList;
-    std::vector<TempSensorNode> savedDevList;
-    SchedulerList schedulerList;
     Time currentTime;
     int currentWeekday;
 
@@ -44,20 +44,35 @@ public:
         String ssid;
         String pwd;
     };
-
-    void setPumpSchedule(Time start, Time duration);
-    void setPumpSchedule(String start, String duration);
-    void setWifiCredentials(WifiHotspotData data);
-    void setHotspotCredentials(WifiHotspotData data);
-    PumpSchedule getPumpSchedule();
-    SchedulerList getSchedulerList();
     WifiHotspotData getWifiCredentials();
+    void setWifiCredentials(WifiHotspotData data);
+
     WifiHotspotData getHotspotCredentials();
-    void setSchedulerList(const char *json, int length = 1024);
+    void setHotspotCredentials(WifiHotspotData data);
+
+    FBData getFirebaseData();
+    void setFirebaseData(FBData data);
+    
     void update(SystemTime *systemTime);
-    std::vector<TempSensorNode> getSensorList();
-    void setSensorList(std::vector<TempSensorNode> devList);
-    void storeSensorNames(std::vector<TempSensorNode>& list);
+
+    std::string getSchedulerList();
+    void setSchedulerList(std::string json);
+
+    std::string getGPIOList();
+    void setGPIOList(std::string json);
+
+    std::string getEventList();
+    void setEventList(const std::string& state);
+
+    std::string getDisplayConfig();
+    void setDisplayConfig(const std::string& config);
+
+    std::string getThermostatList();
+    void setThermostatList(const std::string& json);
+
+    std::string getRegisteredTempSensorList();
+    void setRegisteredTempSensorList(const std::string& json);
+
 };
 
 #endif // CONFIGURATION_HPP

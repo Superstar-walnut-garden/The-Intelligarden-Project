@@ -3,29 +3,32 @@
 #include "Time.hpp"
 #include <ArduinoJson.h>
 #include <string>
+#include "BaseItem.hpp"
 
-class SchedulerItem
+class SchedulerItem: public BaseItem
 {
     public:
-    SchedulerItem(short id, Time start, Time duration, std::string weekday, bool situation, bool currentStatus);
-    int getId();
+    SchedulerItem();
+    SchedulerItem(short id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode = "weekly");
     Time getStartTime();
     Time getDuration();
+    void setStartTime(Time start);
+    void setDuration(Time duration);
     std::string getWeekday();
-    bool isOn();
     bool isEnabled();
-    std::string toJson();
-
-    void enable();
-    void disable();
-    void powerOn();
-    void powerOff();
+    void setEnabled(bool enabled);
+    void setMode(std::string mode);
+    std::string getMode();
+    
     private:
-    short id;
+    void populateDerivedClassFromJson(JsonDocument &doc) override;
+    void derivedClassToJson(JsonDocument &doc) override;
+
+    std::string mode;
     Time start;
     Time duration;
     std::string weekday;
-    bool enabled, on;
+    bool enabled;
 };
 
 #endif

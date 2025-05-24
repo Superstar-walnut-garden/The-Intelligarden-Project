@@ -16,62 +16,72 @@ let sensors = {
 
 let scheduleData = [
     {
-        "id": "0",
-        "start": "06:09",
-        "duration": "05:30",
-        "weekday": "1010000",
-        "enabled": false,
-        "on": false
-    },
-    {
-        "id": "1",
-        "start": "13:31",
-        "duration": "01:00",
-        "weekday": "0110000",
+        "id": 0,
+        "event_id": -1,
+        "name": "pump schedule",
+        "start": "18:00",
+        "duration": "01:15",
+        "weekday": "1111111",
         "enabled": true,
-        "on": false
-    },
-    {
-        "id": "2",
-        "start": "08:00",
-        "duration": "01:00",
-        "weekday": "0010000",
-        "enabled": true,
-        "on": false
-    },
-    {
-        "id": "3",
-        "start": "07:30",
-        "duration": "01:00",
-        "weekday": "0010100",
-        "enabled": true,
-        "on": false
-    },
-    {
-        "id": "4",
-        "start": "12:30",
-        "duration": "07:00",
-        "weekday": "0000100",
-        "enabled": false,
-        "on": false
-    },
-    {
-        "id": "5",
-        "start": "05:09",
-        "duration": "06:00",
-        "weekday": "0101000",
-        "enabled": false,
         "on": true
+        
     },
     {
-        "id": "6",
-        "start": "13:09",
-        "duration": "04:00",
-        "weekday": "1100000",
-        "enabled": false,
+        "id": 1,
+        "event_id": -1,
+        "name": "Fan schedule",
+        "start": "18:00",
+        "duration": "01:15",
+        "weekday": "1111111",
+        "enabled": true,
+        "on": true
+    }
+];
+
+let eventList = [
+    {
+        "id": 0,
+        "name": "pump event",
+        "occupied": false,
+        "on": false
+    },
+    {
+        "id": 1,
+        "name": "Lights event",
+        "occupied": false,
+        "on": false
+    },
+    {
+        "id": 2,
+        "name": "Fan event",
+        "occupied": false,
+        "on": false
+    },
+    {
+        "id": 3,
+        "name": "valve event",
+        "occupied": false,
         "on": false
     }
 ];
+
+let pinList = [
+    {
+        "id": 16,
+        "name": "valve pin",
+        "status": false,
+        "mode": 1,
+        "event_id": 3
+    },
+    {
+        "id": 20,
+        "name": "Lamp pin",
+        "status": false,
+        "mode": 1,
+        "event_id": 1
+    },
+];
+
 let currentTimeData = {
     "time": "6:45",
     "weekday": "1000000"
@@ -82,11 +92,30 @@ app.get('/getCurrentTime', (req, res) => {
     console.log("getCurrentTime request handled!");
 });
 
-app.get('/getPumpSchedule', (req, res) => {
+app.get('/getScheduleList', (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(scheduleData);
     console.log("getPumpSchedule request handled!");
 });
+
+app.post('/createSchedule', (req, res) => {
+    const newSchedule = req.body;
+    scheduleData.push(newSchedule);
+    res.status(200).send('Schedule created');
+});
+
+app.post('/deleteSchedule', (req, res) => {
+    const { id } = req.body;
+    scheduleData = scheduleData.filter(schedule => schedule.id !== id);
+    res.status(200).send('Schedule deleted');
+});
+
+app.post('/modifySchedule', (req, res) => {
+    const updatedSchedule = req.body;
+    scheduleData = scheduleData.map(schedule => schedule.id === updatedSchedule.id ? updatedSchedule : schedule);
+    res.status(200).send('Schedule modified');
+});
+
 app.post('/setPumpSchedule', (req, res) => {
     scheduleData = req.body;
     console.log("setPumpSchedule request handled!");
@@ -102,6 +131,54 @@ app.post('/setSensorList', (req, res) => {
     console.log(req.body);
     sensors = req.body;
     res.status(200).send('Data received');
+});
+
+app.get('/getEventList', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.json(eventList);
+    console.log("getEventList request handled!");
+});
+
+app.post('/createEvent', (req, res) => {
+    const newEvent = req.body;
+    eventList.push(newEvent);
+    res.status(200).send('Event created');
+});
+
+app.post('/deleteEvent', (req, res) => {
+    const { id } = req.body;
+    eventList = eventList.filter(event => event.id !== id);
+    res.status(200).send('Event deleted');
+});
+
+app.post('/modifyEvent', (req, res) => {
+    const updatedSchedule = req.body;
+    eventList = eventList.map(event => event.id === updatedEvent.id ? updatedEvent : event);
+    res.status(200).send('Event modified');
+});
+
+app.get('/getGPIOList', (req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.json(pinList);
+    console.log("getGPIOList request handled!");
+});
+
+app.post('/createGPIO', (req, res) => {
+    const newPin = req.body;
+    pinList.push(newPin);
+    res.status(200).send('GPIO created');
+});
+
+app.post('/deleteGPIO', (req, res) => {
+    const { id } = req.body;
+    pinList = pinList.filter(pin => pin.id !== id);
+    res.status(200).send('GPIO deleted');
+});
+
+app.post('/modifyGPIO', (req, res) => {
+    const updatedGPIO = req.body;
+    pinList = pinList.map(pin => pin.id === updatedGPIO.id ? updatedGPIO : pin);
+    res.status(200).send('GPIO modified');
 });
 
 app.listen(port, () => {

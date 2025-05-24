@@ -1,0 +1,28 @@
+[
+    {
+        "id": 0,
+        "event_id": -1,
+        "heaterEvent_id": -1,
+        "coolerEvent_id": -1,
+        "sensor": -1,
+        "name": "Thermostat 0",
+        "setpoint": 28,
+        "altSetpoint": 18,
+        "hysteresis": 2,
+        "enabled": true,
+        "status": false
+    },
+    {
+        "id": 1,
+        "event_id": -1,
+        "heaterEvent_id": -1,
+        "coolerEvent_id": -1,
+        "sensor": -1,
+        "name": "Thermostat 1",
+        "setpoint": 26,
+        "altSetpoint": 24,
+        "hysteresis": 0.5,
+        "enabled": true,
+        "status": false
+    }
+]

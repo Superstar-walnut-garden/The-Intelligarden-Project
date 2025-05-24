@@ -34,6 +34,8 @@ WifiSetup::WifiSetup()
     Serial.println(password.c_str());
 
     // Connect to WiFi with the stored credentials
+    WiFi.setSleep(false);
+    WiFi.mode(WIFI_AP_STA);
     WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
     WiFi.begin(ssid.c_str(), password.c_str());
     while (WiFi.status() != WL_CONNECTED)
