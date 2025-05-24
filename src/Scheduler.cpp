@@ -30,17 +30,18 @@ void Scheduler::update(SystemTime* systemTime)
 
 void Scheduler::update(EventManager* eventManager) 
 {
-    for (auto& item : list.getList())
-    {
-        if(item.getSkipEventId() != -1) // if the item is associated with an event.
-        {
-            bool flag = false;
-            if (eventManager->hasEventFlagChanged(item.getSkipEventId(), flag)) // if the event flag has changed update the status of the item
-            {
-                list.getItem(item.getId()).setSkipped(flag); // use reference to set the status of the actual item.
-            }
-        }
-    }
+    // for (auto& item : list.getList())
+    // {
+    //     if(item.getSkipEventId() != -1) // if the item is associated with an event.
+    //     {
+    //         bool flag = false;
+    //         if (eventManager->hasEventFlagChanged(item.getSkipEventId(), flag)) // if the event flag has changed update the status of the item
+    //         {
+    //             if(flag) // Only Skip on Rising-Edge of The Event
+    //                 list.getItem(item.getId()).setSkipped(flag); // use reference to skip the actual item.
+    //         }
+    //     }
+    // }
 }
 
 void Scheduler::determineStatusofItems() 
@@ -53,6 +54,9 @@ void Scheduler::determineStatusofItems()
         { 
             if(!status) // if the item is off, cancell the skip
                 item.setSkipped(false);
+            else if(item.getSkipEventId() != -1) // if the item is on, and associated with an event.
+                item.setSkipped(EventManager::getInstance()->getEventFlag(item.getSkipEventId())); // skip the item if the event status is "true".
+            
             item.setStatus(status and !item.isSkipped()); 
             Serial.println(("item" + std::to_string(item.getId()) + ": is" + std::to_string(item.getStatus())).c_str());
         };
