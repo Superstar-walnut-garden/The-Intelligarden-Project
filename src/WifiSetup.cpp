@@ -1,4 +1,6 @@
 #include "WifiSetup.hpp"
+#include <thread>
+
 
 // Static member variable initialization
 WifiSetup *WifiSetup::instance = nullptr;
@@ -21,6 +23,21 @@ bool WifiSetup::isConnected()
 WifiSetup::WifiSetup()
 {
     auto wifiCred = Configuration::getInstance()->getWifiCredentials();
+    // Start the Wi-Fi reconnect thread
+    std::thread wifiThread([this, wifiCred]()
+    {
+        while(true)
+        {
+            if(!isConnected()) // if not connected
+                connect(wifiCred); // retry
+            std::this_thread::sleep_for(std::chrono::minutes(1)); // Check every 2 minutes
+        }
+    });
+    wifiThread.detach(); // Run independently
+}
+
+void WifiSetup::connect(WifiHotspotData wifiCred)
+{
     auto ssid = wifiCred.getSsid();
     auto password = wifiCred.getPassword();
     auto local_IP = wifiCred.getIP();
@@ -28,29 +45,54 @@ WifiSetup::WifiSetup()
     auto subnet = wifiCred.getSubnet();
     auto primaryDNS = wifiCred.getPrimaryDNS();
     auto secondaryDNS = wifiCred.getSecondaryDNS();
+    auto wifiOn = wifiCred.isOn();
 
-    Serial.print("Connecting to ");
-    Serial.println(ssid.c_str());
-    Serial.println(password.c_str());
 
     // Connect to WiFi with the stored credentials
     WiFi.setAutoReconnect(false);
+    WiFi.scanNetworks(false);
     WiFi.setSleep(false);
-    WiFi.mode(WIFI_AP_STA);
-    WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
-    WiFi.begin(ssid.c_str(), password.c_str());
-    while (WiFi.status() != WL_CONNECTED)
+    if(wifiOn)
     {
-        static int localCounter = 0;
-        delay(500);
-        Serial.print(".");
-        if (localCounter++ > 15)
+        Serial.println("wifi is on!");
+        Serial.print("Connecting to ");
+        Serial.println(ssid.c_str());
+        Serial.println(password.c_str());
+        WiFi.mode(WIFI_AP_STA);
+        WiFi.config(local_IP, gateway, subnet, primaryDNS, secondaryDNS);
+        WiFi.begin(ssid.c_str(), password.c_str());
+        while (WiFi.status() != WL_CONNECTED)
         {
-            localCounter = 0;
-            Serial.println(" Failed to connect!");
-            WiFi.setAutoReconnect(false);
-            WiFi.disconnect();
-            break;
+            static int localCounter = 0;
+            delay(500);
+            if (localCounter++ > 15)
+            {
+                localCounter = 0;
+                Serial.println(" Failed to connect!");
+                WiFi.setAutoReconnect(false);
+                WiFi.disconnect();
+                break;
+            }
         }
     }
+    else
+    {
+        Serial.println("wifi is of :(((((((");
+        WiFi.disconnect();
+        WiFi.mode(WIFI_AP); // turn off wifi and only work with hotspot
+    }
+    if(isConnected())
+        connectFlag.store(true); // Raise flag
+}
+
+void WifiSetup::onConnect(std::function<void()> callback)
+{
+    onConnectCallback = callback;
+}
+
+void WifiSetup::loop()
+{
+    if (connectFlag.exchange(false)) // Check and reset flag atomically
+        if (onConnectCallback) 
+            onConnectCallback();
 }
