@@ -50,7 +50,6 @@ void WifiSetup::connect(WifiHotspotData wifiCred)
 
     // Connect to WiFi with the stored credentials
     WiFi.setAutoReconnect(false);
-    WiFi.scanNetworks(false);
     WiFi.setSleep(false);
     if(wifiOn)
     {
