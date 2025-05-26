@@ -61,8 +61,7 @@ int virtualMain()
     
 
     
-
-    if(wifiSetup->isConnected())
+    wifiSetup->onConnect([systemTime, fbm]()
     {
         systemTime->obtainTime();
         if(systemTime->isTimeUpdated())
@@ -72,14 +71,15 @@ int virtualMain()
             fbm->init();
             fbm->update(systemTime);
         }
-    }
+    });
+
     Serial.println("Sys-OK: All of the system components are initialized!");
 
-    if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
-    {
-        auto networkAbnormalityID = systemMaintainer.createTrackableAbnormality("network issue", 2); // system abnormality reported!
-        Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
-    }
+    // if(!systemTime->isTimeUpdated() or !wifiSetup->isConnected())
+    // {
+    //     auto networkAbnormalityID = systemMaintainer.createTrackableAbnormality("network issue", 2); // system abnormality reported!
+    //     Serial.println("Sys-Error: No internet access. Check your router! System will be rebooted 2 minutes later!");
+    // }
 
     eventManager->initializeListeners(); // initialize the listeners (should be after time retrival to ensure schedulers are correctly initialized).
 
@@ -101,6 +101,7 @@ int virtualMain()
             Serial.println("warning: time is not available due to connection error at the system startup!");
         
         eventManager->loop();
+        wifiSetup->loop();
         ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
     }

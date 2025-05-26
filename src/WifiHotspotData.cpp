@@ -16,6 +16,7 @@ WifiHotspotData::WifiHotspotData(const char* json)
     subnet = doc["subnet"].as<std::string>();
     primaryDNS = doc["primaryDNS"].as<std::string>();
     secondaryDNS = doc["secondaryDNS"].as<std::string>();
+    on = doc["on"].as<bool>();
 }
 std::string WifiHotspotData::toJsonString()
 {
@@ -27,6 +28,7 @@ std::string WifiHotspotData::toJsonString()
     doc["subnet"] = subnet;
     doc["primaryDNS"] = primaryDNS;
     doc["secondaryDNS"] = secondaryDNS;
+    doc["on"] = on;
     std::string output;
     serializeJson(doc, output);
     return output;
@@ -73,4 +75,8 @@ IPAddress WifiHotspotData::getSecondaryDNS()
     if(!secondaryDNS.empty())
         ip.fromString(secondaryDNS.c_str());
     return ip;
+}
+bool WifiHotspotData::isOn()
+{
+    return on;
 }
