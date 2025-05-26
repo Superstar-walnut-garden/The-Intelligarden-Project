@@ -30,7 +30,7 @@ WifiSetup::WifiSetup()
         {
             if(!isConnected()) // if not connected
                 connect(wifiCred); // retry
-            std::this_thread::sleep_for(std::chrono::minutes(1)); // Check every 2 minutes
+            std::this_thread::sleep_for(std::chrono::minutes(2)); // Check every 2 minutes
         }
     });
     wifiThread.detach(); // Run independently
