@@ -10,12 +10,13 @@
 #include <iostream>
 #include "IManager.hpp"
 
-class Scheduler: public IManager<SchedulerItem>, public IObserver<SystemTime> // SchedulerItem Manager Class
+class Scheduler: public IManager<SchedulerItem>, public IObserver<SystemTime>, public IObserver<EventManager> // SchedulerItem Manager Class
 {
 public:
     static Scheduler* getInstance();
     bool isAnyItemOn();
     void update(SystemTime* systemTime) override;
+    void update(EventManager* eventManager) override;
 
     void create(SchedulerItem newItem) override;
     void remove(uint64_t id) override;

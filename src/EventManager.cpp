@@ -117,6 +117,24 @@ bool EventManager::hasEventFlagChanged(uint64_t id, bool& newFlag)
 }
 
 /** 
+ * @brief Get the flag (status) of an event.
+ * 
+ * @param id The ID of the event.
+ * @return true If the event is triggered.
+ * @return false If the event is not triggered.
+ */
+bool EventManager::getEventFlag(uint64_t id)
+{
+    for(auto& item : eventList.getList()) // loop through the event list
+    {
+        if(item.getId() == id) // check if the event ID is found
+        {
+            return item.getFlag(); // return the flag (status) of the event
+        }
+    }
+    return false; // Return false if the event ID is not found
+}
+/** 
  * @brief Initialize the listeners by triggering a dummy event change (by inverting the previous event status) to notify all the listeners.
  * 
  */

@@ -17,6 +17,8 @@ class WifiHotspotData // Wifi Setup Data Parser
     IPAddress getSubnet();
     IPAddress getPrimaryDNS();
     IPAddress getSecondaryDNS();
+    bool isOn();
+
     private:
     std::string ssid;
     std::string password;
@@ -25,6 +27,7 @@ class WifiHotspotData // Wifi Setup Data Parser
     std::string subnet;
     std::string primaryDNS;
     std::string secondaryDNS;
+    bool on;
 };
 
 #endif
