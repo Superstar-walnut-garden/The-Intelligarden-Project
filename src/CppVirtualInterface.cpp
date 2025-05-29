@@ -60,14 +60,12 @@ int virtualMain()
     webApiManager->init();
     
 
-    
-    wifiSetup->onConnect([systemTime, fbm]()
+    // when internet is available
+    wifiSetup->onOnline([systemTime, fbm]() 
     {
         systemTime->obtainTime();
         if(systemTime->isTimeUpdated())
         {
-            Serial.println("");
-            Serial.println("WiFi connected.");
             fbm->init();
             fbm->update(systemTime);
         }
@@ -87,7 +85,7 @@ int virtualMain()
     {
         systemMaintainer.refreshCycleTime(); // software implemented watchdog
         delay(1); // For other threads to work.this should be 1ms in the main setup
-        Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
+        Serial.print(wifiSetup->isConnected() ? "Wifi is Connected!" : "Wifi is disconnected!");
         display->drawUI();
         delay(100);
 
