@@ -76,7 +76,7 @@ void WifiSetup::connect(WifiHotspotData wifiCred)
     }
     else
     {
-        Serial.println("wifi is of :(((((((");
+        Serial.println("wifi is off :(((((((");
         WiFi.disconnect();
         WiFi.mode(WIFI_AP); // turn off wifi and only work with hotspot
     }
