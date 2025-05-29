@@ -104,6 +104,11 @@ int virtualMain()
         wifiSetup->loop();
         ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
+
+        // Convert to time_t for formatting
+        std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        // Format and print the time
+        std::cout << "Current time: " << std::put_time(std::localtime(&currentTime), "%Y-%m-%d %H:%M:%S") << std::endl;
     }
     return 0;
 }
