@@ -1,10 +1,17 @@
 #include "SystemTime.hpp"
 
 
-// Initialize the static member variable
+/**
+ * @brief instance initialization for the singleton pattern
+ * 
+ */
 SystemTime *SystemTime::instance = nullptr;
 
-// Singleton instance getter
+/**
+ * @brief get the singleton instance of SystemTime.
+ * 
+ * @return SystemTime* 
+ */
 SystemTime *SystemTime::getInstance()
 {
     if (!instance)
@@ -12,7 +19,10 @@ SystemTime *SystemTime::getInstance()
     return instance;
 }
 
-// Constructor
+/**
+ * @brief Construct a new SystemTime::SystemTime object
+ * 
+ */
 SystemTime::SystemTime() 
 : rtc(0), timeClient(ntpUDP), timeUpdated(false), externalRTCEnabled(false), setTimeAutomatically(true), ntpUpdated(false)
 {
@@ -27,7 +37,10 @@ SystemTime::SystemTime()
     }
 }
 
-// Obtain time from NTP server and update the RTC
+/**
+ * @brief try to obtain the current time from an NTP server.
+ * 
+ */
 void SystemTime::obtainTime()
 {
     if(setTimeAutomatically and !ntpUpdated)
@@ -88,43 +101,72 @@ void SystemTime::obtainTime()
     }
 }
 
-// Check if time was updated successfully
+/**
+ * @brief check if the time has been updated from ntp server, internal rtc or external rtc successfully.
+ * 
+ * @return true 
+ * @return false 
+ */
 bool SystemTime::isTimeUpdated()
 {
     return timeUpdated;
 }
 
-// Get the current minute
+/**
+ * @brief get current minute.
+ * 
+ * @return short 
+ */
 short SystemTime::getMinute()
 {
     return rtc.getMinute();
 }
 
-// Get the current hour
+/**
+ * @brief get current hour in 24-hour format.
+ * 
+ * @return short 
+ */
 short SystemTime::getHour()
 {
     return rtc.getHour(true);
 }
 
-// Get the current day
+/**
+ * @brief Get the current day of the month.
+ * 
+ * @return short 
+ */
 short SystemTime::getDay()
 {
     return rtc.getDay();
 }
 
-// Get the current month
+/**
+ * @brief Get the current month (1-12).
+ * 
+ * @return short 
+ */
 short SystemTime::getMonth()
 {
     return rtc.getMonth() + 1;
 }
 
-// Get the current year
+/**
+ * @brief Get the current year (e.g. 2024).
+ * 
+ * @return short 
+ */
 short SystemTime::getYear()
 {
     return rtc.getYear();
 }
 
-// Handle time update failure
+/**
+ * @brief Handle the case when the system loses track of time.
+ * This function is called when the system fails to reach the time server or loses power.
+ * It resets the timeUpdated flag and prints an error message.
+ */
 void SystemTime::lostTrackOfTime()
 {
     Serial.println("Error: Couldn't reach time server!!!");
