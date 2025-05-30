@@ -1,5 +1,5 @@
 {
-    "timezone": "Asia/Tehran", 
+    "timezone": "IRST-3:30", 
     "ntpServer": "pool.ntp.org", 
     "timeSubsystemInitialized": false, 
     "externalRTCAvailable": false, 
