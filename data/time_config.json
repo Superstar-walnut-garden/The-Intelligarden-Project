@@ -1,0 +1,10 @@
+{
+    "timezone": "Asia/Tehran", 
+    "ntpServer": "pool.ntp.org", 
+    "timeSubsystemInitialized": false, 
+    "externalRTCAvailable": false, 
+    "setTimeAutomatically": true, 
+    "ntpUpdated": false, 
+    "manualTimeSetFlag": false, 
+    "manualTimeEpoch": 0
+}
