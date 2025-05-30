@@ -91,6 +91,19 @@ void WebApiManager::init()
         return "";
     }, true);
 
+    createEndpoint("/time-config", [](std::string data) -> std::string
+    {
+        auto timeConfig = SystemTime::getInstance()->getConfig();
+        return timeConfig;
+    }); // get request
+
+    createEndpoint("/time-config", [](std::string data) -> std::string
+    {
+        SystemTime::getInstance()->setConfig(TimeConfigData(data).toJson());
+        Serial.println("Time configuration saved successfully.");
+        return "";
+    }, true); // post request
+
     createEndpoint("/restart", [](std::string data) -> std::string
     {
         Serial.println("restarting...");
