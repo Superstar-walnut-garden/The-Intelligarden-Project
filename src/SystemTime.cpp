@@ -39,6 +39,8 @@ SystemTime::SystemTime()
         currentConfigData.setExternalRTCAvailability(true);
         DateTime now = externalRTC.now();
         rtc.setTime(now.second(), now.minute(), now.hour(), now.day(), now.month(), now.year());
+        setenv("TZ", currentConfigData.getTimezone().c_str(), 1); // Set time zone
+        tzset(); // Apply time zone
         currentConfigData.setTimeSubsystemInitialized(true);
     }
 }
@@ -53,13 +55,11 @@ void SystemTime::obtainTime()
     if(cfg.isSetTimeAutomatically() and !cfg.isNtpUpdated())
     {
         const char* ntpServer = "pool.ntp.org";
-        const long  gmtOffset_sec = 12600;
-        const int   daylightOffset_sec = 0;
         Serial.println("Obtaining time from NTP server...");
         WiFiClient client;
         if(client.connect(ntpServer, 123)) // check if ntp server is reachable
         {
-            configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+            configTime(0, 0, ntpServer); // get utc time
             int attempt = 0;
             bool ntpSuccess = true;
             // Wait for the SNTP sync status to be completed
@@ -76,6 +76,8 @@ void SystemTime::obtainTime()
             }
             if (ntpSuccess)
             {
+                setenv("TZ", "IRST-3:30", 1); // Set time zone
+                tzset(); // Apply time zone
                 struct tm timeinfo;
                 getLocalTime(&timeinfo);
                 Serial.println("Time obtained successfully!");
@@ -85,7 +87,11 @@ void SystemTime::obtainTime()
                 cfg.setNtpUpdated(true);
                 if(cfg.isExternalRTCAvailable())
                 {
-                    externalRTC.adjust(DateTime(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
+                    time_t now;
+                    struct tm *timeinfo;
+                    time(&now); // Get current system time (epoch)
+                    timeinfo = gmtime(&now); // Convert to UTC time structure
+                    externalRTC.adjust(DateTime(timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec));
                     Serial.println("External RTC sub-system updated successfully!");
                 }
             }
@@ -95,6 +101,8 @@ void SystemTime::obtainTime()
                 {
                     DateTime now = externalRTC.now();
                     rtc.setTime(now.second(), now.minute(), now.hour(), now.day(), now.month(), now.year());
+                    setenv("TZ", cfg.getTimezone().c_str(), 1); // Set time zone
+                    tzset(); // Apply time zone
                 }
                 Serial.println("Failed to obtain time");
                 lostTrackOfTime();
@@ -243,5 +251,5 @@ void SystemTime::loadState()
  */
 void SystemTime::setTime(unsigned long epochTime)
 {
-    
+
 }
