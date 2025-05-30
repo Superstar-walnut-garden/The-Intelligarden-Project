@@ -60,14 +60,12 @@ int virtualMain()
     webApiManager->init();
     
 
-    
-    wifiSetup->onConnect([systemTime, fbm]()
+    // when internet is available
+    wifiSetup->onOnline([systemTime, fbm]() 
     {
         systemTime->obtainTime();
         if(systemTime->isTimeUpdated())
         {
-            Serial.println("");
-            Serial.println("WiFi connected.");
             fbm->init();
             fbm->update(systemTime);
         }
@@ -87,7 +85,7 @@ int virtualMain()
     {
         systemMaintainer.refreshCycleTime(); // software implemented watchdog
         delay(1); // For other threads to work.this should be 1ms in the main setup
-        Serial.println(WiFi.status() == WL_CONNECTED ? "Wifi is Connected!" : "Fatal Error: Wifi is disconnected!!!");
+        Serial.print(wifiSetup->isConnected() ? "Wifi is Connected!" : "Wifi is disconnected!");
         display->drawUI();
         delay(100);
 
@@ -104,6 +102,11 @@ int virtualMain()
         wifiSetup->loop();
         ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
+
+        // Convert to time_t for formatting
+        std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+        // Format and print the time
+        std::cout << "Current time: " << std::put_time(std::localtime(&currentTime), "%Y-%m-%d %H:%M:%S") << std::endl;
     }
     return 0;
 }

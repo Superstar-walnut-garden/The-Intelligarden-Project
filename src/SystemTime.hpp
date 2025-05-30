@@ -11,6 +11,10 @@
 #include <bitset>
 #include "Time.hpp"
 #include <Arduino.h>
+#include <RTClib.h>
+#include <chrono>
+#include "esp_sntp.h"
+#include <WiFiClient.h>
 
 class SystemTime: public Subject<SystemTime>
 {
@@ -86,6 +90,10 @@ private:
     String timeStamp;
     bool timeUpdated;
     ESP32Time rtc;
+    RTC_DS1307 externalRTC;
+    bool externalRTCEnabled;
+    bool setTimeAutomatically;
+    bool ntpUpdated;
 
     static SystemTime *instance;
 };

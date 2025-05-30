@@ -1,9 +1,17 @@
 #include "SystemTime.hpp"
 
-// Initialize the static member variable
+
+/**
+ * @brief instance initialization for the singleton pattern
+ * 
+ */
 SystemTime *SystemTime::instance = nullptr;
 
-// Singleton instance getter
+/**
+ * @brief get the singleton instance of SystemTime.
+ * 
+ * @return SystemTime* 
+ */
 SystemTime *SystemTime::getInstance()
 {
     if (!instance)
@@ -11,116 +19,167 @@ SystemTime *SystemTime::getInstance()
     return instance;
 }
 
-// Constructor
-SystemTime::SystemTime() : rtc(0), timeClient(ntpUDP), timeUpdated(false)
+/**
+ * @brief Construct a new SystemTime::SystemTime object
+ * 
+ */
+SystemTime::SystemTime() 
+: rtc(0), timeClient(ntpUDP), timeUpdated(false), externalRTCEnabled(false), setTimeAutomatically(true), ntpUpdated(false)
 {
+    if(externalRTC.begin()) // try to initialize module
+    {
+        Serial.println("External RTC module found!");
+        Serial.println("External RTC sub-system initialized successfully!");
+        externalRTCEnabled = true;
+        DateTime now = externalRTC.now();
+        rtc.setTime(now.second(), now.minute(), now.hour(), now.day(), now.month(), now.year());
+        timeUpdated = true;
+    }
 }
 
-// Obtain time from NTP server and update the RTC
+/**
+ * @brief try to obtain the current time from an NTP server.
+ * 
+ */
 void SystemTime::obtainTime()
 {
-    Serial.println("Connecting to time server!");
-    Serial.println("time offset: 3:30 GMT");
-    timeClient.setTimeOffset(12600);
-    timeClient.begin();
-    Serial.print("Retrieving time and date...  ");
-    timeUpdated = true;
-    while (!timeClient.update())
+    if(setTimeAutomatically and !ntpUpdated)
     {
-        if (timeClient.forceUpdate())
+        const char* ntpServer = "pool.ntp.org";
+        const long  gmtOffset_sec = 12600;
+        const int   daylightOffset_sec = 0;
+        Serial.println("Obtaining time from NTP server...");
+        WiFiClient client;
+        if(client.connect(ntpServer, 123)) // check if ntp server is reachable
         {
-            timeUpdated = true;
-            break;
+            configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+            int attempt = 0;
+            bool ntpSuccess = true;
+            // Wait for the SNTP sync status to be completed
+            while(!sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED)
+            {
+                if (attempt++ > 15) // wait for 5 seconds max
+                {
+                    Serial.println("Err: Timeout while waiting for NTP sync status.");
+                    ntpSuccess = false;
+                    sntp_stop();  // Stops automatic retries
+                    break;
+                }
+                delay(500); // wait for 0.5 second before checking again
+            }
+            if (ntpSuccess)
+            {
+                struct tm timeinfo;
+                getLocalTime(&timeinfo);
+                Serial.println("Time obtained successfully!");
+                Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+                Serial.println("-----------------------");
+                timeUpdated = true;
+                ntpUpdated = true;
+                if(externalRTCEnabled)
+                {
+                    externalRTC.adjust(DateTime(timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec));
+                    Serial.println("External RTC sub-system updated successfully!");
+                }
+            }
+            else
+            {
+                if(externalRTCEnabled) // resync with external RTC if available
+                {
+                    DateTime now = externalRTC.now();
+                    rtc.setTime(now.second(), now.minute(), now.hour(), now.day(), now.month(), now.year());
+                }
+                Serial.println("Failed to obtain time");
+                lostTrackOfTime();
+            }
         }
         else
         {
-            Serial.println("Failed!");
-            timeUpdated = false;
-            static int localCounter = 0;
-            if (localCounter++ > 5)
-            {
-                localCounter = 0;
-                Serial.println("Fatal Error: can't reach NTP server. Check your internet connection.");
-                lostTrackOfTime();
-                break;
-            }
+            Serial.println("Failed to connect to NTP server");
+            lostTrackOfTime();
         }
-    }
-    if (isTimeUpdated())
-    {
-        Serial.println("Passed!");
-        auto hour = timeClient.getHours();
-        auto minute = timeClient.getMinutes();
-        time_t c = timeClient.getEpochTime();
-        Serial.println(ctime(&c));
-        struct tm *timeinfo = localtime(&c);
-        auto day = timeinfo->tm_mday;
-        auto month = timeinfo->tm_mon + 1;
-        auto year = timeinfo->tm_year + 1900;
-        Serial.println(("year = " + std::to_string(year)).c_str());
-        Serial.println(("month = " + std::to_string(month)).c_str());
-        Serial.println(("day = " + std::to_string(day)).c_str());
-        rtc.setTime(0, minute, hour, day, month, year);
-        Serial.println("RTC sub-system updated successfully!");
-        Serial.print("HOUR: ");
-        Serial.println(hour);
-        Serial.print("MINUTE: ");
-        Serial.println(minute);
-        notify();
-    }
-    else
-    {
-        lostTrackOfTime();
     }
 }
 
-// Check if time was updated successfully
+/**
+ * @brief check if the time has been updated from ntp server, internal rtc or external rtc successfully.
+ * 
+ * @return true 
+ * @return false 
+ */
 bool SystemTime::isTimeUpdated()
 {
     return timeUpdated;
 }
 
-// Get the current minute
+/**
+ * @brief get current minute.
+ * 
+ * @return short 
+ */
 short SystemTime::getMinute()
 {
     return rtc.getMinute();
 }
 
-// Get the current hour
+/**
+ * @brief get current hour in 24-hour format.
+ * 
+ * @return short 
+ */
 short SystemTime::getHour()
 {
     return rtc.getHour(true);
 }
 
-// Get the current day
+/**
+ * @brief Get the current day of the month.
+ * 
+ * @return short 
+ */
 short SystemTime::getDay()
 {
     return rtc.getDay();
 }
 
-// Get the current month
+/**
+ * @brief Get the current month (1-12).
+ * 
+ * @return short 
+ */
 short SystemTime::getMonth()
 {
     return rtc.getMonth() + 1;
 }
 
-// Get the current year
+/**
+ * @brief Get the current year (e.g. 2024).
+ * 
+ * @return short 
+ */
 short SystemTime::getYear()
 {
     return rtc.getYear();
 }
 
-// Handle time update failure
+/**
+ * @brief Handle the case when the system loses track of time.
+ * This function is called when the system fails to reach the time server or loses power.
+ * It resets the timeUpdated flag and prints an error message.
+ */
 void SystemTime::lostTrackOfTime()
 {
-    Serial.println("Error: cannot connect to the network!!!");
+    Serial.println("Error: Couldn't reach time server!!!");
     Serial.printf("reset reason core 0 code: %d\n", rtc_get_reset_reason(0));
     Serial.printf("reset reason core 1 code: %d\n", rtc_get_reset_reason(1));
     if (!(rtc_get_reset_reason(0) == 0xc || rtc_get_reset_reason(1) == 0xc)) // if reset cause is not from the watchdog
     {
-        Serial.println("reset reason is not from watchdog");
-        timeUpdated = false;
-        Serial.println("Warning: Lost track of time. Time may be inaccurate!");
-        rtc.setTime(0, 0, 5, 1, 1, 2024);
+        if(!externalRTCEnabled) // if there is no external rtc module
+        {
+            Serial.println("reset cause is power failure and the internal rtc is reset");
+            timeUpdated = false;
+            Serial.println("Warning: Lost track of time. Time may be inaccurate!");
+            //rtc.setTime(0, 0, 5, 1, 1, 2024); // estimate time.
+        }
     }
 }
