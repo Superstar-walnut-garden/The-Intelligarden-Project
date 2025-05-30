@@ -31,6 +31,7 @@ SystemTime::SystemTime()
     currentConfigData.setExternalRTCAvailability(false);
     currentConfigData.setTimeSubsystemInitialized(false);
     currentConfigData.setNtpUpdated(false);
+    currentConfigData.setManualTimeSetFlag(false);
 
     if(externalRTC.begin()) // try to initialize module
     {
@@ -221,7 +222,33 @@ void SystemTime::setConfig(const std::string& configJson)
     newConfig.setTimeSubsystemInitialized(currentConfigData.isTimeSubsystemInitialized());
     newConfig.setExternalRTCAvailability(currentConfigData.isExternalRTCAvailable());
     newConfig.setNtpUpdated(currentConfigData.isNtpUpdated());
+    setenv("TZ", newConfig.getTimezone().c_str(), 1); // Set time zone
+    tzset(); // Apply time zone
+    if(newConfig.isManualTimeSetFlag())
+    {
+        newConfig.setManualTimeSetFlag(false); // drop the flag
+        if(!newConfig.isSetTimeAutomatically())
+        {
+            auto localTimeEpoch = newConfig.getManualTimeEpoch();
+            struct timeval tv;
+            tv.tv_sec = localTimeEpoch - getTimezoneOffset(); // Convert to UTC and set seconds (epoch time)
+            tv.tv_usec = 0; // Microseconds (not needed)
+            settimeofday(&tv, NULL); // Apply local time without affecting timezone config
+            if(newConfig.isExternalRTCAvailable()) // if external RTC is available
+            {
+                time_t now;
+                struct tm *timeinfo;
+                time(&now); // Get current system time (epoch)
+                timeinfo = gmtime(&now); // Convert to UTC time structure
+                externalRTC.adjust(DateTime(timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday, timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec));
+                Serial.println("External RTC sub-system updated successfully!");
+            }
+            newConfig.setTimeSubsystemInitialized(true); // set the time subsystem initialized flag
+            Serial.println("Manual time set successfully!");
+        }
+    }
     currentConfigData = newConfig; // update the time configuration data
+    saveState();
 }
 
 /**
@@ -246,10 +273,18 @@ void SystemTime::loadState()
 }
 
 /**
- * @brief set the system time using an epoch timestamp.
- * only works if setTimeAutomatically is false and the manualTimeSetFlag is raised
+ * @brief calculate the timezone offset in seconds.
+ * This function calculates the timezone offset by comparing the local time and UTC time (i.e. it depends on system's timezone configuration).
  */
-void SystemTime::setTime(unsigned long epochTime)
+int SystemTime::getTimezoneOffset() 
 {
+    time_t now = time(NULL);
+    struct tm utc_tm, local_tm;
+
+    gmtime_r(&now, &utc_tm);  // Get UTC time structure
+    localtime_r(&now, &local_tm);  // Get Local time structure
+
+    int offsetSeconds = difftime(mktime(&local_tm), mktime(&utc_tm)); // Correct offset calculation
+    return offsetSeconds;
 
 }

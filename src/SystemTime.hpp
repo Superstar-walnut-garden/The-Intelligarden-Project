@@ -86,7 +86,7 @@ private:
     void lostTrackOfTime();
     void saveState();
     void loadState();
-    void setTime(unsigned long epochTime);
+    int getTimezoneOffset();
 
     // Date and time variables
     String formattedDate;
