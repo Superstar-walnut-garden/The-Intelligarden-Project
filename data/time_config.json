@@ -1,0 +1,10 @@
+{
+    "timezone": "IRST-3:30", 
+    "ntpServer": "pool.ntp.org", 
+    "timeSubsystemInitialized": false, 
+    "externalRTCAvailable": false, 
+    "setTimeAutomatically": true, 
+    "ntpUpdated": false, 
+    "manualTimeSetFlag": false, 
+    "manualTimeEpoch": 0
+}

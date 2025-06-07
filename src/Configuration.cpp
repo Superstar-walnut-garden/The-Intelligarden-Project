@@ -257,3 +257,29 @@ void Configuration::setRegisteredTempSensorList(const std::string& json)
         Serial.println("Failed to open file for writing.");
     }
 }
+std::string Configuration::getTimeConfig()
+{
+    auto file = SPIFFS.open(timeConfigFileAddress, FILE_READ);
+    std::string jsonData;
+    if (file)
+    {
+        jsonData = file.readString().c_str(); // read raw data from file
+        file.close();
+        return jsonData;
+    }
+    return ""; // return empty
+}
+void Configuration::setTimeConfig(const std::string& json)
+{
+    File file = SPIFFS.open(timeConfigFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json.c_str());
+        file.close();
+        Serial.println("Time configuration data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
