@@ -2,6 +2,7 @@
 
 * Multi-sensor temperature data logging
 * Advanced multi-purpose scheduler (can used for irrigation pump, solenoid valves and etc...)
+* Manual and Auto Time/Date Config (+External RTC Support)
 * Cloud-based (Firebase) data storing
 * Manual GPIO control (e.g. Can be used for turning on a pump manualy)
 * Remote direct connection between nodes (Coming soon)
