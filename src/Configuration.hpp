@@ -20,6 +20,7 @@ constexpr auto gpioFileAddress = "/gpio.txt";
 constexpr auto displayFileAddress = "/display.json";
 constexpr auto thermostatFileAddress = "/thermostat.json";
 constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
+constexpr auto timeConfigFileAddress = "/time_config.json";
 
 class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
 {
@@ -72,6 +73,9 @@ public:
 
     std::string getRegisteredTempSensorList();
     void setRegisteredTempSensorList(const std::string& json);
+
+    std::string getTimeConfig();
+    void setTimeConfig(const std::string& json);
 
 };
 

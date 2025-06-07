@@ -11,6 +11,11 @@
 #include <bitset>
 #include "Time.hpp"
 #include <Arduino.h>
+#include <RTClib.h>
+#include <chrono>
+#include "esp_sntp.h"
+#include <WiFiClient.h>
+#include "TimeConfigData.hpp"
 
 class SystemTime: public Subject<SystemTime>
 {
@@ -73,19 +78,23 @@ public:
     short getMonth();
     short getYear();
 
+    std::string getConfig();
+    void setConfig(const std::string& configJson);
+
 private:
     SystemTime();
     void lostTrackOfTime();
+    void saveState();
+    void loadState();
+    int getTimezoneOffset();
 
-    // NTP Client to get time
-    WiFiUDP ntpUDP;
-    NTPClient timeClient;
     // Date and time variables
     String formattedDate;
     String dayStamp;
     String timeStamp;
-    bool timeUpdated;
     ESP32Time rtc;
+    RTC_DS1307 externalRTC;
+    TimeConfigData currentConfigData;
 
     static SystemTime *instance;
 };
