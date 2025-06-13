@@ -25,7 +25,7 @@ WebApiManager::WebApiManager() : server(80), baseUrl("/api")
 void WebApiManager::init()
 {
     // Serve HTML page to enter WiFi credentials
-    server.serveStatic("/", SPIFFS, "/dist/").setDefaultFile("index.html");
+    server.serveStatic("/", SPIFFS, "/dist/").setDefaultFile("index.html").setCacheControl("max-age=86400");
 
     createEndpoint("/getCurrentTime", [](std::string data) -> std::string
     {
