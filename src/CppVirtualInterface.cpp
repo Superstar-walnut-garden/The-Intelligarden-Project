@@ -102,6 +102,7 @@ int virtualMain()
         wifiSetup->loop();
         ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
+        Serial.printf("Free Flash: %d bytes\n", SPIFFS.totalBytes() - SPIFFS.usedBytes());
 
         // Convert to time_t for formatting
         std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
