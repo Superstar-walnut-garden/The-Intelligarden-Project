@@ -147,8 +147,10 @@ void GPIOManager::syncHardware()
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
+            if(item.getEventId() != -1) // if the pin is associated with an event.
+                itemRef.setStatus(EventManager::getInstance()->getEventFlag(item.getEventId()));
             pinMode(item.getPin(), OUTPUT);
-            digitalWrite(item.getPin(), item.getStatus()); // update the pin from item status
+            digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
         } else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
