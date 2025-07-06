@@ -46,7 +46,6 @@ EventManager* EventManager::getInstance()
 void EventManager::create(EventItem eventItem) 
 {
     eventList.addItem(eventItem);
-    previousFlags[eventItem.getId()] = eventItem.getStatus();
     saveState();
     notify();
 }
@@ -59,7 +58,6 @@ void EventManager::create(EventItem eventItem)
 void EventManager::remove(uint64_t id) 
 {
     eventList.deleteItem(id);
-    previousFlags.erase(id);
     saveState();
 }
 
@@ -72,7 +70,6 @@ void EventManager::remove(uint64_t id)
 void EventManager::modify(uint64_t id, EventItem newItem) 
 {
     eventList.modifyItem(id, newItem);
-    previousFlags[id] = newItem.getFlag();
     saveState();
 }
 
@@ -87,11 +84,7 @@ void EventManager::modifyEventFlag(uint64_t id, bool flag)
 {
     EventItem& item = eventList.getItem(id); // get a reference to the item
     if (item.getId() != -1) // Check if the item exists
-    { 
         item.setFlag(flag);
-        notify();
-        previousFlags[id] = flag;
-    }
 }
 
 /** 
@@ -104,14 +97,10 @@ void EventManager::modifyEventFlag(uint64_t id, bool flag)
  */
 bool EventManager::hasEventFlagChanged(uint64_t id, bool& newFlag) 
 {
-    auto it = previousFlags.find(id);
-    if (it != previousFlags.end()) 
+    auto &item = eventList.getItem(id);
+    if(item.getId() != -1) // if item exist
     {
-        newFlag = eventList.getItem(id).getFlag();
-        auto realFlag = newFlag; // copy flag 
-        if(eventList.getItem(id).isInvert())
-            newFlag = !newFlag; // invert the flag ref that is returned through the method arg
-        return it->second != realFlag;
+        return (getEventFlag(item.getId()) != item.getPrevState());
     }
     return false;
 }
@@ -125,15 +114,53 @@ bool EventManager::hasEventFlagChanged(uint64_t id, bool& newFlag)
  */
 bool EventManager::getEventFlag(uint64_t id)
 {
-    for(auto& item : eventList.getList()) // loop through the event list
+    auto item = eventList.getItem(id); // get a copy of desired item
+    if(item.getId() == id) // check if the event ID is found
     {
-        if(item.getId() == id) // check if the event ID is found
+        auto logic = item.getLogic();
+        auto flag = item.getFlag(); // self is the default case
+        auto pairedEventExist = (eventList.getItem(item.getEventId()).getId() != -1);
+        //Serial.printf("Info: event_%d: logic=%s, pEvent=%d", item.getId(), logic, pairedEventExist);
+        if(logic == "self")
         {
-            return item.getFlag(); // return the flag (status) of the event
+            flag = flag;
+            Serial.print("self for ---- event:");
+            Serial.print(item.getId());
+            Serial.print(" flag:");
+            Serial.println(flag);
         }
+        else if(logic == "selfInverted")
+            flag = !flag;
+        else if(pairedEventExist)
+        {
+            if(logic == "pairedOnly")
+                flag = getEventFlag(item.getEventId());
+            else if(logic == "pairedInverted")
+                flag = getEventFlag(item.getEventId());
+            else if(logic == "andWith")
+            {
+                flag = (flag and getEventFlag(item.getEventId()));
+                Serial.print("andWith for ---- event:");
+                Serial.print(item.getId());
+                Serial.print(" flag:");
+                Serial.println(flag);
+            }
+            else if(logic == "orWith")
+                flag = (flag or getEventFlag(item.getEventId()));
+            else if(logic == "nandWith")
+                flag = !(flag and getEventFlag(item.getEventId()));
+            else if(logic == "norWith")
+                flag = !(flag or getEventFlag(item.getEventId()));
+            else
+                Serial.println("Error: unsupported logic operation");
+        }
+        else
+            Serial.println("Error: unsupported logic operation");
+        return flag; // return the flag (status) of the event
     }
     return false; // Return false if the event ID is not found
 }
+
 /** 
  * @brief Initialize the listeners by triggering a dummy event change (by inverting the previous event status) to notify all the listeners.
  * 
@@ -141,10 +168,10 @@ bool EventManager::getEventFlag(uint64_t id)
 void EventManager::initializeListeners()
 {
     for (auto& item : eventList.getList()) 
-        previousFlags[item.getId()] = !item.getFlag(); // make flags opposite to trigger all the listeners at startup
+        item.setPrevState(!item.getFlag()); // make flags opposite to trigger all the listeners at startup
     notify();
     for (auto& item : eventList.getList()) 
-        previousFlags[item.getId()] = item.getFlag(); // revert to their original state
+        item.setPrevState(item.getFlag()); // revert to their original state
 }
 
 /** 
@@ -186,8 +213,6 @@ void EventManager::loadState()
     if (state.empty()) return;
 
     eventList.repopulateWith(state);
-    for (auto& item : eventList.getList()) // Save the flags to the previousFlags map
-        previousFlags[item.getId()] = item.getFlag();
 }
 
 /**
@@ -198,15 +223,12 @@ void EventManager::loop()
 {
     for (auto& item : eventList.getList()) 
     {
-        bool currentFlag = item.getFlag();
-        if(item.getEventId() != -1) // if mated to another event
-            eventList.getItem(item.getId()).setFlag(eventList.getItem(item.getEventId()).getFlag()); // link (mate) to another event status
-
-        if (currentFlag != previousFlags[item.getId()]) // Check if the flag has changed
+        bool currentFlag = getEventFlag(item.getId());
+        if (currentFlag != item.getPrevState()) // Check if the flag has changed
         {
-            previousFlags[item.getId()] = currentFlag;
             // Notify all listeners
             notify();
+            eventList.getItem(item.getId()).setPrevState(currentFlag);
         }
     }
 }

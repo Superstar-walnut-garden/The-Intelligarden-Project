@@ -39,7 +39,6 @@ private:
 
     static EventManager* instance;
     EventList eventList;
-    std::unordered_map<int, bool> previousFlags;
 };
 
 #endif // EVENTMANAGER_HPP
