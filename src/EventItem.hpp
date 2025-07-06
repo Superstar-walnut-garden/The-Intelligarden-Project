@@ -8,14 +8,17 @@ class EventItem : public BaseItem
 {
 public:
     EventItem();
-    EventItem(int id, int event_id, std::string name, bool flag, bool occupied, bool invert = false);
+    EventItem(int id, int event_id, std::string name, bool flag, bool occupied, std::string logic);
     ~EventItem();
 
     bool getFlag() const;
     void setFlag(bool flag);
 
-    bool isInvert() const;
-    void setInvert(bool invert);
+    std::string getLogic() const;
+    void setLogic(std::string logic);
+
+    bool getPrevState();
+    void setPrevState(bool prevState);
 
     bool isOccupied() const;
     void setOccupied(bool occupied);
@@ -25,7 +28,8 @@ private:
     void derivedClassToJson(JsonDocument &doc) override;
     
     bool occupied;
-    bool invert;
+    bool prevState;
+    std::string logic;
     using BaseItem::setEventId; // making setEventId private (because it's not needed)
 };
 
