@@ -1,6 +1,7 @@
 #include "WebApiManager.hpp"
 #include "Configuration.hpp"
 #include "EventManager.hpp"
+#include "CentralizedSignalHub.hpp"
 
 /**
  * @brief Construct a new WebApiManager object
@@ -105,6 +106,12 @@ void WebApiManager::init()
         Serial.println("Time configuration saved successfully.");
         return "";
     }, true); // post request
+
+    createEndpoint("/signal-hub-items", [](std::string data) -> std::string
+    {
+        auto signalHubItems = CentralizedSignalHub::getInstance()->getListJson();
+        return signalHubItems;
+    }); // get request
 
     createEndpoint("/restart", [](std::string data) -> std::string
     {
