@@ -2,9 +2,10 @@
 #define GPIOITEM_HPP
 
 #include "BaseItem.hpp"
+#include "SignalCompatibleBaseItem.hpp"
 #include <string>
 
-class GPIOItem : public BaseItem
+class GPIOItem : public SignalCompatibleBaseItem
 {
 public:
     GPIOItem();
@@ -16,6 +17,8 @@ public:
 
     void setMode(short mode);
     void setExtraParameters(std::string extraParameters);
+
+    virtual std::vector<std::string> getLocalSignalNames() override;
 
 private:
     void populateDerivedClassFromJson(JsonDocument &json) override;

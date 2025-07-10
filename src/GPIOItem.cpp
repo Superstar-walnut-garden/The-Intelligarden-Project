@@ -1,12 +1,13 @@
 #include "GPIOItem.hpp"
+#include "SignalNameResolver.hpp"
 
 GPIOItem::GPIOItem()
-    : BaseItem(), mode(0), extraParameters("")
+    : SignalCompatibleBaseItem(), mode(0), extraParameters("")
 {
 }
 
 GPIOItem::GPIOItem(int pin, int event_id, std::string name, bool status, short mode, std::string extraParameters)
-    : BaseItem(pin, event_id, name, status), mode(mode), extraParameters(extraParameters)
+    : SignalCompatibleBaseItem(pin, event_id, name, status), mode(mode), extraParameters(extraParameters)
 {
 }
 
@@ -45,4 +46,16 @@ void GPIOItem::derivedClassToJson(JsonDocument &doc)
 {
     doc["extraParameters"] = this->extraParameters;
     doc["mode"] = this->mode;
+}
+
+std::vector<std::string> GPIOItem::getLocalSignalNames()
+{
+    // Dynamic SignalType and Name Generation
+    SignalNameResolver::SignalType signalType;
+    if(mode == 0) // if input, it broadcasts the pin status to a signal
+        signalType = SignalNameResolver::SignalType::Broadcaster;
+    else
+        signalType = SignalNameResolver::SignalType::Listener;
+
+    return {SignalNameResolver::generateLocalSignalName("default", signalType)};
 }

@@ -57,6 +57,7 @@ void GPIOManager::create(GPIOItem newItem)
 void GPIOManager::remove(uint64_t id)
 {
     list.deleteItem(id);
+    notify();
     saveState();
 }
 
@@ -69,6 +70,7 @@ void GPIOManager::remove(uint64_t id)
 void GPIOManager::modify(uint64_t id, GPIOItem newItem)
 {
     list.modifyItem(id, newItem);
+    notify();
     saveState();
 }
 
@@ -84,6 +86,7 @@ void GPIOManager::modifyIOStatus(uint64_t id, bool status)
     if (item.getId() != -1) // Check if the item exists
     {
         item.setStatus(status);
+        notify();
         saveState();
     }
 }
@@ -134,6 +137,27 @@ void GPIOManager::loadState()
         return;
     list.repopulateWith(state.c_str());
     syncHardware();
+}
+
+/**
+ * @brief get unique name of subsystem (manager)
+ * @return Subsystem Name
+ */
+std::string GPIOManager::getName()
+{
+    return "GPIO";
+}
+
+/**
+ * @brief get a list of signal compatible items
+ * @return list of all signal compatible items
+ */
+std::vector<ISignalCompatibleItem *> GPIOManager::getSignalCompatibleItems()
+{
+    std::vector<ISignalCompatibleItem *> signalCompatibleList;
+    for(auto &item : list.getList()) // copy list
+        signalCompatibleList.push_back(&list.getItem(item.getId()));
+    return signalCompatibleList;
 }
 
 /**
