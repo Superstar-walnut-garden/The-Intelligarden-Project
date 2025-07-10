@@ -22,6 +22,7 @@
 #include "SystemMaintainer.hpp"
 #include "EventManager.hpp"
 #include "ThermostatManager.hpp"
+#include "CentralizedSignalHub.hpp"
 
 
 int virtualMain()
@@ -45,6 +46,7 @@ int virtualMain()
     auto *scheduler = Scheduler::getInstance();
     auto *ioManager = GPIOManager::getInstance();
     auto *thermostatManager = ThermostatManager::getInstance();
+    auto *centralizedSignalHub = CentralizedSignalHub::getInstance();
 
     temperature->attach(display); // attach display as an observer
     temperature->attach(thermostatManager); // attach ThermostatManager as an observer
@@ -53,6 +55,8 @@ int virtualMain()
     eventManager->registerListener(ioManager); // attach GPIOManager as an observer
     eventManager->registerListener(thermostatManager); // attach ThermostatManager as an observer
     eventManager->registerListener(scheduler); // attach scheduler as an observer
+
+    centralizedSignalHub->registerManager(ioManager);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
