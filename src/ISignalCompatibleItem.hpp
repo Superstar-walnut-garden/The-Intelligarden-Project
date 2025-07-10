@@ -6,10 +6,10 @@
 class ISignalCompatibleItem
 {
 public:
-    virtual std::string getName() = 0;
-    virtual std::string getSubsystemName() = 0;
-    virtual int getId() = 0;
+    // virtual std::string getSubsystemName() = 0;
     virtual std::vector<std::string> getLocalSignalNames() = 0;
+    virtual std::string getName() const = 0;
+    virtual uint64_t getId() const = 0;
 };
 
 #endif
