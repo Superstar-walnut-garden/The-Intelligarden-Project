@@ -7,13 +7,17 @@
 class CentralizedSignalHub: public Subject<CentralizedSignalHub>, public IObserver<ISignalCompatibleManager>
 {
 public:
-    void registerManager(ISignalCompatibleManager &manager);
-    std::vector<ISignalCompatibleManager &> getManagers();
+    static CentralizedSignalHub* getInstance();
+    void registerManager(ISignalCompatibleManager *manager);
+    std::vector<ISignalCompatibleManager *> getManagers();
     std::string getListJson();
     void update(ISignalCompatibleManager *scm);
 
 private:
-    std::vector<ISignalCompatibleManager &> managers;
+    std::vector<ISignalCompatibleManager *> managers;
+
+    CentralizedSignalHub(){}; // private constructor
+    static CentralizedSignalHub *instance; // singleton instance
 };
 
 #endif
