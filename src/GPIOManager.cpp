@@ -1,4 +1,6 @@
 #include "GPIOManager.hpp"
+#include "SignalManager.hpp"
+#include "SignalNameResolver.hpp"
 
 /**
  * @brief initialize the instance of the GPIOManager to null
@@ -166,21 +168,27 @@ std::vector<ISignalCompatibleItem *> GPIOManager::getSignalCompatibleItems()
  */
 void GPIOManager::syncHardware()
 {
+    SignalNameResolver::SignalNameParameters signalNameParameters;
+    signalNameParameters.subsystemName = this->getName();
+    
     for (auto& item : list.getList())
     {
+        signalNameParameters.id = item.getId();
+        signalNameParameters.localSignalName = item.getLocalSignalNames()[0];
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
-            if(item.getEventId() != -1) // if the pin is associated with an event.
-                itemRef.setStatus(EventManager::getInstance()->getEventFlag(item.getEventId()));
+            if(true) // if the pin is associated with an event.
+                itemRef.setStatus(SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters)));
             pinMode(item.getPin(), OUTPUT);
             digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
         } else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
             itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
-            if(item.getEventId() != -1)
-                EventManager::getInstance()->modifyEventFlag(item.getEventId(), itemRef.getStatus());
+            if(true)
+                SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
+                
         }
     }
 }
@@ -192,15 +200,15 @@ void GPIOManager::syncHardware()
  */
 void GPIOManager::update(EventManager* eventManager)
 {
-    for (auto& item : list.getList())
-    {
-        if(item.getEventId() != -1) // if the pin is associated with an event.
-        {
-            bool flag = false;
-            if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
-            {
-                list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
-            }
-        }
-    }
+    // for (auto& item : list.getList())
+    // {
+    //     if(item.getEventId() != -1) // if the pin is associated with an event.
+    //     {
+    //         bool flag = false;
+    //         if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
+    //         {
+    //             list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
+    //         }
+    //     }
+    // }
 }
