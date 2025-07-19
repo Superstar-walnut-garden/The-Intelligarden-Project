@@ -7,19 +7,18 @@
 
 /**
  * @brief Default constructor for BaseItem.
- * Initializes id and event_id to 0, name to an empty string, and status to false.
+ * Initializes id to -1, name to an empty string, and status to false.
  */
-BaseItem::BaseItem() : id(-1), event_id(-1), name(""), status(false) {}
+BaseItem::BaseItem() : id(-1), name(""), status(false) {}
 
 /**
  * @brief Parameterized constructor for BaseItem.
  * @param id The ID of the item.
- * @param event_id The event ID associated with the item.
  * @param name The name of the item.
  * @param status The status of the item.
  */
-BaseItem::BaseItem(uint64_t id, int event_id, std::string name, bool status) 
-    : id(id), event_id(event_id), name(name), status(status) {}
+BaseItem::BaseItem(uint64_t id, std::string name, bool status) 
+    : id(id), name(name), status(status) {}
 
 /**
  * @brief Destructor for BaseItem.
@@ -38,25 +37,6 @@ uint64_t BaseItem::getId() const
 void BaseItem::setId(uint64_t id)
 {
     this->id = id;
-}
-
-/**
- * @brief Getter for the event ID of the item.
- * 
- * @return The event ID of the item. 
- */
-int BaseItem::getEventId() const 
-{
-    return event_id;
-}
-
-/**
- * @brief Setter for the event ID of the item.
- * @param event_id The new event ID of the item.
- */
-void BaseItem::setEventId(int event_id) 
-{
-    this->event_id = event_id;
 }
 
 /**
@@ -103,8 +83,7 @@ void BaseItem::populateFromJson(std::string json)
 {
     JsonDocument doc;
     deserializeJson(doc, json);
-    this->id = doc["id"].as<uint64_t>(); 
-    this->event_id = doc["event_id"].as<int>();
+    this->id = doc["id"].as<uint64_t>();
     this->name = doc["name"].as<std::string>();
     this->status = doc["status"].as<bool>();
     populateDerivedClassFromJson(doc); // in case of this method is overrided by the derrived class
@@ -118,7 +97,6 @@ std::string BaseItem::toJson()
 {
     JsonDocument doc;
     doc["id"] = this->id;
-    doc["event_id"] = this->event_id;
     doc["name"] = this->name;
     doc["status"] = this->status;
     derivedClassToJson(doc); // in case of this method is overrided by the derrived class

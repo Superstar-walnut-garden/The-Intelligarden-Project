@@ -115,7 +115,7 @@ void BaseList<T>::repopulateWith(std::string json)
 }
 
 /**
- * @brief Print the list of items (only BaseItem parameters id, event_id, name and status).
+ * @brief Print the list of items (only BaseItem parameters id, name and status).
  * 
  * @tparam T 
  */
@@ -125,7 +125,6 @@ void BaseList<T>::printList()
     for(auto & item : list)
         std::cout <<
             "id: " << item.getId() << std::endl <<
-            "event_id: " << item.getEventId() << std::endl <<
             "name: " << item.getName() << std::endl <<
             "status: " << item.getStatus() << std::endl;
 }
