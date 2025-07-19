@@ -78,6 +78,13 @@ void SignalManager::modify(uint64_t id, SignalItem newItem)
 void SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 {
     // search and find the signal path in signal list (broadcaster parameter)
+    for(auto &signalItem: signalList.getList())
+    {
+        if(signalItem.getBroadcaster() == fullSignalPath)
+        {
+            signalList.getItem(signalItem.getId()).setStatus(value);
+        }
+    }
     // if found, set the status of that signal item to the value parameter
     // throw error if not found.
 }
@@ -91,6 +98,15 @@ void SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 bool SignalManager::getSignalValue(std::string fullSignalPath)
 {
     // search and find the signal path in signal list (listeners parameter)
+    for(auto &signalItem: signalList.getList())
+    {
+        for(auto &listener : signalItem.getListeners())
+            if(listener == fullSignalPath)
+            {
+                return signalList.getItem(signalItem.getId()).getStatus();
+            }
+    }
+    return false;
     // if found, get the status of that signal item and return it
     // throw error if not found.
 }
