@@ -6,8 +6,8 @@ GPIOItem::GPIOItem()
 {
 }
 
-GPIOItem::GPIOItem(int pin, int event_id, std::string name, bool status, short mode, std::string extraParameters)
-    : SignalCompatibleBaseItem(pin, event_id, name, status), mode(mode), extraParameters(extraParameters)
+GPIOItem::GPIOItem(int pin, std::string name, bool status, short mode, std::string extraParameters)
+    : SignalCompatibleBaseItem(pin, name, status), mode(mode), extraParameters(extraParameters)
 {
 }
 

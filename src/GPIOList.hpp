@@ -9,8 +9,6 @@ class GPIOList : public BaseList<GPIOItem>
 public:
     GPIOList();
     GPIOList(std::string json);
-
-    void printList() override;
 };
 
 #endif // GPIOLIST_HPP

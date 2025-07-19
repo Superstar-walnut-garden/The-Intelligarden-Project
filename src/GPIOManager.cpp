@@ -178,7 +178,7 @@ void GPIOManager::syncHardware()
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
-            if(true) // if the pin is associated with an event.
+            if(true) // if the pin is associated with a signal.
                 itemRef.setStatus(SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters)));
             pinMode(item.getPin(), OUTPUT);
             digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
@@ -191,24 +191,4 @@ void GPIOManager::syncHardware()
                 
         }
     }
-}
-
-/**
- * @brief Update the GPIOManager when the EventManager changes.
- * 
- * @param eventManager The EventManager that changed.
- */
-void GPIOManager::update(EventManager* eventManager)
-{
-    // for (auto& item : list.getList())
-    // {
-    //     if(item.getEventId() != -1) // if the pin is associated with an event.
-    //     {
-    //         bool flag = false;
-    //         if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
-    //         {
-    //             list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
-    //         }
-    //     }
-    // }
 }

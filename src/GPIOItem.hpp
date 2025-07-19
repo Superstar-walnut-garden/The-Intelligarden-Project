@@ -9,7 +9,7 @@ class GPIOItem : public SignalCompatibleBaseItem
 {
 public:
     GPIOItem();
-    GPIOItem(int pin, int event_id, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
+    GPIOItem(int pin, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
 
     int getPin();
     int getMode();
