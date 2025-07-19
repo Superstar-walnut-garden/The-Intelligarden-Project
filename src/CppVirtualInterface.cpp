@@ -57,6 +57,7 @@ int virtualMain()
     eventManager->registerListener(scheduler); // attach scheduler as an observer
 
     centralizedSignalHub->registerManager(ioManager);
+    centralizedSignalHub->registerManager(thermostatManager);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
