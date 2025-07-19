@@ -2,6 +2,7 @@
 #include "Configuration.hpp"
 #include "EventManager.hpp"
 #include "CentralizedSignalHub.hpp"
+#include "SignalManager.hpp"
 
 /**
  * @brief Construct a new WebApiManager object
@@ -126,6 +127,7 @@ void WebApiManager::init()
     createIManagerEndpoints<ThermostatItem>("/Thermostat", ThermostatManager::getInstance());
     createIManagerEndpoints<EventItem>("/Event", EventManager::getInstance());
     createIManagerEndpoints<SchedulerItem>("/Scheduler", Scheduler::getInstance());
+    createIManagerEndpoints<SignalItem>("/signal", SignalManager::getInstance());
     server.begin();
 }
 
