@@ -2,11 +2,23 @@
 
 SignalItem::SignalItem() : BaseItem(), broadcaster(""), listeners() {}
 
+std::vector<std::string> SignalItem::getListeners()
+{
+    return listeners;
+}
+
+std::string SignalItem::getBroadcaster()
+{
+    return broadcaster;
+}
 
 void SignalItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     this->broadcaster = doc["broadcaster"].as<std::string>();
-    // this->listeners = doc["listeners"].as<(const char[]*)>();
+    JsonArray listenersArray = doc["listeners"].as<JsonArray>();
+
+    for(auto item : listenersArray)
+        this->listeners.push_back(item);
 }
 
 void SignalItem::derivedClassToJson(JsonDocument &doc)
