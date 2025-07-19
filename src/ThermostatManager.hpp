@@ -6,8 +6,12 @@
 #include "IObserver.hpp"
 #include "Temperature.hpp"
 #include "IManager.hpp"
+#include "ISignalCompatibleManager.hpp"
 
-class ThermostatManager: public IManager<ThermostatItem>, public IObserver<EventManager>, public IObserver<Temperature>
+class ThermostatManager: public IManager<ThermostatItem>, 
+    public ISignalCompatibleManager, 
+    public IObserver<EventManager>, 
+    public IObserver<Temperature>
 {
 public:
     static ThermostatManager* getInstance();
@@ -18,6 +22,9 @@ public:
     std::string getListJson() override;
     void saveState() override;
     void loadState() override;
+
+    std::string getName() override;
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
     void update(EventManager* eventManager) override;
     void update(Temperature* temperature) override;
