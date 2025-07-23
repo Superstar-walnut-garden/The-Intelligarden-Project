@@ -13,6 +13,11 @@ public:
     class SignalNameParameters
     {
         public:
+        SignalNameParameters()
+            : subsystemName("Untitled"), id(-1), localSignalName("Signal"), type(SignalType::Broadcaster) {}
+
+        SignalNameParameters(std::string subsystemName, int id, std::string localSignalName, SignalType type = SignalType::Broadcaster)
+            : subsystemName(subsystemName), id(id), localSignalName(localSignalName), type(type) {}
         std::string subsystemName;
         int id;
         std::string localSignalName;
