@@ -178,17 +178,16 @@ void GPIOManager::syncHardware()
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
-            if(true) // if the pin is associated with a signal.
-                itemRef.setStatus(SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters)));
+            auto signalValue = SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
+            if (signalValue.has_value()) // if registered signal found
+                itemRef.setStatus(signalValue.value());
             pinMode(item.getPin(), OUTPUT);
             digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
         } else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
             itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
-            if(true)
-                SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
-                
+            SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
         }
     }
 }
