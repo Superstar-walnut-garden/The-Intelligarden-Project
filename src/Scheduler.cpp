@@ -1,6 +1,8 @@
 #include "Scheduler.hpp"
 #include "Configuration.hpp"
 #include <ArduinoJson.h>
+#include "SignalManager.hpp"
+#include "SignalNameResolver.hpp"
 
 Scheduler* Scheduler::instance = nullptr;
 
@@ -23,39 +25,21 @@ Scheduler* Scheduler::getInstance()
     return instance;
 }
 
-void Scheduler::update(SystemTime* systemTime) 
-{
-    determineStatusofItems();
-}
-
-void Scheduler::update(EventManager* eventManager) 
-{
-    // for (auto& item : list.getList())
-    // {
-    //     if(item.getSkipEventId() != -1) // if the item is associated with an event.
-    //     {
-    //         bool flag = false;
-    //         if (eventManager->hasEventFlagChanged(item.getSkipEventId(), flag)) // if the event flag has changed update the status of the item
-    //         {
-    //             if(flag) // Only Skip on Rising-Edge of The Event
-    //                 list.getItem(item.getId()).setSkipped(flag); // use reference to skip the actual item.
-    //         }
-    //     }
-    // }
-}
-
 void Scheduler::determineStatusofItems() 
 {
     auto systemTime = SystemTime::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
     for (auto& item : list.getList()) // iterate over the list of items
     {
-        auto setItemStatus = [](SchedulerItem& item, bool status) // lambda to set the status of item
+        auto setItemStatus = [this](SchedulerItem& item, bool status) // lambda to set the status of item
         { 
+            auto skipSignal = SignalManager::getInstance()->
+                getSignalValue(SignalNameResolver::toString(
+                    SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getSkipLocalSignalName())));
             if(!status) // if the item is off, cancell the skip
                 item.setSkipped(false);
-            else if(item.getSkipEventId() != -1) // if the item is on, and associated with an event.
-                item.setSkipped(EventManager::getInstance()->getEventFlag(item.getSkipEventId())); // skip the item if the event status is "true".
+            else if(skipSignal.has_value()) // if the item is on, and associated with a signal.
+                item.setSkipped(skipSignal.value()); // skip the item if the signal value is "true".
             
             item.setStatus(status and !item.isSkipped()); 
             Serial.println(("item" + std::to_string(item.getId()) + ": is" + std::to_string(item.getStatus())).c_str());
@@ -86,14 +70,6 @@ void Scheduler::determineStatusofItems()
             Serial.println("Unsupported mode");
         }
     }
-}
-
-bool Scheduler::isAnyItemOn() 
-{
-    for (SchedulerItem& item : list.getList())
-        if (item.getStatus())
-            return true;
-    return false;
 }
 
 void Scheduler::create(SchedulerItem schedulerItem) 
@@ -134,8 +110,29 @@ std::string Scheduler::getListJson()
     return list.toJson();
 }
 
+std::vector<ISignalCompatibleItem *> Scheduler::getSignalCompatibleItems()
+{
+    std::vector<ISignalCompatibleItem *> items;
+    for (auto& item : list.getList())
+    {
+        items.push_back(&list.getItem(item.getId())); // pushback real reference of the item, not a copy
+        // Note: This assumes that the list's items are not going to be deleted or modified in a way that invalidates the pointers.
+        // If they are, you may need to handle that case to avoid dangling pointers.
+    }
+    return items;
+}
+
+void Scheduler::loop()
+{
+    determineStatusofItems(); // determine the status of items based on the current time and weekday
+}
+
 void Scheduler::broadcastItem(SchedulerItem &item)
 {
-    if(item.getEventId() != -1) // if the item is associated with an event
-        EventManager::getInstance()->modifyEventFlag(item.getEventId(), item.getStatus()); // broadcast the status of the item
+    SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(
+        SignalNameResolver::SignalNameParameters(
+            this->getName(), 
+            item.getId(), 
+            item.getMainLocalSignalName()
+        )), item.getStatus());
 }

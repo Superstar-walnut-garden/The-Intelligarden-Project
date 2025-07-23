@@ -1,10 +1,10 @@
 #include "SchedulerItem.hpp"
 
 SchedulerItem::SchedulerItem() 
-    : BaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) {}
+    : SignalCompatibleBaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) {}
 
-SchedulerItem::SchedulerItem(uint64_t id, short event_id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode, bool skipped)
-    :BaseItem(id, event_id, name, on), start(start), duration(duration), weekday(weekday), enabled(enabled), mode(mode), skipped(skipped) {}
+SchedulerItem::SchedulerItem(uint64_t id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode, bool skipped)
+    : SignalCompatibleBaseItem(id, name, on), start(start), duration(duration), weekday(weekday), enabled(enabled), mode(mode), skipped(skipped) {}
 
 Time SchedulerItem::getStartTime() 
 {
@@ -60,9 +60,29 @@ bool SchedulerItem::isSkipped()
     return skipped;
 }
 
-short SchedulerItem::getSkipEventId()
+std::string SchedulerItem::getMainLocalSignalName() 
 {
-    return skipEvent_id;
+    return SignalNameResolver::generateLocalSignalName("Main", SignalNameResolver::SignalType::Broadcaster);
+}
+
+std::string SchedulerItem::getSkipLocalSignalName() 
+{
+    return SignalNameResolver::generateLocalSignalName("Skip", SignalNameResolver::SignalType::Listener);
+}
+
+std::string SchedulerItem::getPauseLocalSignalName() 
+{
+    return SignalNameResolver::generateLocalSignalName("Pause", SignalNameResolver::SignalType::Listener);
+}
+
+std::vector<std::string> SchedulerItem::getLocalSignalNames()
+{
+    return 
+    {
+        getMainLocalSignalName(),
+        getSkipLocalSignalName(),
+        getPauseLocalSignalName()
+    };
 }
 
 void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
@@ -73,7 +93,6 @@ void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
     this->enabled = doc["enabled"].as<bool>();
     this->mode = doc["mode"].as<std::string>();
     this->skipped = doc["skipped"].as<bool>();
-    this->skipEvent_id = doc["skipEvent_id"].as<short>();
 }
 
 void SchedulerItem::derivedClassToJson(JsonDocument &doc)
@@ -84,5 +103,4 @@ void SchedulerItem::derivedClassToJson(JsonDocument &doc)
     doc["enabled"] = isEnabled();
     doc["mode"] = getMode();
     doc["skipped"] = isSkipped();
-    doc["skipEvent_id"] = skipEvent_id;
 }

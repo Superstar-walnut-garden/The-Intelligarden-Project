@@ -2,21 +2,18 @@
 #define SCHEDULER_HPP
 
 #include "SchedulerList.hpp"
-#include "EventManager.hpp"
 #include "Time.hpp"
 #include "SystemTime.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
 #include "IManager.hpp"
+#include "ISignalCompatibleManager.hpp"
 
-class Scheduler: public IManager<SchedulerItem>, public IObserver<SystemTime>, public IObserver<EventManager> // SchedulerItem Manager Class
+class Scheduler: public IManager<SchedulerItem>, public ISignalCompatibleManager // SchedulerItem Manager Class
 {
 public:
     static Scheduler* getInstance();
-    bool isAnyItemOn();
-    void update(SystemTime* systemTime) override;
-    void update(EventManager* eventManager) override;
 
     void create(SchedulerItem newItem) override;
     void remove(uint64_t id) override;
@@ -26,6 +23,9 @@ public:
     void loadState() override;
 
     std::string getListJson() override;
+    std::string getName() override { return "Scheduler"; }
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
+    void loop();
 
 private:
     Scheduler();
