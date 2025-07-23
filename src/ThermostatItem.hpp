@@ -8,11 +8,11 @@ class ThermostatItem : public SignalCompatibleBaseItem
 {
 public:
     ThermostatItem();
-    ThermostatItem(int id, int event_id, int heaterEvent_id, int coolerEvent_id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor); // pin = id
+    ThermostatItem(int id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor); // pin = id
 
-    static std::string getHeaterSignalName();
-    static std::string getCoolerSignalName();
-    static std::string getAltSetpointSignalName();
+    static std::string getHeaterLocalSignalName();
+    static std::string getCoolerLocalSignalName();
+    static std::string getAltSetpointLocalSignalName();
     double getSetpoint();
     double getAltSetpoint();
     double getHysteresis();
@@ -25,7 +25,6 @@ private:
     void populateDerivedClassFromJson(JsonDocument &json) override;
     void derivedClassToJson(JsonDocument &doc) override;
     
-    int heaterEvent_id, coolerEvent_id;
     double setpoint, altSetpoint, hysteresis;
     bool enabled;
     uint64_t sensor;

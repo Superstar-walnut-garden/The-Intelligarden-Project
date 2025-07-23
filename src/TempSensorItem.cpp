@@ -6,7 +6,7 @@
  * 
  */
 TempSensorItem::TempSensorItem()
-    : BaseItem(-1, -1, "", false) {}
+    : BaseItem(-1, "", false) {}
 
 /**
  * @brief Construct a new Temp Sensor Item:: Temp Sensor Item object
@@ -16,7 +16,7 @@ TempSensorItem::TempSensorItem()
  * @param isConnected 
  */
 TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected)
-    : BaseItem(id, -1, name, isConnected) {}
+    : BaseItem(id, name, isConnected) {}
 
 /**
  * @brief Overloaded operator to compare two TempSensorItem objects based on their address (id).

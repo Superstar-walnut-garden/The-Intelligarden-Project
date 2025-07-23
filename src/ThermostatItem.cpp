@@ -2,27 +2,27 @@
 #include "SignalNameResolver.hpp"
 
 ThermostatItem::ThermostatItem()
-    : SignalCompatibleBaseItem(), heaterEvent_id(-1), coolerEvent_id(-1), setpoint(0), altSetpoint(0), hysteresis(0), enabled(true)
+    : SignalCompatibleBaseItem(), setpoint(0), altSetpoint(0), hysteresis(0), enabled(true)
 {
 }
 
-ThermostatItem::ThermostatItem(int id, int event_id, int heaterEvent_id, int coolerEvent_id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor)
-    : SignalCompatibleBaseItem(id, event_id, name, true), 
-    heaterEvent_id(heaterEvent_id), coolerEvent_id(coolerEvent_id), setpoint(setpoint), altSetpoint(altSetpoint), hysteresis(hysteresis), enabled(enabled), sensor(sensor)
+ThermostatItem::ThermostatItem(int id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor)
+    : SignalCompatibleBaseItem(id, name, true)
+    , setpoint(setpoint), altSetpoint(altSetpoint), hysteresis(hysteresis), enabled(enabled), sensor(sensor)
 {
 }
 
-std::string ThermostatItem::getHeaterSignalName()
+std::string ThermostatItem::getHeaterLocalSignalName()
 {
     return SignalNameResolver::generateLocalSignalName("heater", SignalNameResolver::SignalType::Broadcaster);
 }
 
-std::string ThermostatItem::getCoolerSignalName()
+std::string ThermostatItem::getCoolerLocalSignalName()
 {
     return SignalNameResolver::generateLocalSignalName("cooler", SignalNameResolver::SignalType::Broadcaster);
 }
 
-std::string ThermostatItem::getAltSetpointSignalName()
+std::string ThermostatItem::getAltSetpointLocalSignalName()
 {
     return SignalNameResolver::generateLocalSignalName("altSetpoint", SignalNameResolver::SignalType::Listener);
 }
@@ -56,16 +56,14 @@ std::vector<std::string> ThermostatItem::getLocalSignalNames()
 {
     return 
     {
-        getCoolerSignalName(),
-        getHeaterSignalName(),
-        getAltSetpointSignalName()
+        getCoolerLocalSignalName(),
+        getHeaterLocalSignalName(),
+        getAltSetpointLocalSignalName()
     };
 }
 
 void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
-    this->coolerEvent_id = doc["coolerEvent_id"].as<int>();
-    this->heaterEvent_id = doc["heaterEvent_id"].as<int>();
     this->setpoint = doc["setpoint"].as<double>();
     this->altSetpoint = doc["altSetpoint"].as<double>();
     this->hysteresis = doc["hysteresis"].as<double>();
@@ -75,8 +73,6 @@ void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
 
 void ThermostatItem::derivedClassToJson(JsonDocument &doc)
 {
-    doc["coolerEvent_id"] = this->coolerEvent_id;
-    doc["heaterEvent_id"] = this->heaterEvent_id;
     doc["setpoint"] = this->setpoint;
     doc["altSetpoint"] = this->altSetpoint;
     doc["hysteresis"] = this->hysteresis;

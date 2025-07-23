@@ -119,26 +119,6 @@ std::vector<ISignalCompatibleItem *> ThermostatManager::getSignalCompatibleItems
 }
 
 /**
- * @brief Update the ThermostatManager when the EventManager changes.
- * 
- * @param eventManager The EventManager that changed.
- */
-void ThermostatManager::update(EventManager* eventManager)
-{
-    for (auto& item : list.getList())
-    {
-        if(item.getEventId() != -1) // if the item is associated with an event.
-        {
-            bool flag = false;
-            if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
-            {
-                list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
-            }
-        }
-    }
-}
-
-/**
  * @brief Update the ThermostatManager when the Temperature changes.
  * 
  * @param temperature The Temperature value that changed.
@@ -155,30 +135,36 @@ void ThermostatManager::update(Temperature* temperature)
         auto temp = temperature->getData(item.getSensor()); // retrive temp value
         auto setpoint = 0.00;
         auto hysteresis = item.getHysteresis();
-        if(item.getEventId() != -1 and item.getStatus()) // if it's associated with an event and the event made its status true:
-            setpoint = item.getAltSetpoint(); // use the secondary setpoint
+        auto altTempSignal = SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(
+            SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getAltSetpointLocalSignalName())));
+        
+        if(altTempSignal.has_value()) // if it's associated with a signal
+        {
+            if(altTempSignal.value() == true) // if signal value is true
+                setpoint = item.getAltSetpoint(); // use the secondary setpoint
+        }
         else
             setpoint = item.getSetpoint(); // use the main setpoint
         
         // Temperature control algorithm
         if(temp > (setpoint + hysteresis)) // if temperature rises
         {
-            signalNameParameters.localSignalName = item.getCoolerSignalName();
+            signalNameParameters.localSignalName = item.getCoolerLocalSignalName();
             SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), true); // turn on cooler
         }
         if(temp <= (setpoint - (hysteresis / 2)))
         {
-            signalNameParameters.localSignalName = item.getCoolerSignalName();
+            signalNameParameters.localSignalName = item.getCoolerLocalSignalName();
             SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), false); // turn off cooler
         }
         if(temp < (setpoint - hysteresis))
         {
-            signalNameParameters.localSignalName = item.getHeaterSignalName();
+            signalNameParameters.localSignalName = item.getHeaterLocalSignalName();
             SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), true); // turn on heater
         }
         if(temp >= (setpoint + (hysteresis / 2)))
         {
-            signalNameParameters.localSignalName = item.getHeaterSignalName();
+            signalNameParameters.localSignalName = item.getHeaterLocalSignalName();
             SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), false); // turn off heater
         }
     }
