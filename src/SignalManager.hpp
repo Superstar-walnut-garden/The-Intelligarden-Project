@@ -7,8 +7,11 @@
 #include <functional>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 #include "IManager.hpp"
 #include "CentralizedSignalHub.hpp"
+#include "StatusCode.hpp"
+
 
 class SignalManager : public IManager<SignalItem>, public IObserver<CentralizedSignalHub>
 {
@@ -21,8 +24,8 @@ public:
     void modifyEventFlag(uint64_t id, bool flag);
     std::string getListJson() override;
 
-    void setSignalValue(std::string fullSignalPath, bool value);
-    bool getSignalValue(std::string fullSignalPath);
+    StatusCode setSignalValue(std::string fullSignalPath, bool value);
+    std::optional<bool> getSignalValue(std::string fullSignalPath);
 
     void update(CentralizedSignalHub *signalHub) override;
 

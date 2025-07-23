@@ -74,28 +74,34 @@ void SignalManager::modify(uint64_t id, SignalItem newItem)
  * 
  * @param fullSignalPath example: "Thermostat_3_cooler_B"
  * @param Value The new signal value.
+ * @param StatusCode if signal is found "StatusCode::SUCSESS" else "StatusCode::NOT_FOUND"
  */
-void SignalManager::setSignalValue(std::string fullSignalPath, bool value)
+StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 {
     // search and find the signal path in signal list (broadcaster parameter)
+    bool found = false;
     for(auto &signalItem: signalList.getList())
     {
         if(signalItem.getBroadcaster() == fullSignalPath)
         {
             signalList.getItem(signalItem.getId()).setStatus(value);
+            found = true;
         }
     }
-    // if found, set the status of that signal item to the value parameter
-    // throw error if not found.
+    
+    if(!found)
+        return StatusCode::NOT_FOUND;
+
+    return StatusCode::SUCCESS;
 }
 
 /** 
- * @brief get the value of a signal in the signal list (for listening).
+ * @brief Get the value of a signal in the signal list.
  * 
  * @param fullSignalPath example: "Thermostat_3_cooler_B"
- * @return bool The value of the desired signal
+ * @return std::optional<bool> The value of the signal if found, otherwise std::nullopt.
  */
-bool SignalManager::getSignalValue(std::string fullSignalPath)
+std::optional<bool> SignalManager::getSignalValue(std::string fullSignalPath)
 {
     // search and find the signal path in signal list (listeners parameter)
     for(auto &signalItem: signalList.getList())
@@ -107,8 +113,6 @@ bool SignalManager::getSignalValue(std::string fullSignalPath)
             }
     }
     return false;
-    // if found, get the status of that signal item and return it
-    // throw error if not found.
 }
 
 /** 
