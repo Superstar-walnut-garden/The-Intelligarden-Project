@@ -82,13 +82,15 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
     bool found = false;
     for(auto &signalItem: signalList.getList())
     {
-        if(signalItem.getBroadcaster() == fullSignalPath)
+        if(signalItem.getBroadcaster().getSignalPath() == fullSignalPath)
         {
-            signalList.getItem(signalItem.getId()).setStatus(value);
+            signalList.getItem(signalItem.getId())
+                .setStatus(signalItem.getBroadcaster().isInverted() ? !value : value);
             found = true;
+            // do not break or return here because broadcasting to multiple SignalItems is allowed.
         }
     }
-    
+
     if(!found)
         return StatusCode::NOT_FOUND;
 
@@ -106,13 +108,14 @@ std::optional<bool> SignalManager::getSignalValue(std::string fullSignalPath)
     // search and find the signal path in signal list (listeners parameter)
     for(auto &signalItem: signalList.getList())
     {
-        for(auto &listener : signalItem.getListeners())
-            if(listener == fullSignalPath)
+        for(auto &listener : signalItem.getListeners()) // loop through listeners
+            if(listener.getSignalPath() == fullSignalPath)
             {
-                return signalList.getItem(signalItem.getId()).getStatus();
+                auto status = signalList.getItem(signalItem.getId()).getStatus();
+                return listener.isInverted() ? !status : status;
             }
     }
-    return false;
+    return std::nullopt; // signal not found (not registered in any signal item)
 }
 
 /** 

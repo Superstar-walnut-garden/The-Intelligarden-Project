@@ -7,18 +7,32 @@
 
 class SignalItem: public BaseItem
 {
-public:
+public: 
+    class SignalEndpoint; // prototype declaration
     SignalItem();
-    // SignalItem(uint64_t id, std::string name);
-    std::vector<std::string> getListeners();
-    std::string getBroadcaster();
+    std::vector<SignalEndpoint> getListeners();
+    SignalEndpoint getBroadcaster();
+
+    class SignalEndpoint // nested class for signal endpoints
+    {
+        public:
+        SignalEndpoint() : signalPath(""), inverted(false) {}
+        SignalEndpoint(std::string signalPath, bool inverted) : signalPath(signalPath), inverted(inverted) {}
+        std::string getSignalPath() { return signalPath; }
+        bool isInverted() { return inverted; }
+
+        private:
+        std::string signalPath;
+        bool inverted;
+    };
 
 private:
     void populateDerivedClassFromJson(JsonDocument &doc) override;
     void derivedClassToJson(JsonDocument &doc) override;
 
-    std::vector<std::string> listeners;
-    std::string broadcaster;
+    std::vector<SignalEndpoint> listeners;
+    SignalEndpoint broadcaster;
+
 };
 
 #endif
