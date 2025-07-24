@@ -24,9 +24,9 @@ public:
         SignalType type;
     };
     
-    static std::string toString(SignalNameParameters p)
+    static std::string toString(SignalNameParameters p) // localSignalName already includes type (e.g. "_B") so the SignalNameParameters::type is not used here
     {
-        return p.subsystemName + "_" + std::to_string(p.id) + "_" + p.localSignalName; // localSignalName already includes type (e.g. "_B")
+        return p.subsystemName + "_" + std::to_string(p.id) + "_" + p.localSignalName;
     }
     static SignalNameParameters parse(std::string signalPath)
     {

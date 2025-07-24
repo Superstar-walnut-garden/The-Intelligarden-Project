@@ -1,19 +1,36 @@
 #include "SystemMaintainer.hpp"
 #include <ESP.h>
 
+/**
+ * @brief get SystemMaintainer singleton instance for managing system state and abnormalities.
+ * 
+ * @return SystemMaintainer& 
+ */
 SystemMaintainer& SystemMaintainer::getInstance()
 {
     static SystemMaintainer instance;
     return instance;
 }
 
+/**
+ * @brief Construct a new System Maintainer:: System Maintainer object
+ * 
+ */
 SystemMaintainer::SystemMaintainer() : running(false), generalAbnormalCondition(false), nextRestartTime(std::chrono::steady_clock::now() + std::chrono::minutes(480)), cycleTimeInitialized(false), abnormalityCounter(0), restartDelayed(false) {}
 
+/**
+ * @brief Destroy the System Maintainer:: System Maintainer object
+ * 
+ */
 SystemMaintainer::~SystemMaintainer()
 {
     stop();
 }
 
+/**
+ * @brief Start the SystemMaintainer loop in a separate thread.
+ * 
+ */
 void SystemMaintainer::start()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -24,6 +41,11 @@ void SystemMaintainer::start()
     }
 }
 
+/**
+ * @brief Check if the system is running.
+ * 
+ * @return true if the system is running, false otherwise.
+ */
 void SystemMaintainer::stop()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -34,6 +56,11 @@ void SystemMaintainer::stop()
     }
 }
 
+/**
+ * @brief Set the general abnormal condition of the system.
+ * 
+ * @param condition true if there is a general abnormal condition, false otherwise.
+ */
 void SystemMaintainer::setGeneralAbnormalCondition(bool condition)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -44,6 +71,11 @@ void SystemMaintainer::setGeneralAbnormalCondition(bool condition)
     }
 }
 
+/**
+ * @brief Get the current general abnormal condition of the system.
+ * 
+ * @return id of the created trackable abnormality
+ */
 int SystemMaintainer::createTrackableAbnormality(const std::string& description, int restartTimeMinutes)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -52,6 +84,11 @@ int SystemMaintainer::createTrackableAbnormality(const std::string& description,
     return id;
 }
 
+/**
+ * @brief Resolve a trackable abnormality by its ID.
+ * 
+ * @param id The ID of the abnormality to resolve.
+ */
 void SystemMaintainer::resolveAbnormality(int &id)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -62,6 +99,11 @@ void SystemMaintainer::resolveAbnormality(int &id)
     }
 }
 
+/**
+ * @brief Postpone a scheduled restart for a specified number of minutes.
+ * 
+ * @param minutes The number of minutes to postpone the restart.
+ */
 void SystemMaintainer::postponeRestart(int minutes)
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -78,6 +120,11 @@ void SystemMaintainer::postponeRestart(int minutes)
     }
 }
 
+/**
+ * @brief Get the next scheduled restart time.
+ * 
+ * @return std::chrono::steady_clock::time_point The next scheduled restart time.
+ */
 void SystemMaintainer::refreshCycleTime()
 {
     std::lock_guard<std::mutex> lock(mtx);
@@ -92,6 +139,10 @@ void SystemMaintainer::refreshCycleTime()
     }
 }
 
+/**
+ * @brief Main loop for the SystemMaintainer to check for abnormalities and manage system state.
+ * 
+ */
 void SystemMaintainer::loop()
 {
     while (running)

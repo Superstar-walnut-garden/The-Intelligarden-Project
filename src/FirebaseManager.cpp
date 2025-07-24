@@ -2,11 +2,19 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
+/**
+ * @brief FirebaseManager constructor.
+ * 
+ */
 FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false), updateTimestamp(-1), firebaseAbnormalityID(-1)
 {
     this->fbData = fbData;
 }
 
+/**
+ * @brief Initialize the FirebaseManager.
+ * 
+ */
 void FirebaseManager::init()
 {
     if(fbData.isNull() or !fbData.isEnabled())
@@ -56,6 +64,11 @@ void FirebaseManager::init()
     Firebase.reconnectWiFi(true);
 }
 
+/**
+ * @brief Check to log data (if not already logged) each minute.
+ * 
+ * @param systemTime 
+ */
 void FirebaseManager::update(SystemTime *systemTime)
 {
     auto hour = systemTime->getHour();
