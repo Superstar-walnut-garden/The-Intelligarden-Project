@@ -164,6 +164,21 @@ void BaseList<T>::deleteItem(uint64_t id)
 }
 
 /**
+ * @brief for each item in the list, call the given function.
+ * 
+ * @tparam T
+ * @param func function to call for each item in the list
+ */
+template <class T>
+void BaseList<T>::forEach(std::function<void(T&)> func)
+    {
+        for (auto &item : this->list)
+        {
+            func(item);
+        }
+    }
+
+/**
  * @brief Get a reference to the list.
  * 
  * @tparam T 

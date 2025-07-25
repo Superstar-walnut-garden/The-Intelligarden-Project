@@ -25,6 +25,8 @@ public:
     virtual void modifyItem(uint64_t id, T& newItem);
     virtual void deleteItem(uint64_t id);
 
+    virtual void forEach(std::function<void(T&)> func);
+
 protected:
     virtual std::vector<T> &getListRef();
 
