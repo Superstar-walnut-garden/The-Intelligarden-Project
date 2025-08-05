@@ -1,0 +1,5 @@
+{
+  "sources": ["src/"],
+  "include_dirs": [],
+  "output": "enum_metadata.json"
+}
