@@ -1,7 +1,7 @@
 #ifndef BASELIST_HPP
 #define BASELIST_HPP
 
-#include <string.h>
+#include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
