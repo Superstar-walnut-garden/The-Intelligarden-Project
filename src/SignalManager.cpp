@@ -1,4 +1,5 @@
 #include "SignalManager.hpp"
+#include "SignalNameResolver.hpp"
 #include <ArduinoJson.h>
 
 SignalManager* SignalManager::instance = nullptr;
@@ -80,17 +81,51 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 {
     // search and find the signal path in signal list (broadcaster parameter)
     bool found = false;
+    static std::vector<std::string> cycleDetection; // to prevent infinite loop
+    auto detectCycle = [&](const std::string &signalPath) 
+    {
+        if (cycleDetection.size() <= 1)
+            return false;
+
+        for (auto i = cycleDetection.begin(); i != cycleDetection.end() - 1; ++i)
+        {
+            if (*i == signalPath)
+            {
+                Serial.print("Error: Cycle detected in signal path: ");
+                for(auto & path : cycleDetection)
+                    Serial.print((path + " -> ").c_str());
+                Serial.println("");
+                return true; // cycle detected
+            }
+        }
+
+        return false; // no cycle detected
+    };
     signalList.forEach([&](SignalItem &signalItem) -> void
     {
-        if(signalItem.getBroadcaster().getSignalPath() == fullSignalPath)
+        auto primaryBroadcasterMatched = signalItem.getBroadcaster().getSignalPath() == fullSignalPath;
+        auto auxiliaryBroadcasterMatched = signalItem.getAuxiliaryBroadcaster().getSignalPath() == fullSignalPath;
+        if(primaryBroadcasterMatched or auxiliaryBroadcasterMatched)
         {
-            signalList.getItem(signalItem.getId())
-                .setStatus(signalItem.getBroadcaster().isInverted() ? !value : value);
-            found = true;
+            if(primaryBroadcasterMatched)
+                signalItem.setBroadcasterStatus(value);
+            else if(auxiliaryBroadcasterMatched)
+                signalItem.setAuxiliaryBroadcasterStatus(value);
+
+            cycleDetection.push_back(fullSignalPath);
+            // emit self as a broadcaster
+            if(detectCycle(fullSignalPath)) return; // prevent infinite loop
+            this->setSignalValue(SignalNameResolver::toString(
+                SignalNameResolver::SignalNameParameters(
+                    this->getName(), 
+                    signalItem.getId(), 
+                    signalItem.getEmittedSignalLocalSignalName()
+                )), signalItem.getStatus());
+                    found = true;
             // do not break or return here because broadcasting to multiple SignalItems is allowed.
         }
     });
-
+    cycleDetection.clear();
     if(!found)
         return StatusCode::NOT_FOUND;
 
@@ -158,4 +193,20 @@ void SignalManager::update(CentralizedSignalHub *signalHub)
 {
     // scan the signal list and check all the broadcaster names and listeners names
     // if there wasn't a match, remove that signalpath.
+}
+
+/**
+ * @brief Get the list of signal-compatible items in the SignalManager (for the CentralizedSignalHub).
+ * @note Never store this std::vector for future use because it may contain dangling pointers if the items are modified or deleted.
+ * 
+ * @return std::vector<ISignalCompatibleItem*> A vector of pointers to signal-compatible items.
+ */
+std::vector<ISignalCompatibleItem *> SignalManager::getSignalCompatibleItems()
+{
+    std::vector<ISignalCompatibleItem *> items;
+    signalList.forEach([&](SignalItem &item) -> void
+    {
+        items.push_back(&signalList.getItem(item.getId())); // pushback real reference of the item, not a copy
+    });
+    return items;
 }

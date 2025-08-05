@@ -24,6 +24,7 @@
 #include "GPIOManager.hpp"
 #include "Scheduler.hpp"
 #include "CentralizedSignalHub.hpp"
+#include "SignalManager.hpp"
 
 
 int virtualMain()
@@ -54,6 +55,7 @@ int virtualMain()
     // systemTime->attach(scheduler); // attach scheduler as an observer
     // eventManager->registerListener(scheduler); // attach scheduler as an observer
 
+    centralizedSignalHub->registerManager(SignalManager::getInstance());
     centralizedSignalHub->registerManager(ioManager);
     centralizedSignalHub->registerManager(thermostatManager);
     centralizedSignalHub->registerManager(scheduler);

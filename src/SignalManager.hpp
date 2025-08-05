@@ -9,11 +9,12 @@
 #include <vector>
 #include <optional>
 #include "IManager.hpp"
+#include "ISignalCompatibleManager.hpp"
 #include "CentralizedSignalHub.hpp"
 #include "StatusCode.hpp"
 
 
-class SignalManager : public IManager<SignalItem>, public IObserver<CentralizedSignalHub>
+class SignalManager : public IManager<SignalItem>, public ISignalCompatibleManager, public IObserver<CentralizedSignalHub>
 {
 public:
     static SignalManager* getInstance();
@@ -21,7 +22,6 @@ public:
     void create(SignalItem item) override;
     void remove(uint64_t id) override;
     void modify(uint64_t id, SignalItem newItem) override;
-    void modifyEventFlag(uint64_t id, bool flag);
     std::string getListJson() override;
 
     StatusCode setSignalValue(std::string fullSignalPath, bool value);
@@ -39,6 +39,9 @@ private:
     ~SignalManager();
     SignalManager(const SignalManager&) = delete;
     SignalManager& operator=(const SignalManager&) = delete;
+
+    std::string getName() override { return "Signal"; };
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
     static SignalManager* instance;
     SignalList signalList;
