@@ -92,17 +92,22 @@ SignalItem::Mode SignalItem::getMode()
 }
 
 /**
- * @brief evaluate the status of the SignalItem based on its broadcaster and mode
+ * @brief evaluate the status of the SignalItem and its listeners based on its broadcaster(s) and mode
  * 
  */
 void SignalItem::evaluateStatus()
 {
+    // broadcasters evaluation
     if(mode == Mode::SingleSource)
         this->setStatus(broadcaster.getStatus());
     else if(mode == Mode::AndWithAuxiliary)
         this->setStatus(broadcaster.getStatus() and auxiliaryBroadcaster.getStatus());
     else if(mode == Mode::OrWithAuxiliary)
         this->setStatus(broadcaster.getStatus() or auxiliaryBroadcaster.getStatus());
+    
+    // listeners evaluation
+    for(auto &listener : listeners) // loop through listeners
+        listener.setStatus(this->getStatus());
 }
 
 /**
@@ -161,6 +166,7 @@ void SignalItem::derivedClassToJson(JsonDocument &doc)
         JsonObject obj = listenersArray.createNestedObject();
         obj["signalPath"] = listener.getSignalPath();
         obj["inverted"] = listener.isInverted();
+        obj["status"] = listener.getStatus();
     }
     // broadcaster
     // Create a nested object for broadcaster

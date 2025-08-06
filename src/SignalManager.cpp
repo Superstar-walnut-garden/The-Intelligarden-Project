@@ -81,8 +81,8 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 {
     // search and find the signal path in signal list (broadcaster parameter)
     bool found = false;
-    static std::vector<std::string> cycleDetection; // to prevent infinite loop
-    auto detectCycle = [&](const std::string &signalPath) 
+    static std::vector<std::string> cycleDetection; // to keep trak of chain calls and prevent endless cycle (prevents stack overflow)
+    auto detectCycle = [&](const std::string &signalPath) // this function searches signal paths in cycleDetection and detects cycles.
     {
         if (cycleDetection.size() <= 1)
             return false;
@@ -94,7 +94,7 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
                 Serial.print("Error: Cycle detected in signal path: ");
                 for(auto & path : cycleDetection)
                     Serial.print((path + " -> ").c_str());
-                Serial.println("");
+                Serial.println("end");
                 return true; // cycle detected
             }
         }
@@ -109,19 +109,21 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
         {
             if(primaryBroadcasterMatched)
                 signalItem.setBroadcasterStatus(value);
-            else if(auxiliaryBroadcasterMatched)
+            else if(auxiliaryBroadcasterMatched and (signalItem.getMode() != SignalItem::Mode::SingleSource))
                 signalItem.setAuxiliaryBroadcasterStatus(value);
+            else
+                return; // skip a forEach cycle (like "continue" keyword)
 
             cycleDetection.push_back(fullSignalPath);
             // emit self as a broadcaster
-            if(detectCycle(fullSignalPath)) return; // prevent infinite loop
+            if(detectCycle(fullSignalPath)) return; // skip (continue) "forEach" to prevent infinite loop
             this->setSignalValue(SignalNameResolver::toString(
                 SignalNameResolver::SignalNameParameters(
                     this->getName(), 
                     signalItem.getId(), 
                     signalItem.getEmittedSignalLocalSignalName()
                 )), signalItem.getStatus());
-                    found = true;
+            found = true;
             // do not break or return here because broadcasting to multiple SignalItems is allowed.
         }
     });
@@ -146,10 +148,7 @@ std::optional<bool> SignalManager::getSignalValue(std::string fullSignalPath)
     {
         for(auto &listener : signalItem.getListeners()) // loop through listeners
             if(listener.getSignalPath() == fullSignalPath)
-            {
-                auto status = signalList.getItem(signalItem.getId()).getStatus();
-                result = listener.isInverted() ? !status : status;
-            }
+                result = listener.getStatus();
     });
     return result;
 }
