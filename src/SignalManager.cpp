@@ -1,5 +1,6 @@
 #include "SignalManager.hpp"
 #include "SignalNameResolver.hpp"
+#include "CentralizedSignalHub.hpp"
 #include <ArduinoJson.h>
 
 SignalManager* SignalManager::instance = nullptr;
@@ -11,6 +12,7 @@ SignalManager* SignalManager::instance = nullptr;
 SignalManager::SignalManager() 
 {
     loadState(); // load the state from the internal storage (SPIFFS)
+    CentralizedSignalHub::getInstance()->attach(this); // get attached to the CentralizedSignalHub to receive updates (via observer pattern)
 }
 
 /** 
@@ -55,6 +57,7 @@ void SignalManager::create(SignalItem item)
 void SignalManager::remove(uint64_t id) 
 {
     signalList.deleteItem(id);
+    notify();
     saveState();
 }
 
@@ -67,6 +70,7 @@ void SignalManager::remove(uint64_t id)
 void SignalManager::modify(uint64_t id, SignalItem newItem) 
 {
     signalList.modifyItem(id, newItem);
+    notify();
     saveState();
 }
 
@@ -190,8 +194,27 @@ void SignalManager::loadState()
  */
 void SignalManager::update(CentralizedSignalHub *signalHub)
 {
+    Serial.println("SignalManager received update from CentralizedSignalHub.");
+    Serial.println("checking signal paths...");
     // scan the signal list and check all the broadcaster names and listeners names
     // if there wasn't a match, remove that signalpath.
+    signalList.forEach([&](SignalItem &item) -> void
+    {
+        // check if the broadcaster signal path is valid
+        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath())){
+            item.removeBroadcaster(); Serial.println("Removed invalid broadcaster signal path: " + String(item.getBroadcaster().getSignalPath().c_str()));
+        }
+
+        // check if the auxiliary broadcaster signal path is valid
+        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getAuxiliaryBroadcaster().getSignalPath()))
+            item.removeBroadcaster(true); // remove auxiliary broadcaster
+
+        // check if the listeners signal paths are valid
+        for(auto &listener : item.getListeners())
+            if(!CentralizedSignalHub::getInstance()->isSignalPathValid(listener.getSignalPath()))
+                item.removeListener(listener.getSignalPath());
+    });
+    saveState(); // save the state after removing invalid signal paths
 }
 
 /**

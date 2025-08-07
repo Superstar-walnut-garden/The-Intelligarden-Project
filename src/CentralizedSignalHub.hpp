@@ -10,6 +10,7 @@ public:
     static CentralizedSignalHub* getInstance();
     void registerManager(ISignalCompatibleManager *manager);
     std::vector<ISignalCompatibleManager *> getManagers();
+    bool isSignalPathValid(std::string fullSignalPath);
     std::string getListJson();
     void update(ISignalCompatibleManager *scm);
 

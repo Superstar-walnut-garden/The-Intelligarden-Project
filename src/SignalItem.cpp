@@ -1,6 +1,7 @@
 #include "SignalItem.hpp"
 #include "SignalNameResolver.hpp"
 #include "../EnumCrafter.hpp"
+#include <algorithm>
 
 /**
  * @brief Construct a new Signal Item:: Signal Item object
@@ -58,6 +59,33 @@ void SignalItem::setBroadcasterStatus(bool value)
 void SignalItem::setAuxiliaryBroadcasterStatus(bool value)
 {
     this->auxiliaryBroadcaster.setStatus(value);
+    this->evaluateStatus(); // evaluate the main status based on the broadcaster
+}
+
+/**
+ * @brief Remove a listener from the SignalItem by its signal path.
+ * 
+ * @param signalPath The signal path of the listener to remove.
+ */
+void SignalItem::removeListener(std::string signalPath)
+{
+    listeners.erase(std::remove_if(listeners.begin(), listeners.end(), [&](SignalEndpoint& listener) 
+    {
+        return (listener.getSignalPath() == signalPath);
+    }), listeners.end());
+}
+
+/**
+ * @brief Remove the broadcaster and optionally the auxiliary broadcaster from the SignalItem.
+ * 
+ * @param removeAuxiliary If true, the auxiliary broadcaster will be removed otherwise primary broadcaster will be removed.
+ */
+void SignalItem::removeBroadcaster(bool removeAuxiliary)
+{
+    if(removeAuxiliary)
+        this->auxiliaryBroadcaster = SignalItem::SignalEndpoint(); // reset the auxiliary broadcaster to a default state
+    else
+        this->broadcaster = SignalItem::SignalEndpoint(); // reset the primary broadcaster to a default state
     this->evaluateStatus(); // evaluate the main status based on the broadcaster
 }
 

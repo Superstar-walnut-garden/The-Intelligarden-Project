@@ -113,7 +113,7 @@ void Scheduler::create(SchedulerItem schedulerItem)
 void Scheduler::remove(uint64_t id) 
 {
     list.deleteItem(id);
-    Serial.printf("Schedule %d removed\n", id);
+    notify();
     saveState();
 }
 
@@ -126,7 +126,7 @@ void Scheduler::remove(uint64_t id)
 void Scheduler::modify(uint64_t id, SchedulerItem newItem) 
 {
     list.modifyItem(id, newItem);
-    Serial.printf("Schedule %d modified\n", id);
+    notify();
     saveState();
 }
 

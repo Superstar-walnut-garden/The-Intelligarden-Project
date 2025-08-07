@@ -19,6 +19,8 @@ public:
 
     void setBroadcasterStatus(bool value);
     void setAuxiliaryBroadcasterStatus(bool value);
+    void removeListener(std::string signalPath);
+    void removeBroadcaster(bool removeAuxiliary = false);
 
     class SignalEndpoint // nested class for signal endpoints
     {

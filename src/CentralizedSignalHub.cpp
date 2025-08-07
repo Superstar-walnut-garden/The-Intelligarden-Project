@@ -41,6 +41,31 @@ std::vector<ISignalCompatibleManager *> CentralizedSignalHub::getManagers()
 }
 
 /**
+ * @brief check if a signal path is valid
+ * @param fullSignalPath the full signal path to be checked
+ * @return true if the signal path is valid, false otherwise
+ */
+bool CentralizedSignalHub::isSignalPathValid(std::string fullSignalPath)
+{
+    for(auto *manager : managers) // iterate over managers
+    {
+        for(auto &item : manager->getSignalCompatibleItems()) // iterate over items
+        {
+            for(auto &localPath : item->getLocalSignalNames()) // iterate over local signals
+            {
+                SignalNameResolver::SignalNameParameters signalParams;
+                signalParams.subsystemName = manager->getName();
+                signalParams.id = item->getId();
+                signalParams.localSignalName = localPath;
+                if(SignalNameResolver::toString(signalParams) == fullSignalPath)
+                    return true; // found a match
+            }
+        }
+    }
+    return false; // no match found
+}
+
+/**
  * @brief get a complete list of signal-compatible items
  * @return json list of signal-compatible items including their local signals
  */

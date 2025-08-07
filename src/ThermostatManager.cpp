@@ -59,6 +59,7 @@ void ThermostatManager::create(ThermostatItem newItem)
 void ThermostatManager::remove(uint64_t id)
 {
     list.deleteItem(id);
+    notify();
     saveState();
 }
 
@@ -71,6 +72,7 @@ void ThermostatManager::remove(uint64_t id)
 void ThermostatManager::modify(uint64_t id, ThermostatItem newItem)
 {
     list.modifyItem(id, newItem);
+    notify();
     saveState();
 }
 
