@@ -2,12 +2,14 @@
 #define THERMOSTATMANAGER_HPP
 
 #include "ThermostatList.hpp"
-#include "EventManager.hpp"
 #include "IObserver.hpp"
 #include "Temperature.hpp"
 #include "IManager.hpp"
+#include "ISignalCompatibleManager.hpp"
 
-class ThermostatManager: public IManager<ThermostatItem>, public IObserver<EventManager>, public IObserver<Temperature>
+class ThermostatManager: public IManager<ThermostatItem>, 
+    public ISignalCompatibleManager,
+    public IObserver<Temperature>
 {
 public:
     static ThermostatManager* getInstance();
@@ -19,7 +21,9 @@ public:
     void saveState() override;
     void loadState() override;
 
-    void update(EventManager* eventManager) override;
+    std::string getName() override;
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
+    
     void update(Temperature* temperature) override;
 
 private:

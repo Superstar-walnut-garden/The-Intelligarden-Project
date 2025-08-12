@@ -2,11 +2,11 @@
 #define GPIOMANAGER_HPP
 
 #include "GPIOList.hpp"
-#include "EventManager.hpp"
 #include "IObserver.hpp"
 #include "IManager.hpp"
+#include "ISignalCompatibleManager.hpp"
 
-class GPIOManager: public IManager<GPIOItem>, public IObserver<EventManager>
+class GPIOManager: public IManager<GPIOItem>, public ISignalCompatibleManager
 {
 public:
     static GPIOManager* getInstance();
@@ -20,8 +20,10 @@ public:
     void saveState() override;
     void loadState() override;
 
+    std::string getName() override;
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
+
     void syncHardware();
-    void update(EventManager* eventManager) override;
 
 private:
     GPIOManager();

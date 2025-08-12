@@ -7,13 +7,11 @@ class BaseItem
 {
 public:
     BaseItem();
-    BaseItem(uint64_t id, int event_id, std::string name, bool status);
+    BaseItem(uint64_t id, std::string name, bool status);
     virtual ~BaseItem();
 
     virtual uint64_t getId() const;
     virtual void setId(uint64_t id);
-    virtual int getEventId() const;
-    virtual void setEventId(int event_id);
     virtual std::string getName() const;
     virtual void setName(std::string name);
     virtual bool getStatus() const;
@@ -27,7 +25,6 @@ protected:
 
 private:
     uint64_t id;
-    int event_id;
     std::string name;
     bool status;
 };

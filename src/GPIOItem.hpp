@@ -2,13 +2,14 @@
 #define GPIOITEM_HPP
 
 #include "BaseItem.hpp"
+#include "SignalCompatibleBaseItem.hpp"
 #include <string>
 
-class GPIOItem : public BaseItem
+class GPIOItem : public SignalCompatibleBaseItem
 {
 public:
     GPIOItem();
-    GPIOItem(int pin, int event_id, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
+    GPIOItem(int pin, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
 
     int getPin();
     int getMode();
@@ -16,6 +17,8 @@ public:
 
     void setMode(short mode);
     void setExtraParameters(std::string extraParameters);
+
+    virtual std::vector<std::string> getLocalSignalNames() override;
 
 private:
     void populateDerivedClassFromJson(JsonDocument &json) override;

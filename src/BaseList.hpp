@@ -1,7 +1,7 @@
 #ifndef BASELIST_HPP
 #define BASELIST_HPP
 
-#include <string.h>
+#include <string>
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -24,6 +24,8 @@ public:
     virtual void printList();
     virtual void modifyItem(uint64_t id, T& newItem);
     virtual void deleteItem(uint64_t id);
+
+    virtual void forEach(std::function<void(T&)> func);
 
 protected:
     virtual std::vector<T> &getListRef();

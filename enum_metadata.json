@@ -1,0 +1,58 @@
+[
+  {
+    "qualified_name": "SignalNameResolver::SignalType",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SignalNameResolver.hpp",
+    "line": 8,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Broadcaster",
+        "value": 0
+      },
+      {
+        "name": "Listener",
+        "value": 1
+      }
+    ]
+  },
+  {
+    "qualified_name": "SignalItem::Mode",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SignalItem.hpp",
+    "line": 30,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "SingleSource",
+        "value": 0
+      },
+      {
+        "name": "AndWithAuxiliary",
+        "value": 1
+      },
+      {
+        "name": "OrWithAuxiliary",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "qualified_name": "StatusCode",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\StatusCode.hpp",
+    "line": 8,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "SUCCESS",
+        "value": 0
+      },
+      {
+        "name": "NOT_FOUND",
+        "value": 1
+      },
+      {
+        "name": "ERROR",
+        "value": 2
+      }
+    ]
+  }
+]

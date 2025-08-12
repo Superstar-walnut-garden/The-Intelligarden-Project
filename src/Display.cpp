@@ -1,7 +1,15 @@
 #include "Display.hpp"
 
+/**
+ * @brief Singleton instance of the Display class.
+ * 
+ */
 Display* Display::instance = nullptr;
 
+/**
+ * @brief Construct a new Display object.
+ * 
+ */
 Display::Display()
     : oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(0x3F, 2, 16), displayType("char")
 {
@@ -31,6 +39,10 @@ Display::Display()
     }
 }
 
+/**
+ * @brief Get the singleton instance of the Display class.
+ * 
+ */
 Display* Display::getInstance()
 {
     if (!instance)
@@ -38,6 +50,13 @@ Display* Display::getInstance()
     return instance;
 }
 
+/**
+ * @brief Draw multi-line text on the display at specified coordinates.
+ * 
+ * @param x horizontal position
+ * @param y vertical position
+ * @param text the text to be displayed, can contain newlines(/n)
+ */
 void Display::drawMultiLineText(int x, int y, const char* text)
 {
     int lineHeight = 10; // for OLED
@@ -57,6 +76,13 @@ void Display::drawMultiLineText(int x, int y, const char* text)
     }
 }
 
+/**
+ * @brief Convert a double value to a string with specified precision.
+ * 
+ * @param value the double value to be converted
+ * @param precision the number of decimal places
+ * @return std::string the formatted string
+ */
 std::string Display::to_string_with_precision(double value, int precision)
 {
     std::ostringstream out;
@@ -64,6 +90,12 @@ std::string Display::to_string_with_precision(double value, int precision)
     return out.str();
 }
 
+/**
+ * @brief Draw the user interface on the display.
+ * 
+ * This function clears the display buffer, draws a frame, sets the font,
+ * and displays the text. It supports both OLED and character LCD displays.
+ */
 void Display::drawUI()
 {
     oled.clearBuffer();
@@ -82,6 +114,11 @@ void Display::drawUI()
     
 }
 
+/**
+ * @brief Update the display with temperature data.
+ * 
+ * @param temp pointer to a Temperature object containing sensor data
+ */
 void Display::update(Temperature *temp)
 {
     Serial.println("display got an update!");

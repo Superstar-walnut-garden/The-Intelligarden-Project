@@ -1,7 +1,7 @@
-#ifndef EVENTLIST_HPP
-#define EVENTLIST_HPP
+#ifndef SIGNALLIST_HPP
+#define SIGNALLIST_HPP
 
-#include "EventItem.hpp"
+#include "SignalItem.hpp"
 #include "BaseList.hpp"
 #include <ArduinoJson.h>
 #include <string>
@@ -12,13 +12,11 @@
  * @brief EventList class
  * 
  */
-class EventList: public BaseList<EventItem>
+class SignalList: public BaseList<SignalItem>
 {
 public:
-    EventList();
-    EventList(std::string json);
-
-    void printList() override;
+    SignalList();
+    SignalList(std::string json);
 
 private:
 };

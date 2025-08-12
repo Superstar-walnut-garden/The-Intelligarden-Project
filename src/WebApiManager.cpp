@@ -1,6 +1,14 @@
 #include "WebApiManager.hpp"
+#include <SPIFFS.h>
+#include <ArduinoJson.h>
+
 #include "Configuration.hpp"
-#include "EventManager.hpp"
+#include "CentralizedSignalHub.hpp"
+#include "SystemTime.hpp"
+#include "GPIOManager.hpp"
+#include "ThermostatManager.hpp"
+#include "SignalManager.hpp"
+#include "Scheduler.hpp"
 
 /**
  * @brief Construct a new WebApiManager object
@@ -106,6 +114,12 @@ void WebApiManager::init()
         return "";
     }, true); // post request
 
+    createEndpoint("/signal-hub-items", [](std::string data) -> std::string
+    {
+        auto signalHubItems = CentralizedSignalHub::getInstance()->getListJson();
+        return signalHubItems;
+    }); // get request
+
     createEndpoint("/restart", [](std::string data) -> std::string
     {
         Serial.println("restarting...");
@@ -117,8 +131,8 @@ void WebApiManager::init()
     createIManagerEndpoints<TempSensorItem>("/TempSensor", Temperature::getInstance());
     createIManagerEndpoints<GPIOItem>("/GPIO", GPIOManager::getInstance());
     createIManagerEndpoints<ThermostatItem>("/Thermostat", ThermostatManager::getInstance());
-    createIManagerEndpoints<EventItem>("/Event", EventManager::getInstance());
     createIManagerEndpoints<SchedulerItem>("/Scheduler", Scheduler::getInstance());
+    createIManagerEndpoints<SignalItem>("/signal", SignalManager::getInstance());
     server.begin();
 }
 

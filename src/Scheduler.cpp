@@ -1,19 +1,38 @@
 #include "Scheduler.hpp"
 #include "Configuration.hpp"
 #include <ArduinoJson.h>
+#include "SignalManager.hpp"
+#include "SignalNameResolver.hpp"
 
+/**
+ * @brief Singleton instance of the Scheduler class.
+ * 
+ */
 Scheduler* Scheduler::instance = nullptr;
 
+/**
+ * @brief Construct a new Scheduler object.
+ * 
+ */
 Scheduler::Scheduler()
 {
     loadState();
 }
 
+/**
+ * @brief Destroy the Scheduler object.
+ * 
+ */
 Scheduler::~Scheduler() 
 {
     saveState();
 }
 
+/**
+ * @brief Get the instance of the Scheduler (singleton pattern).
+ * 
+ * @return Scheduler* The instance of the Scheduler.
+ */
 Scheduler* Scheduler::getInstance() 
 {
     if (!instance) 
@@ -23,39 +42,25 @@ Scheduler* Scheduler::getInstance()
     return instance;
 }
 
-void Scheduler::update(SystemTime* systemTime) 
-{
-    determineStatusofItems();
-}
-
-void Scheduler::update(EventManager* eventManager) 
-{
-    // for (auto& item : list.getList())
-    // {
-    //     if(item.getSkipEventId() != -1) // if the item is associated with an event.
-    //     {
-    //         bool flag = false;
-    //         if (eventManager->hasEventFlagChanged(item.getSkipEventId(), flag)) // if the event flag has changed update the status of the item
-    //         {
-    //             if(flag) // Only Skip on Rising-Edge of The Event
-    //                 list.getItem(item.getId()).setSkipped(flag); // use reference to skip the actual item.
-    //         }
-    //     }
-    // }
-}
-
+/**
+ * @brief determine the status of items based on the current time and weekday.
+ * 
+ */
 void Scheduler::determineStatusofItems() 
 {
     auto systemTime = SystemTime::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
     for (auto& item : list.getList()) // iterate over the list of items
     {
-        auto setItemStatus = [](SchedulerItem& item, bool status) // lambda to set the status of item
+        auto setItemStatus = [this](SchedulerItem& item, bool status) // lambda to set the status of item
         { 
+            auto skipSignal = SignalManager::getInstance()->
+                getSignalValue(SignalNameResolver::toString(
+                    SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getSkipLocalSignalName())));
             if(!status) // if the item is off, cancell the skip
                 item.setSkipped(false);
-            else if(item.getSkipEventId() != -1) // if the item is on, and associated with an event.
-                item.setSkipped(EventManager::getInstance()->getEventFlag(item.getSkipEventId())); // skip the item if the event status is "true".
+            else if(skipSignal.has_value()) // if the item is on, and associated with a signal.
+                item.setSkipped(skipSignal.value()); // skip the item if the signal value is "true".
             
             item.setStatus(status and !item.isSkipped()); 
             Serial.println(("item" + std::to_string(item.getId()) + ": is" + std::to_string(item.getStatus())).c_str());
@@ -88,14 +93,11 @@ void Scheduler::determineStatusofItems()
     }
 }
 
-bool Scheduler::isAnyItemOn() 
-{
-    for (SchedulerItem& item : list.getList())
-        if (item.getStatus())
-            return true;
-    return false;
-}
-
+/**
+ * @brief Create a new SchedulerItem and add it to the list.
+ * 
+ * @param schedulerItem The SchedulerItem to be created.
+ */
 void Scheduler::create(SchedulerItem schedulerItem) 
 {
     list.addItem(schedulerItem);
@@ -103,25 +105,44 @@ void Scheduler::create(SchedulerItem schedulerItem)
     saveState();
 }
 
+/**
+ * @brief Remove a SchedulerItem from the list by its ID.
+ * 
+ * @param id The ID of the SchedulerItem to be removed.
+ */
 void Scheduler::remove(uint64_t id) 
 {
     list.deleteItem(id);
-    Serial.printf("Schedule %d removed\n", id);
+    notify();
     saveState();
 }
 
+/**
+ * @brief Modify an existing SchedulerItem in the list.
+ * 
+ * @param id The ID of the SchedulerItem to be modified.
+ * @param newItem The new SchedulerItem with updated values.
+ */
 void Scheduler::modify(uint64_t id, SchedulerItem newItem) 
 {
     list.modifyItem(id, newItem);
-    Serial.printf("Schedule %d modified\n", id);
+    notify();
     saveState();
 }
 
+/**
+ * @brief Save the current state of the Scheduler to the internal storage (SPIFFS).
+ * 
+ */
 void Scheduler::saveState()
 {
     Configuration::getInstance()->setSchedulerList(list.toJson());
 }
 
+/**
+ * @brief Load the state of the Scheduler from the internal storage (SPIFFS).
+ * 
+ */
 void Scheduler::loadState() 
 {
     auto data = Configuration::getInstance()->getSchedulerList();
@@ -129,13 +150,53 @@ void Scheduler::loadState()
         list.repopulateWith(data);
 }
 
+/**
+ * @brief Get the JSON representation of the Scheduler list (for web-api).
+ * 
+ * @return std::string The Scheduler list in JSON format.
+ */
 std::string Scheduler::getListJson()
 {
     return list.toJson();
 }
 
+/**
+ * @brief Get the list of signal-compatible items in the Scheduler (for the CentralizedSignalHub).
+ * 
+ * @return std::vector<ISignalCompatibleItem*> A vector of pointers to signal-compatible items.
+ */
+std::vector<ISignalCompatibleItem *> Scheduler::getSignalCompatibleItems()
+{
+    std::vector<ISignalCompatibleItem *> items;
+    for (auto& item : list.getList())
+    {
+        items.push_back(&list.getItem(item.getId())); // pushback real reference of the item, not a copy
+        // Note: This assumes that the list's items are not going to be deleted or modified in a way that invalidates the pointers.
+        // If they are, you may need to handle that case to avoid dangling pointers.
+    }
+    return items;
+}
+
+/**
+ * @brief The main loop of the Scheduler, call periodically to update the status of items.
+ * 
+ */
+void Scheduler::loop()
+{
+    determineStatusofItems(); // determine the status of items based on the current time and weekday
+}
+
+/**
+ * @brief Broadcast the status of a SchedulerItem to SignalManager
+ * 
+ * @param item The SchedulerItem to be broadcasted.
+ */
 void Scheduler::broadcastItem(SchedulerItem &item)
 {
-    if(item.getEventId() != -1) // if the item is associated with an event
-        EventManager::getInstance()->modifyEventFlag(item.getEventId(), item.getStatus()); // broadcast the status of the item
+    SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(
+        SignalNameResolver::SignalNameParameters(
+            this->getName(), 
+            item.getId(), 
+            item.getMainLocalSignalName()
+        )), item.getStatus());
 }

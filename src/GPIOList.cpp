@@ -1,24 +1,19 @@
 #include "GPIOList.hpp"
 
+/**
+ * @brief Constructor for GPIOList class.
+ * 
+ */
 GPIOList::GPIOList(): BaseList()
 {}
 
+/**
+ * @brief Constructor for GPIOList class with JSON input.
+ * 
+ * @param json JSON string containing GPIO items.
+ */
 GPIOList::GPIOList(std::string json): BaseList()
 {
     this->repopulateWith(json);
     Serial.println(json.c_str()); // for debug purposes
-}
-
-void GPIOList::printList()
-{
-    for (auto& item : getList())
-    {
-        std::cout <<
-         "ID: " << item.getId() << 
-         ", Name: " << item.getName() << 
-         ", Status: " << item.getStatus() << 
-         ", Mode: " << item.getMode() <<
-         ", Event_ID: " << item.getEventId() <<
-         ", ExtraParameters: " << item.getExtraParameters() << std::endl;
-    }
 }

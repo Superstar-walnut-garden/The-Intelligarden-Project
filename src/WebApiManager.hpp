@@ -6,14 +6,7 @@
 #include <rom/rtc.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
-#include <SPIFFS.h>
-#include <ArduinoJson.h>
 #include "IObserver.hpp"
-#include "SystemTime.hpp"
-#include "GPIOManager.hpp"
-#include "ThermostatManager.hpp"
-#include "ThermostatItem.hpp"
-#include "Scheduler.hpp"
 #include "IManager.hpp"
 
 class WebApiManager

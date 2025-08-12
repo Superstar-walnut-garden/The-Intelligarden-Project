@@ -1,4 +1,6 @@
 #include "GPIOManager.hpp"
+#include "SignalManager.hpp"
+#include "SignalNameResolver.hpp"
 
 /**
  * @brief initialize the instance of the GPIOManager to null
@@ -57,6 +59,7 @@ void GPIOManager::create(GPIOItem newItem)
 void GPIOManager::remove(uint64_t id)
 {
     list.deleteItem(id);
+    notify();
     saveState();
 }
 
@@ -69,6 +72,7 @@ void GPIOManager::remove(uint64_t id)
 void GPIOManager::modify(uint64_t id, GPIOItem newItem)
 {
     list.modifyItem(id, newItem);
+    notify();
     saveState();
 }
 
@@ -84,6 +88,7 @@ void GPIOManager::modifyIOStatus(uint64_t id, bool status)
     if (item.getId() != -1) // Check if the item exists
     {
         item.setStatus(status);
+        notify();
         saveState();
     }
 }
@@ -137,44 +142,52 @@ void GPIOManager::loadState()
 }
 
 /**
+ * @brief get unique name of subsystem (manager)
+ * @return Subsystem Name
+ */
+std::string GPIOManager::getName()
+{
+    return "GPIO";
+}
+
+/**
+ * @brief get a list of signal compatible items
+ * @return list of all signal compatible items
+ */
+std::vector<ISignalCompatibleItem *> GPIOManager::getSignalCompatibleItems()
+{
+    std::vector<ISignalCompatibleItem *> signalCompatibleList;
+    for(auto &item : list.getList()) // copy list
+        signalCompatibleList.push_back(&list.getItem(item.getId()));
+    return signalCompatibleList;
+}
+
+/**
  * @brief sync the actual GPIO pins to the status of the items and vice versa.
  * 
  */
 void GPIOManager::syncHardware()
 {
+    SignalNameResolver::SignalNameParameters signalNameParameters;
+    signalNameParameters.subsystemName = this->getName();
+    
     for (auto& item : list.getList())
     {
+        signalNameParameters.id = item.getId();
+        signalNameParameters.localSignalName = item.getLocalSignalNames()[0];
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
+            auto signalValue = SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
+            if (signalValue.has_value()) // if registered signal found
+                itemRef.setStatus(signalValue.value());
             pinMode(item.getPin(), OUTPUT);
-            digitalWrite(item.getPin(), item.getStatus()); // update the pin from item status
+            digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
         } else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
             itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
-            if(item.getEventId() != -1)
-                EventManager::getInstance()->modifyEventFlag(item.getEventId(), itemRef.getStatus());
-        }
-    }
-}
-
-/**
- * @brief Update the GPIOManager when the EventManager changes.
- * 
- * @param eventManager The EventManager that changed.
- */
-void GPIOManager::update(EventManager* eventManager)
-{
-    for (auto& item : list.getList())
-    {
-        if(item.getEventId() != -1) // if the pin is associated with an event.
-        {
-            bool flag = false;
-            if (eventManager->hasEventFlagChanged(item.getEventId(), flag)) // if the event flag has changed update the status of the item
-            {
-                list.getItem(item.getId()).setStatus(flag); // use reference to set the status of the actual item.
-            }
+            SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
         }
     }
 }
