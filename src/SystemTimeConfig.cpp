@@ -1,10 +1,10 @@
-#include "TimeConfigData.hpp"
+#include "SystemTimeConfig.hpp"
 
 /**
  * @brief Construct a new Time Config Data:: Time Config Data object
  * 
  */
-TimeConfigData::TimeConfigData()
+SystemTimeConfig::SystemTimeConfig()
     : timezone(""), ntpServer("pool.ntp.org"), timeSubsystemInitialized(false), 
       externalRTCAvailable(false), setTimeAutomatically(true), ntpUpdated(false), 
       manualTimeSetFlag(false), manualTimeEpoch(0) 
@@ -17,22 +17,22 @@ TimeConfigData::TimeConfigData()
  * 
  * @param json JSON string containing time configuration data
  */
-TimeConfigData::TimeConfigData(std::string json) 
+SystemTimeConfig::SystemTimeConfig(std::string json) 
 {
     populateFromJson(json);
 }
 
 /**
- * @brief Populate the TimeConfigData object from a JSON string
+ * @brief Populate the SystemTimeConfig object from a JSON string
  * 
  * @param json JSON string containing time configuration data
  */
-void TimeConfigData::populateFromJson(std::string json)
+void SystemTimeConfig::populateFromJson(std::string json)
 {
     JsonDocument doc;
     DeserializationError error = deserializeJson(doc, json);
     if (error) {
-        Serial.println("Fatal Err: Failed to parse TimeConfigData JSON");
+        Serial.println("Fatal Err: Failed to parse SystemTimeConfig JSON");
         return;
     }
     
@@ -47,11 +47,11 @@ void TimeConfigData::populateFromJson(std::string json)
 }
 
 /**
- * @brief Convert the TimeConfigData object to a JSON string
+ * @brief Convert the SystemTimeConfig object to a JSON string
  * 
- * @return std::string JSON string representation of the TimeConfigData object
+ * @return std::string JSON string representation of the SystemTimeConfig object
  */
-std::string TimeConfigData::toJson()
+std::string SystemTimeConfig::toJson()
 {
     JsonDocument doc;
     doc["timezone"] = timezone;
@@ -73,7 +73,7 @@ std::string TimeConfigData::toJson()
  * 
  * @return std::string Timezone string
  */
-std::string TimeConfigData::getTimezone()
+std::string SystemTimeConfig::getTimezone()
 {
     return timezone;
 }
@@ -83,7 +83,7 @@ std::string TimeConfigData::getTimezone()
  * 
  * @param tz Timezone string to set
  */
-void TimeConfigData::setTimezone(std::string& tz)
+void SystemTimeConfig::setTimezone(std::string& tz)
 {
     timezone = tz;
 }
@@ -93,7 +93,7 @@ void TimeConfigData::setTimezone(std::string& tz)
  * 
  * @return std::string NTP server string
  */
-std::string TimeConfigData::getNtpServer()
+std::string SystemTimeConfig::getNtpServer()
 {
     return ntpServer;
 }
@@ -103,7 +103,7 @@ std::string TimeConfigData::getNtpServer()
  * 
  * @param server NTP server string to set
  */
-void TimeConfigData::setNtpServer(std::string& server)
+void SystemTimeConfig::setNtpServer(std::string& server)
 {
     ntpServer = server;
 }
@@ -113,7 +113,7 @@ void TimeConfigData::setNtpServer(std::string& server)
  * 
  * @return true if initialized, false otherwise
  */
-bool TimeConfigData::isTimeSubsystemInitialized()
+bool SystemTimeConfig::isTimeSubsystemInitialized()
 {
     return timeSubsystemInitialized;
 }
@@ -123,7 +123,7 @@ bool TimeConfigData::isTimeSubsystemInitialized()
  * 
  * @param initialized true if initialized, false otherwise
  */
-void TimeConfigData::setTimeSubsystemInitialized(bool initialized)
+void SystemTimeConfig::setTimeSubsystemInitialized(bool initialized)
 {
     timeSubsystemInitialized = initialized;
 }
@@ -133,7 +133,7 @@ void TimeConfigData::setTimeSubsystemInitialized(bool initialized)
  * 
  * @return true if enabled, false otherwise
  */
-bool TimeConfigData::isExternalRTCAvailable()
+bool SystemTimeConfig::isExternalRTCAvailable()
 {
     return externalRTCAvailable;
 }
@@ -143,7 +143,7 @@ bool TimeConfigData::isExternalRTCAvailable()
  * 
  * @param enabled true if enabled, false otherwise
  */
-void TimeConfigData::setExternalRTCAvailability(bool available)
+void SystemTimeConfig::setExternalRTCAvailability(bool available)
 {
     externalRTCAvailable = available;
 }
@@ -153,7 +153,7 @@ void TimeConfigData::setExternalRTCAvailability(bool available)
  * 
  * @return true if set automatically, false otherwise
  */
-bool TimeConfigData::isSetTimeAutomatically()
+bool SystemTimeConfig::isSetTimeAutomatically()
 {
     return setTimeAutomatically;
 }
@@ -163,7 +163,7 @@ bool TimeConfigData::isSetTimeAutomatically()
  * 
  * @param setAutomatically true if set automatically, false otherwise
  */
-void TimeConfigData::setSetTimeAutomatically(bool setAutomatically)
+void SystemTimeConfig::setSetTimeAutomatically(bool setAutomatically)
 {
     setTimeAutomatically = setAutomatically;
 }
@@ -173,7 +173,7 @@ void TimeConfigData::setSetTimeAutomatically(bool setAutomatically)
  * 
  * @return true if updated, false otherwise
  */
-bool TimeConfigData::isNtpUpdated()
+bool SystemTimeConfig::isNtpUpdated()
 {
     return ntpUpdated;
 }
@@ -183,7 +183,7 @@ bool TimeConfigData::isNtpUpdated()
  * 
  * @param updated true if updated, false otherwise
  */
-void TimeConfigData::setNtpUpdated(bool updated)
+void SystemTimeConfig::setNtpUpdated(bool updated)
 {
     ntpUpdated = updated;
 }
@@ -193,7 +193,7 @@ void TimeConfigData::setNtpUpdated(bool updated)
  * 
  * @return true if manual time set flag is active, false otherwise
  */
-bool TimeConfigData::isManualTimeSetFlag()
+bool SystemTimeConfig::isManualTimeSetFlag()
 {
     return manualTimeSetFlag;
 }
@@ -203,7 +203,7 @@ bool TimeConfigData::isManualTimeSetFlag()
  * 
  * @param flag true to set the flag, false to clear it
  */
-void TimeConfigData::setManualTimeSetFlag(bool flag)
+void SystemTimeConfig::setManualTimeSetFlag(bool flag)
 {
     manualTimeSetFlag = flag;
 }
@@ -213,7 +213,7 @@ void TimeConfigData::setManualTimeSetFlag(bool flag)
  * 
  * @return unsigned long Manual time epoch in seconds
  */
-unsigned long TimeConfigData::getManualTimeEpoch()
+unsigned long SystemTimeConfig::getManualTimeEpoch()
 {
     return manualTimeEpoch;
 }
@@ -223,7 +223,7 @@ unsigned long TimeConfigData::getManualTimeEpoch()
  * 
  * @param epoch Manual time epoch in seconds to set
  */
-void TimeConfigData::setManualTimeEpoch(unsigned long epoch)
+void SystemTimeConfig::setManualTimeEpoch(unsigned long epoch)
 {
     manualTimeEpoch = epoch;
 }

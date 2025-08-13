@@ -1,32 +1,44 @@
-#ifndef FIREBASEMANAGER_HPP
-#define FIREBASEMANAGER_HPP
+#pragma once
 
 #include <FirebaseESP32.h>
 
-#include "FBData.hpp"
-#include "SystemTime.hpp"
+#include "FirebaseServiceConfig.hpp"
+#include "SystemTimeService.hpp"
 #include "IObserver.hpp"
 #include "Configuration.hpp"
-#include "Temperature.hpp"
+#include "TempSensorService.hpp"
 #include "SystemMaintainer.hpp"
+#include "IResourcePersistenceService.hpp"
+#include "IConfigController.hpp"
 
 
-class FirebaseManager: public IObserver<SystemTime>
+class FirebaseService: 
+    public IConfigController<FirebaseServiceConfig>,
+    public IResourcePersistenceService,
+    public IObserver<SystemTimeService>
 {
-    public:
-    FirebaseManager(FBData fbData);
+public:
+    static FirebaseService *getInstance();
     void init();
-    void update(SystemTime *systemTime);
-    private:
-    FBData fbData;
+    void update(SystemTimeService *systemTime);
+
+    void updateConfig(FirebaseServiceConfig cfg) override;
+    std::string getConfig() override;
+
+    void storeAll() override;
+    void restoreAll() override;
+
+private:
+    FirebaseServiceConfig fbData; // the actual service config
     FirebaseData fbdo;
     FirebaseAuth auth;
-    FirebaseConfig config;
+    FirebaseConfig config; // config of the library
     String uid; // Variable to save USER UID
     bool signupOK;
     bool firebaseOK;
     signed updateTimestamp;
     int firebaseAbnormalityID;
-};
 
-#endif
+    FirebaseService();
+    static FirebaseService *instance;
+};

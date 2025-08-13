@@ -1,4 +1,4 @@
-#include "WifiSetup.hpp"
+#include "WifiService.hpp"
 #include <thread>
 
 
@@ -6,37 +6,37 @@
  * @brief instance initialization for the singleton pattern
  * 
  */
-WifiSetup *WifiSetup::instance = nullptr;
+WifiService *WifiService::instance = nullptr;
 
 /**
- * @brief retrieve the singleton instance of WifiSetup.
+ * @brief retrieve the singleton instance of WifiService.
  * 
- * @return WifiSetup* 
+ * @return WifiService* 
  */
-WifiSetup *WifiSetup::getInstance()
+WifiService *WifiService::getInstance()
 {
     if (!instance)
-        instance = new WifiSetup();
+        instance = new WifiService();
     return instance;
 }
 
 
 /**
- * @brief Constructor for WifiSetup class.
+ * @brief Constructor for WifiService class.
  * Initializes the Wi-Fi connection and starts an internal async thread to monitor the connection status.
  */
-WifiSetup::WifiSetup()
+WifiService::WifiService()
 {
-    auto wifiCred = Configuration::getInstance()->getWifiCredentials();
+    restoreAll();
     // Start the Wi-Fi reconnect thread
-    std::thread wifiThread([this, wifiCred]()
+    std::thread wifiThread([this]()
     {
         bool lastOnlineStatus = false; // Track last online status
         bool lastConnectedStatus = false; // Track last wifi connection status
         while(true)
         {
             if(!isConnected()) // if not connected
-                connect(wifiCred); // retry
+                connect(); // retry
             if(isConnected() && !lastConnectedStatus) // if connected to wifi
             {
                 Serial.println("Wifi Thread: Connected to WiFi!");
@@ -72,7 +72,7 @@ WifiSetup::WifiSetup()
  * 
  * @param wifiCred The Wi-Fi credentials to use for connection.
  */
-void WifiSetup::connect(WifiHotspotData wifiCred)
+void WifiService::connect()
 {
     auto ssid = wifiCred.getSsid();
     auto password = wifiCred.getPassword();
@@ -125,7 +125,7 @@ void WifiSetup::connect(WifiHotspotData wifiCred)
  * 
  * @param callback The function to call when connected.
  */
-void WifiSetup::onConnect(std::function<void()> callback)
+void WifiService::onConnect(std::function<void()> callback)
 {
     onConnectCallback = callback;
 }
@@ -135,7 +135,7 @@ void WifiSetup::onConnect(std::function<void()> callback)
  * 
  * @param callback The function to call when online.
  */
-void WifiSetup::onOnline(std::function<void()> callback)
+void WifiService::onOnline(std::function<void()> callback)
 {
     onOnlineCallback = callback;
 }
@@ -145,7 +145,7 @@ void WifiSetup::onOnline(std::function<void()> callback)
  * 
  * @param callback The function to call when disconnected.
  */
-void WifiSetup::onDisconnect(std::function<void()> callback)
+void WifiService::onDisconnect(std::function<void()> callback)
 {
     onDisconnectCallback = callback;
 }
@@ -155,7 +155,7 @@ void WifiSetup::onDisconnect(std::function<void()> callback)
  * 
  * @param callback The function to call when offline.
  */
-void WifiSetup::onOffline(std::function<void()> callback)
+void WifiService::onOffline(std::function<void()> callback)
 {
     onOfflineCallback = callback;
 }
@@ -165,7 +165,7 @@ void WifiSetup::onOffline(std::function<void()> callback)
  * 
  * @return true if online, false otherwise.
  */
-bool WifiSetup::isOnline()
+bool WifiService::isOnline()
 {
     if(isConnected()) // If connected to wifi, check internet connectivity
         if (Ping.ping(IPAddress(8, 8, 8, 8), 3)) // Ping Google's dns server
@@ -178,16 +178,16 @@ bool WifiSetup::isOnline()
  * 
  * @return true if connected, false otherwise.
  */
-bool WifiSetup::isConnected()
+bool WifiService::isConnected()
 {
     return WiFi.status() == WL_CONNECTED;
 }
 
 /**
  * @brief Main loop function to manage connection callbacks and flags.
- * This function should be called periodically to handle Wi-Fi events.
+ * @details this function should be called periodically to handle Wi-Fi events.
  */
-void WifiSetup::loop()
+void WifiService::loop()
 {
     // manage the connection callbacks and flags
     if (connectFlag.exchange(false)) // Check and reset wifi connect flag atomically
@@ -202,4 +202,41 @@ void WifiSetup::loop()
     if (offlineFlag.exchange(false)) // Check and reset offline flag atomically
         if (onOfflineCallback) 
             onOfflineCallback();
+}
+
+/**
+ * @brief store config in storage
+ * 
+ */
+void WifiService::storeAll()
+{
+    Configuration::getInstance()->setWifiCredentials(wifiCred.toJson());
+}
+
+/**
+ * @brief restore config from storage
+ * 
+ */
+void WifiService::restoreAll()
+{
+    wifiCred.populateFromJson(Configuration::getInstance()->getWifiCredentials());
+}
+
+/**
+ * @brief update config (for web-api)
+ * @param cfg new configuration to replace the old one
+ */
+void WifiService::updateConfig(WifiHotspotConfig cfg)
+{
+    this->wifiCred = cfg;
+    storeAll();
+}
+
+/**
+ * @brief get config in json string format (for web-api)
+ * @return std::string configuration json string
+ */
+std::string WifiService::getConfig()
+{
+    return wifiCred.toJson();
 }

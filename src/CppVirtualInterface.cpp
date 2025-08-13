@@ -10,21 +10,21 @@
 #include <rom/rtc.h>
 #include <SPIFFS.h>
 
-#include "WifiSetup.hpp"
-#include "SystemTime.hpp"
+#include "WifiService.hpp"
+#include "SystemTimeService.hpp"
 #include <Wire.h>
 #include <U8g2lib.h>
-#include "Temperature.hpp"
-#include "Display.hpp"
+#include "TempSensorService.hpp"
+#include "DisplayService.hpp"
 
-#include "FirebaseManager.hpp"
+#include "FirebaseService.hpp"
 #include "SystemMaintainer.hpp"
-#include "ThermostatManager.hpp"
-#include "WebApiManager.hpp"
-#include "GPIOManager.hpp"
-#include "Scheduler.hpp"
+#include "ThermostatService.hpp"
+#include "WebApiService.hpp"
+#include "GpioService.hpp"
+#include "SchedulerService.hpp"
 #include "CentralizedSignalHub.hpp"
-#include "SignalManager.hpp"
+#include "SignalRouterService.hpp"
 
 
 int virtualMain()
@@ -36,26 +36,26 @@ int virtualMain()
     auto &systemMaintainer = SystemMaintainer::getInstance();
     systemMaintainer.start();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
-    auto *wifiSetup = WifiSetup::getInstance();
-    auto *webApiManager = new WebApiManager();
+    auto *wifiSetup = WifiService::getInstance();
+    auto *webApiManager = new WebApiService();
     delay(500); // waiting utill reaching system stability
-    auto *systemTime = SystemTime::getInstance();
-    auto *temperature = Temperature::getInstance();
+    auto *systemTime = SystemTimeService::getInstance();
+    auto *temperature = TempSensorService::getInstance();
     auto *configuration = Configuration::getInstance();
-    auto *display = Display::getInstance();
-    auto *fbm = new FirebaseManager(Configuration::getInstance()->getFirebaseData());
-    auto *scheduler = Scheduler::getInstance();
-    auto *ioManager = GPIOManager::getInstance();
-    auto *thermostatManager = ThermostatManager::getInstance();
+    auto *display = DisplayService::getInstance();
+    auto *fbm = FirebaseService::getInstance();;
+    auto *scheduler = SchedulerService::getInstance();
+    auto *ioManager = GpioService::getInstance();
+    auto *thermostatManager = ThermostatService::getInstance();
     auto *centralizedSignalHub = CentralizedSignalHub::getInstance();
 
     temperature->attach(display); // attach display as an observer
-    temperature->attach(thermostatManager); // attach ThermostatManager as an observer
+    temperature->attach(thermostatManager); // attach ThermostatService as an observer
     // systemTime->attach(fbm); // attach firebase-manager as an observer
     // systemTime->attach(scheduler); // attach scheduler as an observer
     // eventManager->registerListener(scheduler); // attach scheduler as an observer
 
-    centralizedSignalHub->registerManager(SignalManager::getInstance());
+    centralizedSignalHub->registerManager(SignalRouterService::getInstance());
     centralizedSignalHub->registerManager(ioManager);
     centralizedSignalHub->registerManager(thermostatManager);
     centralizedSignalHub->registerManager(scheduler);
@@ -99,7 +99,7 @@ int virtualMain()
         systemTime->notifierEngine();
         if(systemTime->isTimeUpdated()) // scheduler should only run if the time is updated (time subsystem initialized)
         {
-            Scheduler::getInstance()->loop();
+            SchedulerService::getInstance()->loop();
         }
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");

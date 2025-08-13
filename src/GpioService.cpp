@@ -1,41 +1,42 @@
-#include "GPIOManager.hpp"
-#include "SignalManager.hpp"
+#include "GpioService.hpp"
+#include "SignalRouterService.hpp"
 #include "SignalNameResolver.hpp"
+#include "Configuration.hpp"
 
 /**
- * @brief initialize the instance of the GPIOManager to null
+ * @brief initialize the instance of the GpioService to null
  * 
  */
-GPIOManager* GPIOManager::instance = nullptr;
+GpioService* GpioService::instance = nullptr;
 
 /**
- * @brief Construct a new GPIOManager::GPIOManager object
+ * @brief Construct a new GpioService::GpioService object
  * 
  */
-GPIOManager::GPIOManager()
+GpioService::GpioService()
 {
-    loadState();
+    restoreAll();
 }
 
 /**
- * @brief Destroy the GPIOManager object.
+ * @brief Destroy the GpioService object.
  * 
  */
-GPIOManager::~GPIOManager()
+GpioService::~GpioService()
 {
-    saveState();
+    storeAll();
 }
 
 /**
- * @brief Get the instance of the GPIOManager (singleton pattern).
+ * @brief Get the instance of the GpioService (singleton pattern).
  * 
- * @return GPIOManager* The instance of the GPIOManager.
+ * @return GpioService* The instance of the GpioService.
  */
-GPIOManager* GPIOManager::getInstance()
+GpioService* GpioService::getInstance()
 {
     if (!instance)
     {
-        instance = new GPIOManager();
+        instance = new GpioService();
     }
     return instance;
 }
@@ -45,10 +46,10 @@ GPIOManager* GPIOManager::getInstance()
  * 
  * @param newItem The new GPIO item to add.
  */
-void GPIOManager::create(GPIOItem newItem)
+void GpioService::create(GpioItem newItem)
 {
     list.addItem(newItem);
-    saveState();
+    storeAll();
 }
 
 /**
@@ -56,57 +57,24 @@ void GPIOManager::create(GPIOItem newItem)
  * 
  * @param id The ID of the GPIO item to remove.
  */
-void GPIOManager::remove(uint64_t id)
+void GpioService::remove(uint64_t id)
 {
     list.deleteItem(id);
     notify();
-    saveState();
+    storeAll();
 }
 
 /**
- * @brief Modify a GPIO item in the GPIO list.
+ * @brief Update a GPIO item in the GPIO list.
  * 
- * @param id The ID of the GPIO item to modify.
+ * @param id The ID of the GPIO item to update.
  * @param newItem The new GPIO item to replace the old one.
  */
-void GPIOManager::modify(uint64_t id, GPIOItem newItem)
+void GpioService::update(uint64_t id, GpioItem newItem)
 {
     list.modifyItem(id, newItem);
     notify();
-    saveState();
-}
-
-/**
- * @brief Modify the status of a GPIO item in the GPIO list.
- * 
- * @param id The ID of the GPIO item to modify.
- * @param status The new status of the GPIO item.
- */
-void GPIOManager::modifyIOStatus(uint64_t id, bool status)
-{
-    GPIOItem& item = list.getItem(id);
-    if (item.getId() != -1) // Check if the item exists
-    {
-        item.setStatus(status);
-        notify();
-        saveState();
-    }
-}
-
-/**
- * @brief Modify the extra parameters of a GPIO item in the GPIO list.
- * 
- * @param id The ID of the GPIO item to modify.
- * @param extraParameters The new extra parameters of the GPIO item.
- */
-void GPIOManager::modifyIOExtraParameters(uint64_t id, std::string extraParameters)
-{
-    GPIOItem& item = list.getItem(id);
-    if (item.getId() != -1) // Check if the item exists
-    {
-        item.setExtraParameters(extraParameters);
-        saveState();
-    }
+    storeAll();
 }
 
 /**
@@ -114,27 +82,37 @@ void GPIOManager::modifyIOExtraParameters(uint64_t id, std::string extraParamete
  * 
  * @return std::string The GPIO list in JSON format.
  */
-std::string GPIOManager::getListJson()
+std::string GpioService::getAll()
 {
     return list.toJson();
+}
+
+/**
+ * @brief Get a GPIO item in JSON format.
+ * 
+ * @return std::string The Desired GPIO item in JSON format.
+ */
+std::string GpioService::get(uint64_t id)
+{
+    return list.getItem(id).toJson();
 }
 
 /**
  * @brief Save the GPIO list to the configuration and update the hardware.
  * 
  */
-void GPIOManager::saveState()
+void GpioService::storeAll()
 {
-    Configuration::getInstance()->setGPIOList(list.toJson());
+    Configuration::getInstance()->setGpioList(list.toJson());
 }
 
 /**
  * @brief Load the GPIO list from the configuration.
  * 
  */
-void GPIOManager::loadState()
+void GpioService::restoreAll()
 {
-    auto state = Configuration::getInstance()->getGPIOList();
+    auto state = Configuration::getInstance()->getGpioList();
     if (state.empty())
         return;
     list.repopulateWith(state.c_str());
@@ -145,7 +123,7 @@ void GPIOManager::loadState()
  * @brief get unique name of subsystem (manager)
  * @return Subsystem Name
  */
-std::string GPIOManager::getName()
+std::string GpioService::getName()
 {
     return "GPIO";
 }
@@ -154,7 +132,7 @@ std::string GPIOManager::getName()
  * @brief get a list of signal compatible items
  * @return list of all signal compatible items
  */
-std::vector<ISignalCompatibleItem *> GPIOManager::getSignalCompatibleItems()
+std::vector<ISignalCompatibleItem *> GpioService::getSignalCompatibleItems()
 {
     std::vector<ISignalCompatibleItem *> signalCompatibleList;
     for(auto &item : list.getList()) // copy list
@@ -166,7 +144,7 @@ std::vector<ISignalCompatibleItem *> GPIOManager::getSignalCompatibleItems()
  * @brief sync the actual GPIO pins to the status of the items and vice versa.
  * 
  */
-void GPIOManager::syncHardware()
+void GpioService::syncHardware()
 {
     SignalNameResolver::SignalNameParameters signalNameParameters;
     signalNameParameters.subsystemName = this->getName();
@@ -178,7 +156,7 @@ void GPIOManager::syncHardware()
         auto& itemRef = list.getItem(item.getPin());
         if (item.getMode() == 1) // if the item is an output pin
         {
-            auto signalValue = SignalManager::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
+            auto signalValue = SignalRouterService::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
             if (signalValue.has_value()) // if registered signal found
                 itemRef.setStatus(signalValue.value());
             pinMode(item.getPin(), OUTPUT);
@@ -187,7 +165,7 @@ void GPIOManager::syncHardware()
         {
             pinMode(item.getPin(), INPUT);
             itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
-            SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
+            SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
         }
     }
 }

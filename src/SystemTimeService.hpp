@@ -15,12 +15,12 @@
 #include <chrono>
 #include "esp_sntp.h"
 #include <WiFiClient.h>
-#include "TimeConfigData.hpp"
+#include "SystemTimeConfig.hpp"
 
-class SystemTime: public Subject<SystemTime>
+class SystemTimeService: public Subject<SystemTimeService>
 {
 public:
-    static SystemTime *getInstance();
+    static SystemTimeService *getInstance();
 
     void obtainTime();
     bool isTimeUpdated();
@@ -82,7 +82,7 @@ public:
     void setConfig(const std::string& configJson);
 
 private:
-    SystemTime();
+    SystemTimeService();
     void lostTrackOfTime();
     void saveState();
     void loadState();
@@ -94,9 +94,9 @@ private:
     String timeStamp;
     ESP32Time rtc;
     RTC_DS1307 externalRTC;
-    TimeConfigData currentConfigData;
+    SystemTimeConfig currentConfigData;
 
-    static SystemTime *instance;
+    static SystemTimeService *instance;
 };
 
 #endif // SYSTEMTIME_HPP

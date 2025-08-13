@@ -1,21 +1,39 @@
-#include "FirebaseManager.hpp"
+#include "FirebaseService.hpp"
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
+#include "Configuration.hpp"
 
 /**
- * @brief FirebaseManager constructor.
+ * @brief Singleton instance of the FirebaseService class.
  * 
  */
-FirebaseManager::FirebaseManager(FBData fbData): signupOK(false), firebaseOK(false), updateTimestamp(-1), firebaseAbnormalityID(-1)
+FirebaseService* FirebaseService::instance = nullptr;
+
+/**
+ * @brief Get the singleton instance of the FirebaseService class.
+ * 
+ */
+FirebaseService* FirebaseService::getInstance()
 {
-    this->fbData = fbData;
+    if (!instance)
+        instance = new FirebaseService();
+    return instance;
 }
 
 /**
- * @brief Initialize the FirebaseManager.
+ * @brief FirebaseService constructor.
  * 
  */
-void FirebaseManager::init()
+FirebaseService::FirebaseService(): signupOK(false), firebaseOK(false), updateTimestamp(-1), firebaseAbnormalityID(-1), fbData()
+{
+    this->fbData.populateFromJson(Configuration::getInstance()->getFirebaseData());
+}
+
+/**
+ * @brief Initialize the FirebaseService.
+ * 
+ */
+void FirebaseService::init()
 {
     if(fbData.isNull() or !fbData.isEnabled())
         return;
@@ -69,14 +87,14 @@ void FirebaseManager::init()
  * 
  * @param systemTime 
  */
-void FirebaseManager::update(SystemTime *systemTime)
+void FirebaseService::update(SystemTimeService *systemTime)
 {
     auto hour = systemTime->getHour();
     auto minute = systemTime->getMinute();
     Serial.printf("Internal RTC Time: %.2d:%.2d\n", hour, minute);
     if(firebaseOK and hour != updateTimestamp) // if firebase is ok and the data for this hour is not already uploaded
     {
-        auto temperature = Temperature::getInstance();
+        auto temperature = TempSensorService::getInstance();
         auto databasePath = fbData.getDatabaseRootName() + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
                         + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
 
@@ -125,4 +143,41 @@ void FirebaseManager::update(SystemTime *systemTime)
             Serial.println("Warning: The data for the current time and date is already registered on the database!");
         }
     }
+}
+
+/**
+ * @brief store config in storage
+ * 
+ */
+void FirebaseService::storeAll()
+{
+    Configuration::getInstance()->setFirebaseData(fbData.toJson());
+}
+
+/**
+ * @brief restore config from storage
+ * 
+ */
+void FirebaseService::restoreAll()
+{
+    fbData.populateFromJson(Configuration::getInstance()->getFirebaseData());
+}
+
+/**
+ * @brief update config (for web-api)
+ * @param cfg new configuration to replace the old one
+ */
+void FirebaseService::updateConfig(FirebaseServiceConfig cfg)
+{
+    this->fbData = cfg;
+    storeAll();
+}
+
+/**
+ * @brief get config in json string format (for web-api)
+ * @return std::string configuration json string
+ */
+std::string FirebaseService::getConfig()
+{
+    return fbData.toJson();
 }

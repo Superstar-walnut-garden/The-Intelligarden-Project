@@ -1,50 +1,50 @@
-#ifndef SIGNALMANAGER_HPP
-#define SIGNALMANAGER_HPP
+#pragma once
 
-#include "SignalList.hpp"
+#include "SignalRouterList.hpp"
 #include "Subject.hpp"
 #include "Configuration.hpp"
 #include <functional>
 #include <unordered_map>
 #include <vector>
 #include <optional>
-#include "IManager.hpp"
-#include "ISignalCompatibleManager.hpp"
+#include "IResourceController.hpp"
+#include "ISignalCompatibleService.hpp"
+#include "IResourcePersistenceService.hpp"
 #include "CentralizedSignalHub.hpp"
 #include "StatusCode.hpp"
 
 
-class SignalManager : public IManager<SignalItem>, public ISignalCompatibleManager, public IObserver<CentralizedSignalHub>
+class SignalRouterService: 
+    public IResourceController<SignalRouterItem>, 
+    public IResourcePersistenceService,
+    public ISignalCompatibleService, 
+    public IObserver<CentralizedSignalHub>
 {
 public:
-    static SignalManager* getInstance();
-
-    void create(SignalItem item) override;
-    void remove(uint64_t id) override;
-    void modify(uint64_t id, SignalItem newItem) override;
-    std::string getListJson() override;
+    static SignalRouterService* getInstance();
 
     StatusCode setSignalValue(std::string fullSignalPath, bool value);
     std::optional<bool> getSignalValue(std::string fullSignalPath);
-
     void update(CentralizedSignalHub *signalHub) override;
 
-    void saveState() override;
-    void loadState() override;
+    void create(SignalRouterItem item) override;
+    void remove(uint64_t id) override;
+    void update(uint64_t id, SignalRouterItem newItem) override;
+    std::string getAll() override;
+    std::string get(uint64_t id) override;
 
-    void loop();
+    void storeAll() override;
+    void restoreAll() override;
 
 private:
-    SignalManager();
-    ~SignalManager();
-    SignalManager(const SignalManager&) = delete;
-    SignalManager& operator=(const SignalManager&) = delete;
+    SignalRouterService();
+    ~SignalRouterService();
+    SignalRouterService(const SignalRouterService&) = delete;
+    SignalRouterService& operator=(const SignalRouterService&) = delete;
 
     std::string getName() override { return "Signal"; };
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
-    static SignalManager* instance;
-    SignalList signalList;
+    static SignalRouterService* instance;
+    SignalRouterList signalList;
 };
-
-#endif // EVENTMANAGER_HPP

@@ -1,20 +1,29 @@
-#include "FBData.hpp"
+#include "FirebaseServiceConfig.hpp"
 
 /**
- * @brief Constructor for FBData class.
+ * @brief Constructor for FirebaseServiceConfig class.
  * 
  */
-FBData::FBData()
+FirebaseServiceConfig::FirebaseServiceConfig()
 {
 
 }
 
 /**
- * @brief Constructor for FBData class with JSON input.
+ * @brief Constructor for FirebaseServiceConfig class with JSON input.
  * 
  * @param json JSON string containing Firebase configuration data.
  */
-FBData::FBData(const char* json)
+FirebaseServiceConfig::FirebaseServiceConfig(std::string json)
+{
+    populateFromJson(json);
+}
+
+/**
+ * @brief Populate the confg from a JSON string.
+ * @param json The JSON string to populate the config from.
+ */
+void FirebaseServiceConfig::populateFromJson(std::string json)
 {
     JsonDocument doc;
     deserializeJson(doc, json);
@@ -32,7 +41,7 @@ FBData::FBData(const char* json)
  * 
  * @return std::string JSON string representation of the Firebase configuration.
  */
-std::string FBData::toJsonString()
+std::string FirebaseServiceConfig::toJson()
 {
     JsonDocument doc;
     doc["apiKey"] = apiKey;
@@ -51,7 +60,7 @@ std::string FBData::toJsonString()
  * 
  * @return true if any of the configuration fields are null or empty, false otherwise.
  */
-bool FBData::isNull()
+bool FirebaseServiceConfig::isNull()
 {
     if(FBDataNull(apiKey) or 
        FBDataNull(databaseURL) or
@@ -69,7 +78,7 @@ bool FBData::isNull()
  * 
  * @return true if Firebase is enabled, false otherwise.
  */
-bool FBData::isEnabled()
+bool FirebaseServiceConfig::isEnabled()
 {
     return enabled;
 }
@@ -80,11 +89,11 @@ bool FBData::isEnabled()
  * @param data The string data to check.
  * @return true if the data is null or empty, false otherwise.
  */
-bool FBData::FBDataNull(std::string data)
+bool FirebaseServiceConfig::FBDataNull(std::string data)
 {
     if(data == "" or data == "null" or data.empty())
     {
-        Serial.println("Error: Couldn't get FBData");
+        Serial.println("Error: Couldn't get FirebaseServiceConfig");
         return true;
     }
 
@@ -96,7 +105,7 @@ bool FBData::FBDataNull(std::string data)
  * 
  * @return std::string The Firebase API key.
  */
-std::string FBData::getApiKey()
+std::string FirebaseServiceConfig::getApiKey()
 {
     return apiKey;
 }
@@ -106,7 +115,7 @@ std::string FBData::getApiKey()
  * 
  * @return std::string The Firebase database URL.
  */
-std::string FBData::getDatabaseURL()
+std::string FirebaseServiceConfig::getDatabaseURL()
 {
     return databaseURL;
 }
@@ -116,7 +125,7 @@ std::string FBData::getDatabaseURL()
  * 
  * @return std::string The Firebase user email.
  */
-std::string FBData::getUserEmail()
+std::string FirebaseServiceConfig::getUserEmail()
 {
     return userEmail;
 }
@@ -126,7 +135,7 @@ std::string FBData::getUserEmail()
  * 
  * @return std::string The Firebase user password.
  */
-std::string FBData::getUserPassword()
+std::string FirebaseServiceConfig::getUserPassword()
 {
     return userPassword;
 }
@@ -136,7 +145,7 @@ std::string FBData::getUserPassword()
  * 
  * @return std::string The Firebase database root name.
  */
-std::string FBData::getDatabaseRootName()
+std::string FirebaseServiceConfig::getDatabaseRootName()
 {
     return databaseRootName;
 }

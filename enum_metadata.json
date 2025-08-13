@@ -16,9 +16,9 @@
     ]
   },
   {
-    "qualified_name": "SignalItem::Mode",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SignalItem.hpp",
-    "line": 30,
+    "qualified_name": "SignalRouterItem::Mode",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SignalRouterItem.hpp",
+    "line": 42,
     "is_scoped": true,
     "enumerators": [
       {
@@ -52,6 +52,22 @@
       {
         "name": "ERROR",
         "value": 2
+      }
+    ]
+  },
+  {
+    "qualified_name": "DisplayConfig::DisplayType",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\DisplayConfig.hpp",
+    "line": 12,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Oled",
+        "value": 0
+      },
+      {
+        "name": "CharLcd",
+        "value": 1
       }
     ]
   }

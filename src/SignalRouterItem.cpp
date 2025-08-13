@@ -1,4 +1,4 @@
-#include "SignalItem.hpp"
+#include "SignalRouterItem.hpp"
 #include "SignalNameResolver.hpp"
 #include "../EnumCrafter.hpp"
 #include <algorithm>
@@ -7,35 +7,35 @@
  * @brief Construct a new Signal Item:: Signal Item object
  * 
  */
-SignalItem::SignalItem() 
+SignalRouterItem::SignalRouterItem() 
     : SignalCompatibleBaseItem(), broadcaster(), auxiliaryBroadcaster(), listeners(), mode(Mode::SingleSource) {}
 
 /**
- * @brief Get the listeners of the SignalItem.
+ * @brief Get the listeners of the SignalRouterItem.
  * 
  * @return std::vector<SignalEndpoint> A vector of SignalEndpoint objects representing the listeners.
  */
-std::vector<SignalItem::SignalEndpoint> SignalItem::getListeners()
+std::vector<SignalRouterItem::SignalEndpoint> SignalRouterItem::getListeners()
 {
     return listeners;
 }
 
 /**
- * @brief Get the broadcaster of the SignalItem.
+ * @brief Get the broadcaster of the SignalRouterItem.
  * 
- * @return SignalEndpoint The broadcaster of the SignalItem.
+ * @return SignalEndpoint The broadcaster of the SignalRouterItem.
  */
-SignalItem::SignalEndpoint SignalItem::getBroadcaster()
+SignalRouterItem::SignalEndpoint SignalRouterItem::getBroadcaster()
 {
     return broadcaster;
 }
 
 /**
- * @brief Get the auxiliary broadcaster of the SignalItem.
+ * @brief Get the auxiliary broadcaster of the SignalRouterItem.
  * 
- * @return SignalEndpoint The auxiliary broadcaster of the SignalItem.
+ * @return SignalEndpoint The auxiliary broadcaster of the SignalRouterItem.
  */
-SignalItem::SignalEndpoint SignalItem::getAuxiliaryBroadcaster()
+SignalRouterItem::SignalEndpoint SignalRouterItem::getAuxiliaryBroadcaster()
 {
     return auxiliaryBroadcaster;
 }
@@ -45,7 +45,7 @@ SignalItem::SignalEndpoint SignalItem::getAuxiliaryBroadcaster()
  * 
  * @param value The status value to set for the primary broadcaster.
  */
-void SignalItem::setBroadcasterStatus(bool value)
+void SignalRouterItem::setBroadcasterStatus(bool value)
 {
     this->broadcaster.setStatus(value);
     this->evaluateStatus(); // evaluate the main status based on the broadcaster
@@ -56,18 +56,18 @@ void SignalItem::setBroadcasterStatus(bool value)
  * 
  * @param value The status value to set for the auxiliary broadcaster.
  */
-void SignalItem::setAuxiliaryBroadcasterStatus(bool value)
+void SignalRouterItem::setAuxiliaryBroadcasterStatus(bool value)
 {
     this->auxiliaryBroadcaster.setStatus(value);
     this->evaluateStatus(); // evaluate the main status based on the broadcaster
 }
 
 /**
- * @brief Remove a listener from the SignalItem by its signal path.
+ * @brief Remove a listener from the SignalRouterItem by its signal path.
  * 
  * @param signalPath The signal path of the listener to remove.
  */
-void SignalItem::removeListener(std::string signalPath)
+void SignalRouterItem::removeListener(std::string signalPath)
 {
     listeners.erase(std::remove_if(listeners.begin(), listeners.end(), [&](SignalEndpoint& listener) 
     {
@@ -76,16 +76,16 @@ void SignalItem::removeListener(std::string signalPath)
 }
 
 /**
- * @brief Remove the broadcaster and optionally the auxiliary broadcaster from the SignalItem.
+ * @brief Remove the broadcaster and optionally the auxiliary broadcaster from the SignalRouterItem.
  * 
  * @param removeAuxiliary If true, the auxiliary broadcaster will be removed otherwise primary broadcaster will be removed.
  */
-void SignalItem::removeBroadcaster(bool removeAuxiliary)
+void SignalRouterItem::removeBroadcaster(bool removeAuxiliary)
 {
     if(removeAuxiliary)
-        this->auxiliaryBroadcaster = SignalItem::SignalEndpoint(); // reset the auxiliary broadcaster to a default state
+        this->auxiliaryBroadcaster = SignalRouterItem::SignalEndpoint(); // reset the auxiliary broadcaster to a default state
     else
-        this->broadcaster = SignalItem::SignalEndpoint(); // reset the primary broadcaster to a default state
+        this->broadcaster = SignalRouterItem::SignalEndpoint(); // reset the primary broadcaster to a default state
     this->evaluateStatus(); // evaluate the main status based on the broadcaster
 }
 
@@ -94,17 +94,17 @@ void SignalItem::removeBroadcaster(bool removeAuxiliary)
  * 
  * @return std::string The local signal path for emitted signals.
  */
-std::string SignalItem::getEmittedSignalLocalSignalName()
+std::string SignalRouterItem::getEmittedSignalLocalSignalName()
 {
     return SignalNameResolver::generateLocalSignalName("emittedSignal", SignalNameResolver::SignalType::Broadcaster);
 }
 
 /**
- * @brief Get the local signal names associated with the SignalItem (for CentralizedSignalHub).
+ * @brief Get the local signal names associated with the SignalRouterItem (for CentralizedSignalHub).
  * 
  * @return std::vector<std::string> A vector of local signal names.
  */
-std::vector<std::string> SignalItem::getLocalSignalNames()
+std::vector<std::string> SignalRouterItem::getLocalSignalNames()
 {
     return { getEmittedSignalLocalSignalName() };
 }
@@ -112,18 +112,18 @@ std::vector<std::string> SignalItem::getLocalSignalNames()
 /**
  * @brief Get mode (SingleSource, DualSource(andWithAuxilary, orWithAuxilary) and etc...)
  * 
- * @return SignalItem::Mode The mode of the SignalItem.
+ * @return SignalRouterItem::Mode The mode of the SignalRouterItem.
  */
-SignalItem::Mode SignalItem::getMode()
+SignalRouterItem::Mode SignalRouterItem::getMode()
 {
     return mode;
 }
 
 /**
- * @brief evaluate the status of the SignalItem and its listeners based on its broadcaster(s) and mode
+ * @brief evaluate the status of the SignalRouterItem and its listeners based on its broadcaster(s) and mode
  * 
  */
-void SignalItem::evaluateStatus()
+void SignalRouterItem::evaluateStatus()
 {
     // broadcasters evaluation
     if(mode == Mode::SingleSource)
@@ -139,11 +139,11 @@ void SignalItem::evaluateStatus()
 }
 
 /**
- * @brief Populate the SignalItem from a JSON document.
+ * @brief Populate the SignalRouterItem from a JSON document.
  * 
- * @param doc The JSON document containing the SignalItem data.
+ * @param doc The JSON document containing the SignalRouterItem data.
  */
-void SignalItem::populateDerivedClassFromJson(JsonDocument &doc)
+void SignalRouterItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     // broadcaster
     auto broadcasterJsonObject = doc["broadcaster"].as<JsonObject>();
@@ -181,11 +181,11 @@ void SignalItem::populateDerivedClassFromJson(JsonDocument &doc)
 }
 
 /**
- * @brief Convert the SignalItem to a JSON document.
+ * @brief Convert the SignalRouterItem to a JSON document.
  * 
- * @param doc The JSON document to populate with the SignalItem data.
+ * @param doc The JSON document to populate with the SignalRouterItem data.
  */
-void SignalItem::derivedClassToJson(JsonDocument &doc)
+void SignalRouterItem::derivedClassToJson(JsonDocument &doc)
 {
     // Create a nested array for listeners
     auto listenersArray = doc.createNestedArray("listeners");

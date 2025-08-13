@@ -1,16 +1,20 @@
-#ifndef IMANAGER_HPP
-#define IMANAGER_HPP
+#pragma once
+#include <vector>
+#include <cstdint>
+#include "IService.hpp"
 
+/** * @brief Interface for resource controllers that manage a collection of items.
+ * 
+ * @tparam T Type of the items managed by the controller.
+ */
 template <class T>
-class IManager
-{
+class IResourceController : public IService {
 public:
-    virtual void create(T newItem) = 0;
-    virtual void remove(uint64_t id) = 0;
-    virtual void modify(uint64_t id, T newItem) = 0;
-    virtual std::string getListJson() = 0;
-    virtual void saveState() = 0;
-    virtual void loadState() = 0;
-};
+    virtual ~IResourceController() = default;
 
-#endif
+    virtual std::string getAll() = 0;
+    virtual std::string get(uint64_t id) = 0;
+    virtual void create(T item) = 0;
+    virtual void update(uint64_t id, T item) = 0;
+    virtual void remove(uint64_t id) = 0;
+};

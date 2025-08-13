@@ -5,7 +5,7 @@
 #include "ISignalCompatibleItem.hpp"
 #include "Subject.hpp"
 
-class ISignalCompatibleManager: public Subject<ISignalCompatibleManager>
+class ISignalCompatibleService: public Subject<ISignalCompatibleService>
 {
 public:
     virtual std::string getName() = 0;

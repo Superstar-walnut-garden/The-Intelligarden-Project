@@ -5,12 +5,12 @@
 #include <vector>
 #include "SignalCompatibleBaseItem.hpp"
 
-class SignalItem: public SignalCompatibleBaseItem
+class SignalRouterItem: public SignalCompatibleBaseItem
 {
 public: 
     class SignalEndpoint; // prototype declaration
     enum class Mode; // prototype declaration
-    SignalItem();
+    SignalRouterItem();
     std::vector<SignalEndpoint> getListeners();
     SignalEndpoint getBroadcaster();
     SignalEndpoint getAuxiliaryBroadcaster();

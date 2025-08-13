@@ -1,18 +1,18 @@
-#include "GPIOList.hpp"
+#include "GpioList.hpp"
 
 /**
- * @brief Constructor for GPIOList class.
+ * @brief Constructor for GpioList class.
  * 
  */
-GPIOList::GPIOList(): BaseList()
+GpioList::GpioList(): BaseList()
 {}
 
 /**
- * @brief Constructor for GPIOList class with JSON input.
+ * @brief Constructor for GpioList class with JSON input.
  * 
  * @param json JSON string containing GPIO items.
  */
-GPIOList::GPIOList(std::string json): BaseList()
+GpioList::GpioList(std::string json): BaseList()
 {
     this->repopulateWith(json);
     Serial.println(json.c_str()); // for debug purposes

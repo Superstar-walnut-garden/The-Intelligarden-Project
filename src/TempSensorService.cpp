@@ -1,30 +1,30 @@
-#include "Temperature.hpp"
+#include "TempSensorService.hpp"
 
 /**
- * @brief Initialize the instance of the Temperature to null.
+ * @brief Initialize the instance of the TempSensorService to null.
  * 
  */
-Temperature *Temperature::instance = nullptr;
+TempSensorService *TempSensorService::instance = nullptr;
 
 /**
- * @brief Get the singleton instance of the Temperature.
+ * @brief Get the singleton instance of the TempSensorService.
  * 
- * @return Temperature* The singleton instance of the Temperature.
+ * @return TempSensorService* The singleton instance of the TempSensorService.
  */
-Temperature *Temperature::getInstance()
+TempSensorService *TempSensorService::getInstance()
 {
     if (!instance)
-        instance = new Temperature();
+        instance = new TempSensorService();
     return instance;
 }
 
 /**
- * @brief Construct a new Temperature object.
+ * @brief Construct a new TempSensorService object.
  * 
  */
-Temperature::Temperature() : oneWireBus(15), sensors(&oneWireBus)
+TempSensorService::TempSensorService() : oneWireBus(15), sensors(&oneWireBus)
 {
-    loadState();
+    restoreAll();
     sensors.begin();
 }
 
@@ -33,25 +33,25 @@ Temperature::Temperature() : oneWireBus(15), sensors(&oneWireBus)
  * 
  * @param newItem The new sensor to create.
  */
-void Temperature::create(TempSensorItem newItem)
+void TempSensorService::create(TempSensorItem newItem)
 {
     Serial.println("Error: Cannot create a sensor!");
 }
 
 /**
- * @brief Modify a sensor.
+ * @brief update a sensor.
  * 
  * @param id id of the desired sensor.
  * @param newItem new sensor data.
  */
-void Temperature::modify(uint64_t id, TempSensorItem newItem)
+void TempSensorService::update(uint64_t id, TempSensorItem newItem)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     if(registeredSensorList.doesExist(newItem))
         registeredSensorList.modifyItem(id, newItem);
     else
         registeredSensorList.addItem(newItem);
-    saveState();
+    storeAll();
 }
 
 /**
@@ -59,11 +59,11 @@ void Temperature::modify(uint64_t id, TempSensorItem newItem)
  * 
  * @param id id of the desired sensor.
  */
-void Temperature::remove(uint64_t id)
+void TempSensorService::remove(uint64_t id)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     registeredSensorList.deleteItem(id);
-    saveState();
+    storeAll();
 }
 
 /**
@@ -72,7 +72,7 @@ void Temperature::remove(uint64_t id)
  * @param callback The callback function to call for each sensor.
  * @param onlyRegisteredSensors If true, only iterate over registered sensors.
  */
-void Temperature::forEachSensor(std::function<void(TempSensorItem)> callback, bool onlyRegisteredSensors)
+void TempSensorService::forEachSensor(std::function<void(TempSensorItem)> callback, bool onlyRegisteredSensors)
 {
     TempSensorList list;
     if(onlyRegisteredSensors)
@@ -97,7 +97,7 @@ void Temperature::forEachSensor(std::function<void(TempSensorItem)> callback, bo
  * 
  * @param doNotify If true, notify the observers when data is ready (through observer pattern).
  */
-void Temperature::read(bool doNotify)
+void TempSensorService::read(bool doNotify)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     obtainSensors(); // update the list of connected sensors (liveSensorList)
@@ -117,7 +117,7 @@ void Temperature::read(bool doNotify)
  * @param address The address(id) of the sensor.
  * @return double The temperature of the sensor.
  */
-double Temperature::getTempFromSensor(uint64_t address)
+double TempSensorService::getTempFromSensor(uint64_t address)
 {
     uint8_t formattedAddress[8];
     for (int i = 0; i < 8; ++i)
@@ -136,7 +136,7 @@ double Temperature::getTempFromSensor(uint64_t address)
  * @param name The name of the sensor.
  * @return double The temperature of the sensor.
  */
-double Temperature::getData(std::string name)
+double TempSensorService::getData(std::string name)
 {
     auto list = getCompleteList();
     auto item = list.getItem(name);
@@ -149,7 +149,7 @@ double Temperature::getData(std::string name)
  * @param id The id of the sensor.
  * @return double The temperature of the sensor.
  */
-double Temperature::getData(uint64_t id)
+double TempSensorService::getData(uint64_t id)
 {
     auto list = getCompleteList();
     auto item = list.getItem(id);
@@ -161,7 +161,7 @@ double Temperature::getData(uint64_t id)
  * 
  * @return TempSensorList The complete list of sensors.
  */
-TempSensorList Temperature::getCompleteList()
+TempSensorList TempSensorService::getCompleteList()
 {
     auto completeList = liveSensorList; // take a copy of the live list
     mergeAndCopy(completeList, registeredSensorList); // copy registered sensor names to the live list
@@ -173,17 +173,28 @@ TempSensorList Temperature::getCompleteList()
  * 
  * @return std::string The list of sensors in JSON format.
  */
-std::string Temperature::getListJson()
+std::string TempSensorService::getAll()
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     return getCompleteList().toJson();
 }
 
 /**
+ * @brief Get a sensor in JSON format.
+ * 
+ * @return std::string The list of sensors in JSON format.
+ */
+std::string TempSensorService::get(uint64_t id)
+{
+    std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
+    return getCompleteList().getItem(id).toJson();
+}
+
+/**
  * @brief Scan for ds18b20 sensors on the 1wire bus.
  * 
  */
-void Temperature::obtainSensors()
+void TempSensorService::obtainSensors()
 {
     oneWireBus.begin(15); // restart the bus
     oneWireBus.reset(); // reset the bus
@@ -215,7 +226,7 @@ void Temperature::obtainSensors()
  * @brief Save the registered sensors in SPIFFS.
  * 
  */
-void Temperature::saveState()
+void TempSensorService::storeAll()
 {
     auto *cfg = Configuration::getInstance();
     for(auto item : registeredSensorList.getList())
@@ -230,7 +241,7 @@ void Temperature::saveState()
  * @brief Load the registered sensors from SPIFFS.
  * 
  */
-void Temperature::loadState()
+void TempSensorService::restoreAll()
 {
     auto *cfg = Configuration::getInstance();
     auto state = cfg->getRegisteredTempSensorList();
@@ -245,7 +256,7 @@ void Temperature::loadState()
  * @param primary The primary list to merge into.
  * @param secondary The secondary list to merge from.
  */
-void Temperature::mergeAndCopy(TempSensorList &primary, TempSensorList secondary)
+void TempSensorService::mergeAndCopy(TempSensorList &primary, TempSensorList secondary)
 {
     bool alreadyExist = false;
     for (auto sDev : secondary.getList())

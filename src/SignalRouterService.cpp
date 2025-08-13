@@ -1,39 +1,39 @@
-#include "SignalManager.hpp"
+#include "SignalRouterService.hpp"
 #include "SignalNameResolver.hpp"
 #include "CentralizedSignalHub.hpp"
 #include <ArduinoJson.h>
 
-SignalManager* SignalManager::instance = nullptr;
+SignalRouterService* SignalRouterService::instance = nullptr;
 
 /** 
- * @brief Construct a new SignalManager object.
+ * @brief Construct a new SignalRouterService object.
  * 
  */
-SignalManager::SignalManager() 
+SignalRouterService::SignalRouterService() 
 {
-    loadState(); // load the state from the internal storage (SPIFFS)
+    restoreAll(); // load the state from the internal storage (SPIFFS)
     CentralizedSignalHub::getInstance()->attach(this); // get attached to the CentralizedSignalHub to receive updates (via observer pattern)
 }
 
 /** 
- * @brief Destroy the SignalManager object.
+ * @brief Destroy the SignalRouterService object.
  * 
  */
-SignalManager::~SignalManager() 
+SignalRouterService::~SignalRouterService() 
 {
-    saveState(); // save the state before deleting the instance
+    storeAll(); // save the state before deleting the instance
     delete instance;
 }
 
 /** 
- * @brief Get the instance of the SignalManager (singleton pattern).
+ * @brief Get the instance of the SignalRouterService (singleton pattern).
  * 
- * @return SignalManager* The instance of the SignalManager.
+ * @return SignalRouterService* The instance of the SignalRouterService.
  */
-SignalManager* SignalManager::getInstance() 
+SignalRouterService* SignalRouterService::getInstance() 
 {
     if (!instance) {
-        instance = new SignalManager();
+        instance = new SignalRouterService();
     }
     return instance;
 }
@@ -43,10 +43,10 @@ SignalManager* SignalManager::getInstance()
  * 
  * @param item The new item to be added to the list
  */
-void SignalManager::create(SignalItem item) 
+void SignalRouterService::create(SignalRouterItem item) 
 {
     signalList.addItem(item);
-    saveState();
+    storeAll();
 }
 
 /** 
@@ -54,24 +54,24 @@ void SignalManager::create(SignalItem item)
  * 
  * @param id The ID of the signal to remove.
  */
-void SignalManager::remove(uint64_t id) 
+void SignalRouterService::remove(uint64_t id) 
 {
     signalList.deleteItem(id);
     notify();
-    saveState();
+    storeAll();
 }
 
 /** 
- * @brief Modify a signal in the signal list.
+ * @brief Update a signal in the signal list.
  * 
- * @param id The ID of the signal to modify.
+ * @param id The ID of the signal to update.
  * @param newItem The new item to replace the old one.
  */
-void SignalManager::modify(uint64_t id, SignalItem newItem) 
+void SignalRouterService::update(uint64_t id, SignalRouterItem newItem) 
 {
     signalList.modifyItem(id, newItem);
     notify();
-    saveState();
+    storeAll();
 }
 
 /** 
@@ -81,7 +81,7 @@ void SignalManager::modify(uint64_t id, SignalItem newItem)
  * @param Value The new signal value.
  * @param StatusCode if signal is found "StatusCode::SUCSESS" else "StatusCode::NOT_FOUND"
  */
-StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
+StatusCode SignalRouterService::setSignalValue(std::string fullSignalPath, bool value)
 {
     // search and find the signal path in signal list (broadcaster parameter)
     bool found = false;
@@ -105,7 +105,7 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
 
         return false; // no cycle detected
     };
-    signalList.forEach([&](SignalItem &signalItem) -> void
+    signalList.forEach([&](SignalRouterItem &signalItem) -> void
     {
         auto primaryBroadcasterMatched = signalItem.getBroadcaster().getSignalPath() == fullSignalPath;
         auto auxiliaryBroadcasterMatched = signalItem.getAuxiliaryBroadcaster().getSignalPath() == fullSignalPath;
@@ -113,7 +113,7 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
         {
             if(primaryBroadcasterMatched)
                 signalItem.setBroadcasterStatus(value);
-            else if(auxiliaryBroadcasterMatched and (signalItem.getMode() != SignalItem::Mode::SingleSource))
+            else if(auxiliaryBroadcasterMatched and (signalItem.getMode() != SignalRouterItem::Mode::SingleSource))
                 signalItem.setAuxiliaryBroadcasterStatus(value);
             else
                 return; // skip a forEach cycle (like "continue" keyword)
@@ -144,11 +144,11 @@ StatusCode SignalManager::setSignalValue(std::string fullSignalPath, bool value)
  * @param fullSignalPath example: "Thermostat_3_cooler_B"
  * @return std::optional<bool> The value of the signal if found, otherwise std::nullopt.
  */
-std::optional<bool> SignalManager::getSignalValue(std::string fullSignalPath)
+std::optional<bool> SignalRouterService::getSignalValue(std::string fullSignalPath)
 {
     // search and find the signal path in signal list (listeners parameter)
     std::optional<bool> result = std::nullopt;
-    signalList.forEach([&](SignalItem &signalItem) -> void
+    signalList.forEach([&](SignalRouterItem &signalItem) -> void
     {
         for(auto &listener : signalItem.getListeners()) // loop through listeners
             if(listener.getSignalPath() == fullSignalPath)
@@ -162,15 +162,26 @@ std::optional<bool> SignalManager::getSignalValue(std::string fullSignalPath)
  * 
  * @return std::string The signal list in JSON format.
  */
-std::string SignalManager::getListJson() 
+std::string SignalRouterService::getAll() 
 {
     return signalList.toJson();
 }
+
+/** 
+ * @brief Get a signal item in JSON format.
+ * 
+ * @return std::string The signal item in JSON format.
+ */
+std::string SignalRouterService::get(uint64_t id) 
+{
+    return signalList.getItem(id).toJson();
+}
+
 /**
  * @brief save the state of the signal list to the internal storage (SPIFFS).
  * 
  */
-void SignalManager::saveState() 
+void SignalRouterService::storeAll() 
 {
     std::string jsonList = signalList.toJson();
     Configuration::getInstance()->setEventList(jsonList);
@@ -180,7 +191,7 @@ void SignalManager::saveState()
  * @brief Load the state of the signal list from the internal storage (SPIFFS).
  * 
  */
-void SignalManager::loadState() 
+void SignalRouterService::restoreAll() 
 {
     std::string state = Configuration::getInstance()->getEventList();
     if (state.empty()) return;
@@ -192,18 +203,17 @@ void SignalManager::loadState()
  * @brief this is automaticaly called when any of the CentralizedSignalHub changes.
  * 
  */
-void SignalManager::update(CentralizedSignalHub *signalHub)
+void SignalRouterService::update(CentralizedSignalHub *signalHub)
 {
-    Serial.println("SignalManager received update from CentralizedSignalHub.");
+    Serial.println("SignalRouterService received update from CentralizedSignalHub.");
     Serial.println("checking signal paths...");
     // scan the signal list and check all the broadcaster names and listeners names
     // if there wasn't a match, remove that signalpath.
-    signalList.forEach([&](SignalItem &item) -> void
+    signalList.forEach([&](SignalRouterItem &item) -> void
     {
         // check if the broadcaster signal path is valid
-        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath())){
-            item.removeBroadcaster(); Serial.println("Removed invalid broadcaster signal path: " + String(item.getBroadcaster().getSignalPath().c_str()));
-        }
+        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath()))
+            item.removeBroadcaster();
 
         // check if the auxiliary broadcaster signal path is valid
         if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getAuxiliaryBroadcaster().getSignalPath()))
@@ -214,19 +224,19 @@ void SignalManager::update(CentralizedSignalHub *signalHub)
             if(!CentralizedSignalHub::getInstance()->isSignalPathValid(listener.getSignalPath()))
                 item.removeListener(listener.getSignalPath());
     });
-    saveState(); // save the state after removing invalid signal paths
+    storeAll(); // save the state after removing invalid signal paths
 }
 
 /**
- * @brief Get the list of signal-compatible items in the SignalManager (for the CentralizedSignalHub).
+ * @brief Get the list of signal-compatible items in the SignalRouterService (for the CentralizedSignalHub).
  * @note Never store this std::vector for future use because it may contain dangling pointers if the items are modified or deleted.
  * 
  * @return std::vector<ISignalCompatibleItem*> A vector of pointers to signal-compatible items.
  */
-std::vector<ISignalCompatibleItem *> SignalManager::getSignalCompatibleItems()
+std::vector<ISignalCompatibleItem *> SignalRouterService::getSignalCompatibleItems()
 {
     std::vector<ISignalCompatibleItem *> items;
-    signalList.forEach([&](SignalItem &item) -> void
+    signalList.forEach([&](SignalRouterItem &item) -> void
     {
         items.push_back(&signalList.getItem(item.getId())); // pushback real reference of the item, not a copy
     });

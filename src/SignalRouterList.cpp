@@ -1,18 +1,18 @@
-#include "SignalList.hpp"
+#include "SignalRouterList.hpp"
 
 /**
- * @brief Constructor for SignalList class.
+ * @brief Constructor for SignalRouterList class.
  * 
  */
-SignalList::SignalList(): BaseList()
+SignalRouterList::SignalRouterList(): BaseList()
 {}
 
 /**
- * @brief Constructor for SignalList class with JSON input.
+ * @brief Constructor for SignalRouterList class with JSON input.
  * 
  * @param json JSON string containing signal items.
  */
-SignalList::SignalList(std::string json): BaseList()
+SignalRouterList::SignalRouterList(std::string json): BaseList()
 {
     this->repopulateWith(json);
     Serial.println(json.c_str()); // for debug porpuses

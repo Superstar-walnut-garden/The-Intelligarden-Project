@@ -12,12 +12,12 @@ Configuration* Configuration::getInstance()
     return instance;
 }
 
-void Configuration::setWifiCredentials(WifiHotspotData data)
+void Configuration::setWifiCredentials(std::string json)
 {
     File file = SPIFFS.open(wifiFileAddress, FILE_WRITE);
     if (file)
     {
-        file.println(data.toJsonString().c_str());
+        file.println(json.c_str());
         file.close();
         Serial.println("wifi credential data saved successfully.");
     } 
@@ -26,12 +26,12 @@ void Configuration::setWifiCredentials(WifiHotspotData data)
         Serial.println("Failed to open file for writing.");
     }
 }
-void Configuration::setHotspotCredentials(WifiHotspotData data)
+void Configuration::setHotspotCredentials(std::string json)
 {
     File file = SPIFFS.open(hotspotFileAddress, FILE_WRITE);
     if (file)
     {
-        file.println(data.toJsonString().c_str());
+        file.println(json.c_str());
         file.close();
         Serial.println("hotspot credential data saved successfully.");
     } 
@@ -41,27 +41,27 @@ void Configuration::setHotspotCredentials(WifiHotspotData data)
     }
 }
 
-WifiHotspotData Configuration::getWifiCredentials()
+std::string Configuration::getWifiCredentials()
 {
     auto file = SPIFFS.open(wifiFileAddress, FILE_READ);
     if(file)
     {
-        auto json = file.readString(); // read raw data from file
+        std::string json = file.readString().c_str(); // read raw data from file
         file.close();
-        return WifiHotspotData(json.c_str());
+        return json;
     }
-    return WifiHotspotData(); // return empty
+    return ""; // return empty
 }
-WifiHotspotData Configuration::getHotspotCredentials()
+std::string Configuration::getHotspotCredentials()
 {
     auto file = SPIFFS.open(hotspotFileAddress, FILE_READ);
     if(file)
     {
-        auto json = file.readString(); // read raw data from file
+        std::string json = file.readString().c_str(); // read raw data from file
         file.close();
-        return WifiHotspotData(json.c_str());
+        return json;
     }
-    return WifiHotspotData(); // return empty
+    return ""; // return empty
 }
 
 void Configuration::setSchedulerList(std::string json)
@@ -90,12 +90,12 @@ std::string Configuration::getSchedulerList()
     }
     return json;
 }
-void Configuration::setFirebaseData(FBData data)
+void Configuration::setFirebaseData(std::string json)
 {
     File file = SPIFFS.open(firebaseDataFileAddress, FILE_WRITE);
     if (file)
     {
-        file.println(data.toJsonString().c_str());
+        file.println(json.c_str());
         file.close();
         Serial.println("firebase data saved successfully.");
     } 
@@ -104,24 +104,16 @@ void Configuration::setFirebaseData(FBData data)
         Serial.println("Failed to open file for writing.");
     }
 }
-FBData Configuration::getFirebaseData()
+std::string Configuration::getFirebaseData()
 {
     auto file = SPIFFS.open(firebaseDataFileAddress, FILE_READ);
     if(file)
     {
-        auto json = file.readString(); // read raw data from file
-        auto firebaseData = FBData(json.c_str());
+        std::string json = file.readString().c_str(); // read raw data from file
         file.close();
-        return firebaseData;
+        return json;
     }
-    return FBData();
-}
-    
-
-void Configuration::update(SystemTime *systemTime)
-{
-    currentTime = systemTime->getTime();
-    currentWeekday = systemTime->getWeekday();
+    return "";
 }
 
 std::string Configuration::getEventList() 
@@ -149,7 +141,7 @@ void Configuration::setEventList(const std::string& state)
     file.close();
 }
 
-void Configuration::setGPIOList(std::string json)
+void Configuration::setGpioList(std::string json)
 {
     File file = SPIFFS.open(gpioFileAddress, FILE_WRITE);
     if (file)
@@ -164,7 +156,7 @@ void Configuration::setGPIOList(std::string json)
     }
 }
 
-std::string Configuration::getGPIOList()
+std::string Configuration::getGpioList()
 {
     auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
     std::string jsonData;
@@ -184,7 +176,7 @@ void Configuration::setDisplayConfig(const std::string& config)
     {
         file.println(config.c_str());
         file.close();
-        Serial.println("Display data saved successfully.");
+        Serial.println("DisplayService data saved successfully.");
     } 
     else 
     {

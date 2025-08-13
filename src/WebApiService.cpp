@@ -1,23 +1,27 @@
-#include "WebApiManager.hpp"
+#include "WebApiService.hpp"
 #include <SPIFFS.h>
 #include <ArduinoJson.h>
 
 #include "Configuration.hpp"
 #include "CentralizedSignalHub.hpp"
-#include "SystemTime.hpp"
-#include "GPIOManager.hpp"
-#include "ThermostatManager.hpp"
-#include "SignalManager.hpp"
-#include "Scheduler.hpp"
+#include "SystemTimeService.hpp"
+#include "GpioService.hpp"
+#include "ThermostatService.hpp"
+#include "SignalRouterService.hpp"
+#include "SchedulerService.hpp"
+#include "WifiService.hpp"
+#include "DisplayService.hpp"
+#include "FirebaseService.hpp"
+#include "WifiHotspotConfig.hpp"
 
 /**
- * @brief Construct a new WebApiManager object
+ * @brief Construct a new WebApiService object
  * 
  */
-WebApiManager::WebApiManager() : server(80), baseUrl("/api")
+WebApiService::WebApiService() : server(80), baseUrl("/api"), hotspotCred()
 {
     // Configure access point
-    auto hotspotCred = Configuration::getInstance()->getHotspotCredentials();
+    hotspotCred.populateFromJson(Configuration::getInstance()->getHotspotCredentials());
     auto ssid = hotspotCred.getSsid();
     auto password = hotspotCred.getPassword();
     WiFi.softAP(ssid.c_str(), password.c_str());
@@ -30,7 +34,7 @@ WebApiManager::WebApiManager() : server(80), baseUrl("/api")
  * @brief Method to start the web server and create api endpoints
  * 
  */
-void WebApiManager::init()
+void WebApiService::init()
 {
     // Serve HTML page to enter WiFi credentials
     server.serveStatic("/", SPIFFS, "/dist/")
@@ -40,8 +44,8 @@ void WebApiManager::init()
     createEndpoint("/getCurrentTime", [](std::string data) -> std::string
     {
         JsonDocument doc;
-        doc["time"] = SystemTime::getInstance()->getTime().toString();
-        doc["weekday"] = SystemTime::getInstance()->getWeekdayString();
+        doc["time"] = SystemTimeService::getInstance()->getTime().toString();
+        doc["weekday"] = SystemTimeService::getInstance()->getWeekdayString();
         std::string output;
         serializeJson(doc, output);
         return output;
@@ -49,67 +53,63 @@ void WebApiManager::init()
 
     createEndpoint("/getWifiState", [](std::string data) -> std::string
     {
-        auto wifiCred = Configuration::getInstance()->getWifiCredentials();
-        return wifiCred.toJsonString();
+        return WifiService::getInstance()->getConfig();
     });
 
-    createEndpoint("/getHotspotConfig", [](std::string data) -> std::string
+    createEndpoint("/getHotspotConfig", [this](std::string data) -> std::string
     {
-        auto hotspotCred = Configuration::getInstance()->getHotspotCredentials();
-        return hotspotCred.toJsonString();
+        return this->getConfig();
     });
 
     createEndpoint("/setWifiConfig", [](std::string data) -> std::string
     {
-        Configuration::getInstance()->setWifiCredentials(WifiHotspotData(data.c_str()));
+        WifiService::getInstance()->updateConfig(WifiHotspotConfig(data));
         Serial.println("Credentials saved successfully.");
         return "";
     }, true);
 
-    createEndpoint("/setHotspotConfig", [](std::string data) -> std::string
+    createEndpoint("/setHotspotConfig", [this](std::string data) -> std::string
     {
-        Configuration::getInstance()->setHotspotCredentials(WifiHotspotData(data.c_str()));
+        this->updateConfig(WifiHotspotConfig(data));
         Serial.println("Credentials saved successfully.");
         return "";
     }, true);
 
     createEndpoint("/getFirebaseData", [](std::string data) -> std::string
     {
-        auto firebaseData = Configuration::getInstance()->getFirebaseData();
+        
         Serial.println("FirebaseData get request handled.");
-        return firebaseData.toJsonString();
+        return FirebaseService::getInstance()->getConfig();
     });
 
     createEndpoint("/setFirebaseData", [](std::string data) -> std::string
     {
-        Configuration::getInstance()->setFirebaseData(FBData(data.c_str()));
+        FirebaseService::getInstance()->updateConfig(FirebaseServiceConfig(data));
         Serial.println("FirebaseData set request handled.");
         return "";
     }, true);
 
     createEndpoint("/getDisplayConfig", [](std::string data) -> std::string
     {
-        auto displayConfig = Configuration::getInstance()->getDisplayConfig();
         Serial.println("DisplayConfig get request handled.");
-        return displayConfig;
+        return DisplayService::getInstance()->getConfig();
     });
 
     createEndpoint("/setDisplayConfig", [](std::string data) -> std::string
     {
-        Configuration::getInstance()->setDisplayConfig(data.c_str());
+        DisplayService::getInstance()->updateConfig(DisplayConfig(data));
         Serial.println("DisplayConfig set request handled.");
         return "";
     }, true);
 
     createEndpoint("/time-config", [](std::string data) -> std::string
     {
-        auto timeConfig = SystemTime::getInstance()->getConfig();
-        return timeConfig;
+        return SystemTimeService::getInstance()->getConfig();
     }); // get request
 
     createEndpoint("/time-config", [](std::string data) -> std::string
     {
-        SystemTime::getInstance()->setConfig(TimeConfigData(data).toJson());
+        SystemTimeService::getInstance()->setConfig(SystemTimeConfig(data).toJson());
         Serial.println("Time configuration saved successfully.");
         return "";
     }, true); // post request
@@ -128,11 +128,11 @@ void WebApiManager::init()
         return "";
     }, true);
 
-    createIManagerEndpoints<TempSensorItem>("/TempSensor", Temperature::getInstance());
-    createIManagerEndpoints<GPIOItem>("/GPIO", GPIOManager::getInstance());
-    createIManagerEndpoints<ThermostatItem>("/Thermostat", ThermostatManager::getInstance());
-    createIManagerEndpoints<SchedulerItem>("/Scheduler", Scheduler::getInstance());
-    createIManagerEndpoints<SignalItem>("/signal", SignalManager::getInstance());
+    createIManagerEndpoints<TempSensorItem>("/TempSensor", TempSensorService::getInstance());
+    createIManagerEndpoints<GpioItem>("/GPIO", GpioService::getInstance());
+    createIManagerEndpoints<ThermostatItem>("/Thermostat", ThermostatService::getInstance());
+    createIManagerEndpoints<SchedulerItem>("/SchedulerService", SchedulerService::getInstance());
+    createIManagerEndpoints<SignalRouterItem>("/signal", SignalRouterService::getInstance());
     server.begin();
 }
 
@@ -143,7 +143,7 @@ void WebApiManager::init()
  * @param handler Handler function for the endpoint
  * @param post Flag to indicate if the endpoint is a POST request (true) or GET request (false)
  */
-void WebApiManager::createEndpoint(std::string uri, std::function<std::string(std::string)> handler, bool post)
+void WebApiService::createEndpoint(std::string uri, std::function<std::string(std::string)> handler, bool post)
 {
     if (post)
     {
@@ -168,14 +168,14 @@ void WebApiManager::createEndpoint(std::string uri, std::function<std::string(st
 }
 
 /**
- * @brief Method to create endpoints for IManager objects
+ * @brief Method to create endpoints for IResourceController objects
  * 
- * @tparam ItemType Type of the item managed by the IManager object
+ * @tparam ItemType Type of the item managed by the IResourceController object
  * @param uri URI of the endpoint
- * @param manager IManager object
+ * @param manager IResourceController object
  */
 template <typename ItemType>
-void WebApiManager::createIManagerEndpoints(std::string uri, IManager<ItemType>* manager)
+void WebApiService::createIManagerEndpoints(std::string uri, IResourceController<ItemType>* manager)
 {
     auto populator = [] (std::string data) -> ItemType
     {
@@ -185,7 +185,7 @@ void WebApiManager::createIManagerEndpoints(std::string uri, IManager<ItemType>*
     };
     createEndpoint(uri + "/get", [manager] (std::string data) -> std::string
     {
-        return manager->getListJson();
+        return manager->getAll();
     });
     createEndpoint(uri + "/create", [manager, populator] (std::string data) -> std::string
     {
@@ -195,7 +195,7 @@ void WebApiManager::createIManagerEndpoints(std::string uri, IManager<ItemType>*
     createEndpoint(uri + "/modify", [manager, populator] (std::string data) -> std::string
     {
         auto item = populator(data);
-        manager->modify(item.getId(), item);
+        manager->update(item.getId(), item);
         return "";
     }, true);
     createEndpoint(uri + "/delete", [manager, populator] (std::string data) -> std::string
@@ -205,4 +205,41 @@ void WebApiManager::createIManagerEndpoints(std::string uri, IManager<ItemType>*
         manager->remove(item.getId());
         return "";
     }, true);
+}
+
+/**
+ * @brief store config in storage
+ * 
+ */
+void WebApiService::storeAll()
+{
+    Configuration::getInstance()->setHotspotCredentials(hotspotCred.toJson());
+}
+
+/**
+ * @brief restore config from storage
+ * 
+ */
+void WebApiService::restoreAll()
+{
+    hotspotCred.populateFromJson(Configuration::getInstance()->getHotspotCredentials());
+}
+
+/**
+ * @brief update config (for web-api)
+ * @param cfg new configuration to replace the old one
+ */
+void WebApiService::updateConfig(WifiHotspotConfig cfg)
+{
+    this->hotspotCred = cfg;
+    storeAll();
+}
+
+/**
+ * @brief get config in json string format (for web-api)
+ * @return std::string configuration json string
+ */
+std::string WebApiService::getConfig()
+{
+    return hotspotCred.toJson();
 }

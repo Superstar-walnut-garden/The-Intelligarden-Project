@@ -1,15 +1,14 @@
-#ifndef GPIOITEM_HPP
-#define GPIOITEM_HPP
+#pragma once
 
 #include "BaseItem.hpp"
 #include "SignalCompatibleBaseItem.hpp"
 #include <string>
 
-class GPIOItem : public SignalCompatibleBaseItem
+class GpioItem : public SignalCompatibleBaseItem
 {
 public:
-    GPIOItem();
-    GPIOItem(int pin, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
+    GpioItem();
+    GpioItem(int pin, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
 
     int getPin();
     int getMode();
@@ -28,5 +27,3 @@ private:
     short mode;
 
 };
-
-#endif // GPIOITEM_HPP

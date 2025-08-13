@@ -1,18 +1,19 @@
-#ifndef FBDATA_HPP
-#define FBDATA_HPP
+#pragma once
 
 #include <ArduinoJson.h>
 #include <string>
 #include <iostream>
+#include "IJsonSerializable.hpp"
 
 
-class FBData
+class FirebaseServiceConfig: public IJsonSerializable
 {
     public:
-    FBData();
-    FBData(const char* json);
+    FirebaseServiceConfig();
+    FirebaseServiceConfig(std::string json);
 
-    std::string toJsonString();
+    std::string toJson() override;
+    void populateFromJson(std::string) override;
 
     std::string getApiKey();
     std::string getDatabaseURL();
@@ -32,6 +33,3 @@ class FBData
     std::string databaseRootName;
     bool enabled;
 };
-
-
-#endif

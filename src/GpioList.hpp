@@ -1,14 +1,12 @@
-#ifndef GPIOLIST_HPP
-#define GPIOLIST_HPP
+#pragma once
 
-#include "GPIOItem.hpp"
+#include "GpioItem.hpp"
 #include "BaseList.hpp"
+#include <string>
 
-class GPIOList : public BaseList<GPIOItem>
+class GpioList : public BaseList<GpioItem>
 {
 public:
-    GPIOList();
-    GPIOList(std::string json);
+    GpioList();
+    GpioList(std::string json);
 };
-
-#endif // GPIOLIST_HPP

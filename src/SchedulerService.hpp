@@ -3,39 +3,41 @@
 
 #include "SchedulerList.hpp"
 #include "Time.hpp"
-#include "SystemTime.hpp"
+#include "SystemTimeService.hpp"
 #include <string>
 #include <vector>
 #include <iostream>
-#include "IManager.hpp"
-#include "ISignalCompatibleManager.hpp"
+#include "IResourceController.hpp"
+#include "ISignalCompatibleService.hpp"
+#include "IResourcePersistenceService.hpp"
 
-class Scheduler: public IManager<SchedulerItem>, public ISignalCompatibleManager // SchedulerItem Manager Class
+class SchedulerService: public IResourceController<SchedulerItem>, public IResourcePersistenceService, public ISignalCompatibleService // SchedulerItem Manager Class
 {
 public:
-    static Scheduler* getInstance();
+    static SchedulerService* getInstance();
 
-    void create(SchedulerItem newItem) override;
-    void remove(uint64_t id) override;
-    void modify(uint64_t id, SchedulerItem newItem) override;
-
-    void saveState() override;
-    void loadState() override;
-
-    std::string getListJson() override;
-    std::string getName() override { return "Scheduler"; }
+    std::string getName() override { return "SchedulerService"; }
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
     void loop();
 
+    std::string getAll() override;
+    std::string get(uint64_t id) override;
+    void create(SchedulerItem newItem) override;
+    void remove(uint64_t id) override;
+    void update(uint64_t id, SchedulerItem newItem) override;
+
+    void storeAll() override;
+    void restoreAll() override;
+
 private:
-    Scheduler();
-    ~Scheduler();
-    Scheduler(const Scheduler&) = delete;
-    Scheduler& operator=(const Scheduler&) = delete;
+    SchedulerService();
+    ~SchedulerService();
+    SchedulerService(const SchedulerService&) = delete;
+    SchedulerService& operator=(const SchedulerService&) = delete;
     void determineStatusofItems();
     void broadcastItem(SchedulerItem &item);
 
-    static Scheduler* instance;
+    static SchedulerService* instance;
     SchedulerList list;
 };
 

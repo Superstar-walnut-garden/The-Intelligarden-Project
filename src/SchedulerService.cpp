@@ -1,43 +1,43 @@
-#include "Scheduler.hpp"
+#include "SchedulerService.hpp"
 #include "Configuration.hpp"
 #include <ArduinoJson.h>
-#include "SignalManager.hpp"
+#include "SignalRouterService.hpp"
 #include "SignalNameResolver.hpp"
 
 /**
- * @brief Singleton instance of the Scheduler class.
+ * @brief Singleton instance of the SchedulerService class.
  * 
  */
-Scheduler* Scheduler::instance = nullptr;
+SchedulerService* SchedulerService::instance = nullptr;
 
 /**
- * @brief Construct a new Scheduler object.
+ * @brief Construct a new SchedulerService object.
  * 
  */
-Scheduler::Scheduler()
+SchedulerService::SchedulerService()
 {
-    loadState();
+    restoreAll();
 }
 
 /**
- * @brief Destroy the Scheduler object.
+ * @brief Destroy the SchedulerService object.
  * 
  */
-Scheduler::~Scheduler() 
+SchedulerService::~SchedulerService() 
 {
-    saveState();
+    storeAll();
 }
 
 /**
- * @brief Get the instance of the Scheduler (singleton pattern).
+ * @brief Get the instance of the SchedulerService (singleton pattern).
  * 
- * @return Scheduler* The instance of the Scheduler.
+ * @return SchedulerService* The instance of the SchedulerService.
  */
-Scheduler* Scheduler::getInstance() 
+SchedulerService* SchedulerService::getInstance() 
 {
     if (!instance) 
     {
-        instance = new Scheduler();
+        instance = new SchedulerService();
     }
     return instance;
 }
@@ -46,15 +46,15 @@ Scheduler* Scheduler::getInstance()
  * @brief determine the status of items based on the current time and weekday.
  * 
  */
-void Scheduler::determineStatusofItems() 
+void SchedulerService::determineStatusofItems() 
 {
-    auto systemTime = SystemTime::getInstance(); // get direct access to system time
+    auto systemTime = SystemTimeService::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
     for (auto& item : list.getList()) // iterate over the list of items
     {
         auto setItemStatus = [this](SchedulerItem& item, bool status) // lambda to set the status of item
         { 
-            auto skipSignal = SignalManager::getInstance()->
+            auto skipSignal = SignalRouterService::getInstance()->
                 getSignalValue(SignalNameResolver::toString(
                     SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getSkipLocalSignalName())));
             if(!status) // if the item is off, cancell the skip
@@ -70,7 +70,7 @@ void Scheduler::determineStatusofItems()
         {
             auto untilTime = item.getStartTime() + item.getDuration();
             auto isCurrentTimeBetweenStartAndEnd = currentTime >= item.getStartTime() && currentTime <= untilTime;
-            auto newStatus = (systemTime->isCurrentWeekdayPresentIn(SystemTime::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd); // check weekday and time
+            auto newStatus = (systemTime->isCurrentWeekdayPresentIn(SystemTimeService::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd); // check weekday and time
             setItemStatus(itemRef, newStatus);
             broadcastItem(itemRef); // broadcast the real item (because only the reference gets updated in this "for" statement)
         }
@@ -98,11 +98,11 @@ void Scheduler::determineStatusofItems()
  * 
  * @param schedulerItem The SchedulerItem to be created.
  */
-void Scheduler::create(SchedulerItem schedulerItem) 
+void SchedulerService::create(SchedulerItem schedulerItem) 
 {
     list.addItem(schedulerItem);
     Serial.printf("Schedule %d created\n", schedulerItem.getId());
-    saveState();
+    storeAll();
 }
 
 /**
@@ -110,40 +110,40 @@ void Scheduler::create(SchedulerItem schedulerItem)
  * 
  * @param id The ID of the SchedulerItem to be removed.
  */
-void Scheduler::remove(uint64_t id) 
+void SchedulerService::remove(uint64_t id) 
 {
     list.deleteItem(id);
     notify();
-    saveState();
+    storeAll();
 }
 
 /**
- * @brief Modify an existing SchedulerItem in the list.
+ * @brief update an existing SchedulerItem in the list.
  * 
  * @param id The ID of the SchedulerItem to be modified.
  * @param newItem The new SchedulerItem with updated values.
  */
-void Scheduler::modify(uint64_t id, SchedulerItem newItem) 
+void SchedulerService::update(uint64_t id, SchedulerItem newItem) 
 {
     list.modifyItem(id, newItem);
     notify();
-    saveState();
+    storeAll();
 }
 
 /**
- * @brief Save the current state of the Scheduler to the internal storage (SPIFFS).
+ * @brief Save the current state of the SchedulerService to the internal storage (SPIFFS).
  * 
  */
-void Scheduler::saveState()
+void SchedulerService::storeAll()
 {
     Configuration::getInstance()->setSchedulerList(list.toJson());
 }
 
 /**
- * @brief Load the state of the Scheduler from the internal storage (SPIFFS).
+ * @brief Load the state of the SchedulerService from the internal storage (SPIFFS).
  * 
  */
-void Scheduler::loadState() 
+void SchedulerService::restoreAll() 
 {
     auto data = Configuration::getInstance()->getSchedulerList();
     if (data.empty()) return;
@@ -151,21 +151,31 @@ void Scheduler::loadState()
 }
 
 /**
- * @brief Get the JSON representation of the Scheduler list (for web-api).
+ * @brief Get the JSON representation of the SchedulerService list (for web-api).
  * 
- * @return std::string The Scheduler list in JSON format.
+ * @return std::string The SchedulerService list in JSON format.
  */
-std::string Scheduler::getListJson()
+std::string SchedulerService::getAll()
 {
     return list.toJson();
 }
 
 /**
- * @brief Get the list of signal-compatible items in the Scheduler (for the CentralizedSignalHub).
+ * @brief Get an item from JSON representation of the SchedulerService list (for web-api).
+ * 
+ * @return std::string an item in JSON format.
+ */
+std::string SchedulerService::get(uint64_t id)
+{
+    return list.getItem(id).toJson();
+}
+
+/**
+ * @brief Get the list of signal-compatible items in the SchedulerService (for the CentralizedSignalHub).
  * 
  * @return std::vector<ISignalCompatibleItem*> A vector of pointers to signal-compatible items.
  */
-std::vector<ISignalCompatibleItem *> Scheduler::getSignalCompatibleItems()
+std::vector<ISignalCompatibleItem *> SchedulerService::getSignalCompatibleItems()
 {
     std::vector<ISignalCompatibleItem *> items;
     for (auto& item : list.getList())
@@ -178,22 +188,22 @@ std::vector<ISignalCompatibleItem *> Scheduler::getSignalCompatibleItems()
 }
 
 /**
- * @brief The main loop of the Scheduler, call periodically to update the status of items.
+ * @brief The main loop of the SchedulerService, call periodically to update the status of items.
  * 
  */
-void Scheduler::loop()
+void SchedulerService::loop()
 {
     determineStatusofItems(); // determine the status of items based on the current time and weekday
 }
 
 /**
- * @brief Broadcast the status of a SchedulerItem to SignalManager
+ * @brief Broadcast the status of a SchedulerItem to SignalRouterService
  * 
  * @param item The SchedulerItem to be broadcasted.
  */
-void Scheduler::broadcastItem(SchedulerItem &item)
+void SchedulerService::broadcastItem(SchedulerItem &item)
 {
-    SignalManager::getInstance()->setSignalValue(SignalNameResolver::toString(
+    SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(
         SignalNameResolver::SignalNameParameters(
             this->getName(), 
             item.getId(), 

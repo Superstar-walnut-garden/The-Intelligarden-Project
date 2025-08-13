@@ -1,24 +1,32 @@
-#include "WifiHotspotData.hpp"
+#include "WifiHotspotConfig.hpp"
 
 /**
- * @brief Construct a new WifiHotspotData object
+ * @brief Construct a new WifiHotspotConfig object
  * 
  */
-WifiHotspotData::WifiHotspotData()
+WifiHotspotConfig::WifiHotspotConfig()
 {
 
 }
 
 /**
- * @brief Construct a new WifiHotspotData object from JSON string
+ * @brief Construct a new WifiHotspotConfig object from JSON string
  * 
- * @param json JSON string containing WiFi hotspot configuration data.
+ * @param json JSON string containing WiFi hotspot configuration.
  */
-WifiHotspotData::WifiHotspotData(const char* json)
+WifiHotspotConfig::WifiHotspotConfig(std::string json)
+{
+    this->populateFromJson(json);
+}
+
+/**
+ * @brief Populate the BaseItem from a JSON string (override the method in case of having more parameters).
+ * @param json The JSON string to populate the item from.
+ */
+void WifiHotspotConfig::populateFromJson(std::string json)
 {
     JsonDocument doc;
     deserializeJson(doc, json);
-
     ssid = doc["ssid"].as<std::string>();
     password = doc["password"].as<std::string>();
     gateway = doc["gateway"].as<std::string>();
@@ -30,11 +38,11 @@ WifiHotspotData::WifiHotspotData(const char* json)
 }
 
 /**
- * @brief Convert the WifiHotspotData object to a JSON string
+ * @brief Convert the WifiHotspotConfig object to a JSON string
  * 
- * @return std::string JSON string representation of the WifiHotspotData object
+ * @return std::string JSON string representation of the WifiHotspotConfig object
  */
-std::string WifiHotspotData::toJsonString()
+std::string WifiHotspotConfig::toJson()
 {
     JsonDocument doc;
     doc["ssid"] = ssid;
@@ -55,7 +63,7 @@ std::string WifiHotspotData::toJsonString()
  * 
  * @return std::string SSID of the WiFi hotspot
  */
-std::string WifiHotspotData::getSsid()
+std::string WifiHotspotConfig::getSsid()
 {
     return ssid;
 }
@@ -65,7 +73,7 @@ std::string WifiHotspotData::getSsid()
  * 
  * @return std::string Password of the WiFi hotspot
  */
-std::string WifiHotspotData::getPassword()
+std::string WifiHotspotConfig::getPassword()
 {
     return password;
 }
@@ -75,7 +83,7 @@ std::string WifiHotspotData::getPassword()
  * 
  * @return IPAddress Gateway IP address
  */
-IPAddress WifiHotspotData::getGateway()
+IPAddress WifiHotspotConfig::getGateway()
 {
     IPAddress ip;
     if(!gateway.empty())
@@ -88,7 +96,7 @@ IPAddress WifiHotspotData::getGateway()
  * 
  * @return IPAddress Local IP address
  */
-IPAddress WifiHotspotData::getIP()
+IPAddress WifiHotspotConfig::getIP()
 {
     IPAddress ip;
     if(!localIP.empty())
@@ -101,7 +109,7 @@ IPAddress WifiHotspotData::getIP()
  * 
  * @return IPAddress Subnet mask
  */
-IPAddress WifiHotspotData::getSubnet()
+IPAddress WifiHotspotConfig::getSubnet()
 {
     IPAddress ip;
     if(!subnet.empty())
@@ -114,7 +122,7 @@ IPAddress WifiHotspotData::getSubnet()
  * 
  * @return IPAddress Primary DNS server IP address
  */
-IPAddress WifiHotspotData::getPrimaryDNS()
+IPAddress WifiHotspotConfig::getPrimaryDNS()
 {
     IPAddress ip;
     if(!primaryDNS.empty())
@@ -127,7 +135,7 @@ IPAddress WifiHotspotData::getPrimaryDNS()
  * 
  * @return IPAddress Secondary DNS server IP address
  */
-IPAddress WifiHotspotData::getSecondaryDNS()
+IPAddress WifiHotspotConfig::getSecondaryDNS()
 {
     IPAddress ip;
     if(!secondaryDNS.empty())
@@ -140,7 +148,7 @@ IPAddress WifiHotspotData::getSecondaryDNS()
  * 
  * @return true if the WiFi/hotspot is enabled, false otherwise
  */
-bool WifiHotspotData::isOn()
+bool WifiHotspotConfig::isOn()
 {
     return on;
 }

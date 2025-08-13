@@ -1,15 +1,17 @@
-#ifndef WIFIHOTSPOTDATA_HPP
-#define WIFIHOTSPOTDATA_HPP
+#pragma once
 #include <ArduinoJson.h>
 #include <string>
 #include <iostream>
+#include <IJsonSerializable.hpp>
 
-class WifiHotspotData // Wifi Setup Data Parser
+class WifiHotspotConfig: public IJsonSerializable
 {
     public:
-    WifiHotspotData();
-    WifiHotspotData(const char* json);
-    std::string toJsonString();
+    WifiHotspotConfig();
+    WifiHotspotConfig(std::string json);
+    std::string toJson() override;
+    void populateFromJson(std::string json) override;
+
     std::string getSsid();
     std::string getPassword();
     IPAddress getGateway();
@@ -29,5 +31,3 @@ class WifiHotspotData // Wifi Setup Data Parser
     std::string secondaryDNS;
     bool on;
 };
-
-#endif

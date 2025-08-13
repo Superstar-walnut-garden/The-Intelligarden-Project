@@ -1,16 +1,16 @@
-#include "GPIOItem.hpp"
+#include "GpioItem.hpp"
 #include "SignalNameResolver.hpp"
 
 /**
- * @brief Construct a new GPIOItem::GPIOItem object
+ * @brief Construct a new GpioItem::GpioItem object
  * 
  */
-GPIOItem::GPIOItem()
+GpioItem::GpioItem()
     : SignalCompatibleBaseItem(), mode(0), extraParameters("")
 {
 }
 
-/** * @brief Construct a new GPIOItem::GPIOItem object
+/** * @brief Construct a new GpioItem::GpioItem object
  * 
  * @param pin Pin number
  * @param name Name of the GPIO item
@@ -18,7 +18,7 @@ GPIOItem::GPIOItem()
  * @param mode Mode of the GPIO item (0 for input, 1 for output, etc.)
  * @param extraParameters Extra parameters for the GPIO item
  */
-GPIOItem::GPIOItem(int pin, std::string name, bool status, short mode, std::string extraParameters)
+GpioItem::GpioItem(int pin, std::string name, bool status, short mode, std::string extraParameters)
     : SignalCompatibleBaseItem(pin, name, status), mode(mode), extraParameters(extraParameters)
 {
 }
@@ -27,7 +27,7 @@ GPIOItem::GPIOItem(int pin, std::string name, bool status, short mode, std::stri
  * 
  * @return int Pin number
  */ 
-int GPIOItem::getPin()
+int GpioItem::getPin()
 {
     return this->getId();
 }
@@ -35,7 +35,7 @@ int GPIOItem::getPin()
 /** * @brief Get the mode of the GPIO item
  * @return int Mode of the GPIO item
  */
-int GPIOItem::getMode()
+int GpioItem::getMode()
 {
     return this->mode;
 }
@@ -44,7 +44,7 @@ int GPIOItem::getMode()
  * 
  * @param mode Mode to set (0 for input, 1 for output, etc.)
  */
-void GPIOItem::setMode(short mode)
+void GpioItem::setMode(short mode)
 {
     this->mode = mode;
 }
@@ -53,7 +53,7 @@ void GPIOItem::setMode(short mode)
  * 
  * @return std::string Extra parameters as a string
  */
-std::string GPIOItem::getExtraParameters()
+std::string GpioItem::getExtraParameters()
 {
     return this->extraParameters;
 }
@@ -62,7 +62,7 @@ std::string GPIOItem::getExtraParameters()
  * 
  * @param extraParameters Extra parameters to set as a string
  */
-void GPIOItem::setExtraParameters(std::string extraParameters)
+void GpioItem::setExtraParameters(std::string extraParameters)
 {
     this->extraParameters = extraParameters;
 }
@@ -71,7 +71,7 @@ void GPIOItem::setExtraParameters(std::string extraParameters)
  * 
  * @param doc JSON document to populate from
  */
-void GPIOItem::populateDerivedClassFromJson(JsonDocument &doc)
+void GpioItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     this->extraParameters = doc["extraParameters"].as<std::string>();
     this->mode = doc["mode"].as<short>();
@@ -81,7 +81,7 @@ void GPIOItem::populateDerivedClassFromJson(JsonDocument &doc)
  * 
  * @param doc JSON document to convert to
  */
-void GPIOItem::derivedClassToJson(JsonDocument &doc)
+void GpioItem::derivedClassToJson(JsonDocument &doc)
 {
     doc["extraParameters"] = this->extraParameters;
     doc["mode"] = this->mode;
@@ -91,7 +91,7 @@ void GPIOItem::derivedClassToJson(JsonDocument &doc)
  * 
  * @return std::vector<std::string> Vector of local signal names
  */
-std::vector<std::string> GPIOItem::getLocalSignalNames()
+std::vector<std::string> GpioItem::getLocalSignalNames()
 {
     // Dynamic SignalType and Name Generation
     SignalNameResolver::SignalType signalType;

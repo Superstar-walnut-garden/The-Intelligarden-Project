@@ -4,11 +4,11 @@
 #include "IObserver.hpp"
 #include "IResourceController.hpp"
 #include "ISignalCompatibleService.hpp"
-#include "IStateful.hpp"
+#include "IResourcePersistenceService.hpp"
 #include <vector>
 #include <string>
 
-class GpioService: public IStateful, public IResourceController<GpioItem>, public ISignalCompatibleService
+class GpioService: public IResourcePersistenceService, public IResourceController<GpioItem>, public ISignalCompatibleService
 {
 public:
     static GpioService* getInstance();
@@ -17,7 +17,7 @@ public:
     void create(GpioItem newItem) override;
     void remove(uint64_t id) override;
     void update(uint64_t id, GpioItem newItem) override;
-    std::string get(uint64_t) override;
+    std::string get(uint64_t id) override;
     std::string getAll() override;
 
     void storeAll() override;

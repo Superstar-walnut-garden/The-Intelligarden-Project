@@ -1,29 +1,29 @@
-#include "SystemTime.hpp"
+#include "SystemTimeService.hpp"
 #include "Configuration.hpp"
 
 /**
  * @brief instance initialization for the singleton pattern
  * 
  */
-SystemTime *SystemTime::instance = nullptr;
+SystemTimeService *SystemTimeService::instance = nullptr;
 
 /**
- * @brief get the singleton instance of SystemTime.
+ * @brief get the singleton instance of SystemTimeService.
  * 
- * @return SystemTime* 
+ * @return SystemTimeService* 
  */
-SystemTime *SystemTime::getInstance()
+SystemTimeService *SystemTimeService::getInstance()
 {
     if (!instance)
-        instance = new SystemTime();
+        instance = new SystemTimeService();
     return instance;
 }
 
 /**
- * @brief Construct a new SystemTime::SystemTime object
+ * @brief Construct a new SystemTimeService::SystemTimeService object
  * 
  */
-SystemTime::SystemTime() 
+SystemTimeService::SystemTimeService() 
 : rtc(0)
 {
     loadState(); // load the saved configuraion state from SPIFFS
@@ -50,7 +50,7 @@ SystemTime::SystemTime()
  * @brief try to obtain the current time from an NTP server.
  * 
  */
-void SystemTime::obtainTime()
+void SystemTimeService::obtainTime()
 {
     auto& cfg = currentConfigData;
     if(cfg.isSetTimeAutomatically() and !cfg.isNtpUpdated())
@@ -115,7 +115,7 @@ void SystemTime::obtainTime()
  * @return true 
  * @return false 
  */
-bool SystemTime::isTimeUpdated()
+bool SystemTimeService::isTimeUpdated()
 {
     return currentConfigData.isTimeSubsystemInitialized();
 }
@@ -125,7 +125,7 @@ bool SystemTime::isTimeUpdated()
  * 
  * @return short 
  */
-short SystemTime::getMinute()
+short SystemTimeService::getMinute()
 {
     return rtc.getMinute();
 }
@@ -135,7 +135,7 @@ short SystemTime::getMinute()
  * 
  * @return short 
  */
-short SystemTime::getHour()
+short SystemTimeService::getHour()
 {
     return rtc.getHour(true);
 }
@@ -145,7 +145,7 @@ short SystemTime::getHour()
  * 
  * @return short 
  */
-short SystemTime::getDay()
+short SystemTimeService::getDay()
 {
     return rtc.getDay();
 }
@@ -155,7 +155,7 @@ short SystemTime::getDay()
  * 
  * @return short 
  */
-short SystemTime::getMonth()
+short SystemTimeService::getMonth()
 {
     return rtc.getMonth() + 1;
 }
@@ -165,7 +165,7 @@ short SystemTime::getMonth()
  * 
  * @return short 
  */
-short SystemTime::getYear()
+short SystemTimeService::getYear()
 {
     return rtc.getYear();
 }
@@ -175,7 +175,7 @@ short SystemTime::getYear()
  * This function is called when the system fails to reach the time server or loses power.
  * It resets the timeUpdated flag and prints an error message.
  */
-void SystemTime::lostTrackOfTime()
+void SystemTimeService::lostTrackOfTime()
 {
     Serial.println("Error: Couldn't reach time server!!!");
     Serial.printf("reset reason core 0 code: %d\n", rtc_get_reset_reason(0));
@@ -197,7 +197,7 @@ void SystemTime::lostTrackOfTime()
  * 
  * @return std::string 
  */
-std::string SystemTime::getConfig()
+std::string SystemTimeService::getConfig()
 {
     return currentConfigData.toJson();
 }
@@ -207,9 +207,9 @@ std::string SystemTime::getConfig()
  * 
  * @param configJson 
  */
-void SystemTime::setConfig(const std::string& configJson)
+void SystemTimeService::setConfig(const std::string& configJson)
 {
-    auto newConfig = TimeConfigData(configJson);
+    auto newConfig = SystemTimeConfig(configJson);
     // keeping realtime variables intact to prevent wrong
     newConfig.setTimeSubsystemInitialized(currentConfigData.isTimeSubsystemInitialized());
     newConfig.setExternalRTCAvailability(currentConfigData.isExternalRTCAvailable());
@@ -247,7 +247,7 @@ void SystemTime::setConfig(const std::string& configJson)
  * @brief Save the current state of the system time to internal storage.
  * This function is called to save the current time and configuration to persistent storage.
  */
-void SystemTime::saveState()
+void SystemTimeService::saveState()
 {
     Configuration::getInstance()->setTimeConfig(currentConfigData.toJson());   
 }
@@ -256,7 +256,7 @@ void SystemTime::saveState()
  * @brief load the saved state of the system time from internal storage.
  * This function is called to load the previously saved time and configuration from persistent storage.
  */
-void SystemTime::loadState()
+void SystemTimeService::loadState()
 {
     auto state = Configuration::getInstance()->getTimeConfig();
     if (state.empty())
@@ -268,7 +268,7 @@ void SystemTime::loadState()
  * @brief calculate the timezone offset in seconds.
  * This function calculates the timezone offset by comparing the local time and UTC time (i.e. it depends on system's timezone configuration).
  */
-int SystemTime::getTimezoneOffset() 
+int SystemTimeService::getTimezoneOffset() 
 {
     time_t now = time(NULL);
     struct tm utc_tm, local_tm;

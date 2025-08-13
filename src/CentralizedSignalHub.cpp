@@ -25,7 +25,7 @@ CentralizedSignalHub* CentralizedSignalHub::getInstance()
  * @brief register a signal compatible subsystem (manager) 
  * @param manager a refrence of the desired manager to be added to the manager registry
  */
-void CentralizedSignalHub::registerManager(ISignalCompatibleManager *manager)
+void CentralizedSignalHub::registerManager(ISignalCompatibleService *manager)
 {
     managers.push_back(manager);
     manager->attach(this); // listen to changes in manager items
@@ -35,7 +35,7 @@ void CentralizedSignalHub::registerManager(ISignalCompatibleManager *manager)
  * @brief get manager registry
  * @return a list (vector) of managers
  */
-std::vector<ISignalCompatibleManager *> CentralizedSignalHub::getManagers()
+std::vector<ISignalCompatibleService *> CentralizedSignalHub::getManagers()
 {
     return managers;
 }
@@ -102,7 +102,7 @@ std::string CentralizedSignalHub::getListJson()
  * @brief this is automaticaly called when any of the registered managers changes (item modification or removal).
  * 
  */
-void CentralizedSignalHub::update(ISignalCompatibleManager *scm)
+void CentralizedSignalHub::update(ISignalCompatibleService *scm)
 {
-    notify(); // do nothing and pass it to the observer (SignalManager in this case).
+    notify(); // do nothing and pass it to the observer (SignalRouterService in this case).
 }

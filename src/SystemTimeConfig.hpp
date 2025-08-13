@@ -3,18 +3,19 @@
 #include <ArduinoJson.h>
 #include <string>
 #include <iostream>
+#include "IJsonSerializable.hpp"
 
 /**
  * @brief data structure for storing time configuration data.
  * 
  */
-class TimeConfigData
+class SystemTimeConfig: public IJsonSerializable
 {
     public:
-    TimeConfigData();
-    TimeConfigData(std::string json);
-    void populateFromJson(std::string json);
-    std::string toJson();
+    SystemTimeConfig();
+    SystemTimeConfig(std::string json);
+    void populateFromJson(std::string json) override;
+    std::string toJson() override;
 
     std::string getTimezone();
     void setTimezone(std::string& tz);

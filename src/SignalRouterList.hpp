@@ -1,7 +1,7 @@
 #ifndef SIGNALLIST_HPP
 #define SIGNALLIST_HPP
 
-#include "SignalItem.hpp"
+#include "SignalRouterItem.hpp"
 #include "BaseList.hpp"
 #include <ArduinoJson.h>
 #include <string>
@@ -12,11 +12,11 @@
  * @brief EventList class
  * 
  */
-class SignalList: public BaseList<SignalItem>
+class SignalRouterList: public BaseList<SignalRouterItem>
 {
 public:
-    SignalList();
-    SignalList(std::string json);
+    SignalRouterList();
+    SignalRouterList(std::string json);
 
 private:
 };

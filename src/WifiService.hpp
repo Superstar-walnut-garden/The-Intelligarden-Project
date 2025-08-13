@@ -9,14 +9,17 @@
 #include <atomic>
 #include <thread>
 #include <ESP32Ping.h>
+#include "WifiHotspotConfig.hpp"
+#include "IConfigController.hpp"
+#include "IResourcePersistenceService.hpp"
 
 
 
-class WifiSetup
+class WifiService: public IConfigController<WifiHotspotConfig>, public IResourcePersistenceService
 {
 public:
-    static WifiSetup *getInstance();
-    void connect(WifiHotspotData wifiCred);
+    static WifiService *getInstance();
+    void connect();
     bool isConnected();
     bool isOnline();
     void onConnect(std::function<void()>);
@@ -25,9 +28,15 @@ public:
     void onOffline(std::function<void()>);
     void loop();
 
+    void updateConfig(WifiHotspotConfig cfg) override;
+    std::string getConfig() override;
+
+    void storeAll() override;
+    void restoreAll() override;
+
 private:
-    WifiSetup();
-    static WifiSetup *instance;
+    WifiService();
+    static WifiService *instance;
     std::function<void()> onConnectCallback;
     std::function<void()> onOnlineCallback;
     std::function<void()> onDisconnectCallback;
@@ -36,6 +45,8 @@ private:
     std::atomic<bool> onlineFlag{false};
     std::atomic<bool> disconnectFlag{false};
     std::atomic<bool> offlineFlag{false};
+
+    WifiHotspotConfig wifiCred;
 };
 
 #endif // WIFISETUP_HPP
