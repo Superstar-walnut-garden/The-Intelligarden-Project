@@ -10,7 +10,7 @@
 #include "IResourceController.hpp"
 #include "ISignalCompatibleService.hpp"
 #include "IResourcePersistenceService.hpp"
-#include "CentralizedSignalHub.hpp"
+#include "CentralizedSignalHubService.hpp"
 #include "StatusCode.hpp"
 
 
@@ -18,14 +18,14 @@ class SignalRouterService:
     public IResourceController<SignalRouterItem>, 
     public IResourcePersistenceService,
     public ISignalCompatibleService, 
-    public IObserver<CentralizedSignalHub>
+    public IObserver<CentralizedSignalHubService>
 {
 public:
     static SignalRouterService* getInstance();
 
     StatusCode setSignalValue(std::string fullSignalPath, bool value);
     std::optional<bool> getSignalValue(std::string fullSignalPath);
-    void update(CentralizedSignalHub *signalHub) override;
+    void update(CentralizedSignalHubService *signalHub) override;
 
     void create(SignalRouterItem item) override;
     void remove(uint64_t id) override;

@@ -4,10 +4,10 @@
 #include "ISignalCompatibleService.hpp"
 #include "Subject.hpp"
 
-class CentralizedSignalHub: public Subject<CentralizedSignalHub>, public IObserver<ISignalCompatibleService>
+class CentralizedSignalHubService: public Subject<CentralizedSignalHubService>, public IObserver<ISignalCompatibleService>
 {
 public:
-    static CentralizedSignalHub* getInstance();
+    static CentralizedSignalHubService* getInstance();
     void registerManager(ISignalCompatibleService *manager);
     std::vector<ISignalCompatibleService *> getManagers();
     bool isSignalPathValid(std::string fullSignalPath);
@@ -17,8 +17,8 @@ public:
 private:
     std::vector<ISignalCompatibleService *> managers;
 
-    CentralizedSignalHub(){}; // private constructor
-    static CentralizedSignalHub *instance; // singleton instance
+    CentralizedSignalHubService(){}; // private constructor
+    static CentralizedSignalHubService *instance; // singleton instance
 };
 
 #endif

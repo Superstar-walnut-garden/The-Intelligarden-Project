@@ -3,7 +3,7 @@
 #include <ArduinoJson.h>
 
 #include "Configuration.hpp"
-#include "CentralizedSignalHub.hpp"
+#include "CentralizedSignalHubService.hpp"
 #include "SystemTimeService.hpp"
 #include "GpioService.hpp"
 #include "ThermostatService.hpp"
@@ -116,7 +116,7 @@ void WebApiService::init()
 
     createEndpoint("/signal-hub-items", [](std::string data) -> std::string
     {
-        auto signalHubItems = CentralizedSignalHub::getInstance()->getListJson();
+        auto signalHubItems = CentralizedSignalHubService::getInstance()->getListJson();
         return signalHubItems;
     }); // get request
 

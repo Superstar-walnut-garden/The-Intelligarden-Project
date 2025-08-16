@@ -1,6 +1,6 @@
 #include "SignalRouterService.hpp"
 #include "SignalNameResolver.hpp"
-#include "CentralizedSignalHub.hpp"
+#include "CentralizedSignalHubService.hpp"
 #include <ArduinoJson.h>
 
 SignalRouterService* SignalRouterService::instance = nullptr;
@@ -12,7 +12,7 @@ SignalRouterService* SignalRouterService::instance = nullptr;
 SignalRouterService::SignalRouterService() 
 {
     restoreAll(); // load the state from the internal storage (SPIFFS)
-    CentralizedSignalHub::getInstance()->attach(this); // get attached to the CentralizedSignalHub to receive updates (via observer pattern)
+    CentralizedSignalHubService::getInstance()->attach(this); // get attached to the CentralizedSignalHubService to receive updates (via observer pattern)
 }
 
 /** 
@@ -200,35 +200,35 @@ void SignalRouterService::restoreAll()
 }
 
 /**
- * @brief this is automaticaly called when any of the CentralizedSignalHub changes.
+ * @brief this is automaticaly called when any of the CentralizedSignalHubService changes.
  * 
  */
-void SignalRouterService::update(CentralizedSignalHub *signalHub)
+void SignalRouterService::update(CentralizedSignalHubService *signalHub)
 {
-    Serial.println("SignalRouterService received update from CentralizedSignalHub.");
+    Serial.println("SignalRouterService received update from CentralizedSignalHubService.");
     Serial.println("checking signal paths...");
     // scan the signal list and check all the broadcaster names and listeners names
     // if there wasn't a match, remove that signalpath.
     signalList.forEach([&](SignalRouterItem &item) -> void
     {
         // check if the broadcaster signal path is valid
-        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath()))
+        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath()))
             item.removeBroadcaster();
 
         // check if the auxiliary broadcaster signal path is valid
-        if(!CentralizedSignalHub::getInstance()->isSignalPathValid(item.getAuxiliaryBroadcaster().getSignalPath()))
+        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item.getAuxiliaryBroadcaster().getSignalPath()))
             item.removeBroadcaster(true); // remove auxiliary broadcaster
 
         // check if the listeners signal paths are valid
         for(auto &listener : item.getListeners())
-            if(!CentralizedSignalHub::getInstance()->isSignalPathValid(listener.getSignalPath()))
+            if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(listener.getSignalPath()))
                 item.removeListener(listener.getSignalPath());
     });
     storeAll(); // save the state after removing invalid signal paths
 }
 
 /**
- * @brief Get the list of signal-compatible items in the SignalRouterService (for the CentralizedSignalHub).
+ * @brief Get the list of signal-compatible items in the SignalRouterService (for the CentralizedSignalHubService).
  * @note Never store this std::vector for future use because it may contain dangling pointers if the items are modified or deleted.
  * 
  * @return std::vector<ISignalCompatibleItem*> A vector of pointers to signal-compatible items.

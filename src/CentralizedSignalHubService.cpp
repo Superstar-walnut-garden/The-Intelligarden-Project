@@ -1,22 +1,22 @@
-#include "CentralizedSignalHub.hpp"
+#include "CentralizedSignalHubService.hpp"
 #include "ArduinoJson.h"
 #include "SignalNameResolver.hpp"
 
 /**
- * @brief initialize the instance of the CentralizedSignalHub to null
+ * @brief initialize the instance of the CentralizedSignalHubService to null
  * 
  */
-CentralizedSignalHub* CentralizedSignalHub::instance = nullptr;
+CentralizedSignalHubService* CentralizedSignalHubService::instance = nullptr;
 /**
- * @brief Get the instance of the CentralizedSignalHub (singleton pattern).
+ * @brief Get the instance of the CentralizedSignalHubService (singleton pattern).
  * 
- * @return CentralizedSignalHub* The instance of the CentralizedSignalHub.
+ * @return CentralizedSignalHubService* The instance of the CentralizedSignalHubService.
  */
-CentralizedSignalHub* CentralizedSignalHub::getInstance()
+CentralizedSignalHubService* CentralizedSignalHubService::getInstance()
 {
     if (!instance)
     {
-        instance = new CentralizedSignalHub();
+        instance = new CentralizedSignalHubService();
     }
     return instance;
 }
@@ -25,7 +25,7 @@ CentralizedSignalHub* CentralizedSignalHub::getInstance()
  * @brief register a signal compatible subsystem (manager) 
  * @param manager a refrence of the desired manager to be added to the manager registry
  */
-void CentralizedSignalHub::registerManager(ISignalCompatibleService *manager)
+void CentralizedSignalHubService::registerManager(ISignalCompatibleService *manager)
 {
     managers.push_back(manager);
     manager->attach(this); // listen to changes in manager items
@@ -35,7 +35,7 @@ void CentralizedSignalHub::registerManager(ISignalCompatibleService *manager)
  * @brief get manager registry
  * @return a list (vector) of managers
  */
-std::vector<ISignalCompatibleService *> CentralizedSignalHub::getManagers()
+std::vector<ISignalCompatibleService *> CentralizedSignalHubService::getManagers()
 {
     return managers;
 }
@@ -45,7 +45,7 @@ std::vector<ISignalCompatibleService *> CentralizedSignalHub::getManagers()
  * @param fullSignalPath the full signal path to be checked
  * @return true if the signal path is valid, false otherwise
  */
-bool CentralizedSignalHub::isSignalPathValid(std::string fullSignalPath)
+bool CentralizedSignalHubService::isSignalPathValid(std::string fullSignalPath)
 {
     for(auto *manager : managers) // iterate over managers
     {
@@ -69,7 +69,7 @@ bool CentralizedSignalHub::isSignalPathValid(std::string fullSignalPath)
  * @brief get a complete list of signal-compatible items
  * @return json list of signal-compatible items including their local signals
  */
-std::string CentralizedSignalHub::getListJson()
+std::string CentralizedSignalHubService::getListJson()
 {
     JsonDocument doc;
     JsonArray managersArray = doc.to<JsonArray>();
@@ -102,7 +102,7 @@ std::string CentralizedSignalHub::getListJson()
  * @brief this is automaticaly called when any of the registered managers changes (item modification or removal).
  * 
  */
-void CentralizedSignalHub::update(ISignalCompatibleService *scm)
+void CentralizedSignalHubService::update(ISignalCompatibleService *scm)
 {
     notify(); // do nothing and pass it to the observer (SignalRouterService in this case).
 }

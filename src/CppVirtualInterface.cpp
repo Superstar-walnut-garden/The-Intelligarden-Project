@@ -23,7 +23,7 @@
 #include "WebApiService.hpp"
 #include "GpioService.hpp"
 #include "SchedulerService.hpp"
-#include "CentralizedSignalHub.hpp"
+#include "CentralizedSignalHubService.hpp"
 #include "SignalRouterService.hpp"
 
 
@@ -47,7 +47,7 @@ int virtualMain()
     auto *scheduler = SchedulerService::getInstance();
     auto *ioManager = GpioService::getInstance();
     auto *thermostatManager = ThermostatService::getInstance();
-    auto *centralizedSignalHub = CentralizedSignalHub::getInstance();
+    auto *centralizedSignalHub = CentralizedSignalHubService::getInstance();
 
     temperature->attach(display); // attach display as an observer
     temperature->attach(thermostatManager); // attach ThermostatService as an observer
