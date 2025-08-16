@@ -29,11 +29,11 @@ void WifiHotspotConfig::populateFromJson(std::string json)
     deserializeJson(doc, json);
     ssid = doc["ssid"].as<std::string>();
     password = doc["password"].as<std::string>();
-    gateway = doc["gateway"].as<std::string>();
-    localIP = doc["ip"].as<std::string>();
-    subnet = doc["subnet"].as<std::string>();
-    primaryDNS = doc["primaryDNS"].as<std::string>();
-    secondaryDNS = doc["secondaryDNS"].as<std::string>();
+    gateway.fromString(doc["gateway"].as<std::string>().c_str());
+    localIP.fromString(doc["ip"].as<std::string>().c_str());
+    subnet.fromString(doc["subnet"].as<std::string>().c_str());
+    primaryDNS.fromString(doc["primaryDNS"].as<std::string>().c_str());
+    secondaryDNS.fromString(doc["secondaryDNS"].as<std::string>().c_str());
     on = doc["on"].as<bool>();
 }
 
@@ -85,10 +85,7 @@ std::string WifiHotspotConfig::getPassword()
  */
 IPAddress WifiHotspotConfig::getGateway()
 {
-    IPAddress ip;
-    if(!gateway.empty())
-        ip.fromString(gateway.c_str());
-    return ip;
+    return gateway;
 }
 
 /**
@@ -98,10 +95,7 @@ IPAddress WifiHotspotConfig::getGateway()
  */
 IPAddress WifiHotspotConfig::getIP()
 {
-    IPAddress ip;
-    if(!localIP.empty())
-        ip.fromString(localIP.c_str());
-    return ip;
+    return localIP;
 }
 
 /**
@@ -111,10 +105,7 @@ IPAddress WifiHotspotConfig::getIP()
  */
 IPAddress WifiHotspotConfig::getSubnet()
 {
-    IPAddress ip;
-    if(!subnet.empty())
-        ip.fromString(subnet.c_str());
-    return ip;
+    return subnet;
 }
 
 /**
@@ -124,10 +115,7 @@ IPAddress WifiHotspotConfig::getSubnet()
  */
 IPAddress WifiHotspotConfig::getPrimaryDNS()
 {
-    IPAddress ip;
-    if(!primaryDNS.empty())
-        ip.fromString(primaryDNS.c_str());
-    return ip;
+    return primaryDNS;
 }
 
 /**
@@ -137,10 +125,7 @@ IPAddress WifiHotspotConfig::getPrimaryDNS()
  */
 IPAddress WifiHotspotConfig::getSecondaryDNS()
 {
-    IPAddress ip;
-    if(!secondaryDNS.empty())
-        ip.fromString(secondaryDNS.c_str());
-    return ip;
+    return secondaryDNS;
 }
 
 /**

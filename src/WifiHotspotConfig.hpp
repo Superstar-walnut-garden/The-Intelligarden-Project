@@ -24,10 +24,10 @@ class WifiHotspotConfig: public IJsonSerializable
     private:
     std::string ssid;
     std::string password;
-    std::string localIP;
-    std::string gateway;
-    std::string subnet;
-    std::string primaryDNS;
-    std::string secondaryDNS;
+    IPAddress localIP;
+    IPAddress gateway;
+    IPAddress subnet;
+    IPAddress primaryDNS;
+    IPAddress secondaryDNS;
     bool on;
 };
