@@ -125,7 +125,7 @@ void GpioService::restoreAll()
  */
 std::string GpioService::getName()
 {
-    return "GPIO";
+    return "Gpio";
 }
 
 /**
