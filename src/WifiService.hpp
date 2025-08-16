@@ -1,5 +1,4 @@
-#ifndef WIFISETUP_HPP
-#define WIFISETUP_HPP
+#pragma once
 
 #include "SPIFFS.h"
 #include <WiFi.h>
@@ -48,5 +47,3 @@ private:
 
     WifiHotspotConfig wifiCred;
 };
-
-#endif // WIFISETUP_HPP

@@ -1,5 +1,5 @@
-#ifndef SIGNALNAMERESOLVER_HPP
-#define SIGNALNAMERESOLVER_HPP
+#pragma once
+
 #include <string>
 
 class SignalNameResolver
@@ -72,5 +72,3 @@ private:
         return SignalType::Listener;
     }
 };
-
-#endif

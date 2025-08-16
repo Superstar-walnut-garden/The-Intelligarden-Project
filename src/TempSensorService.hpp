@@ -1,5 +1,4 @@
-#ifndef TEMPERATURE_HPP
-#define TEMPERATURE_HPP
+#pragma once
 
 #include "Subject.hpp"
 #include <OneWire.h>
@@ -49,5 +48,3 @@ private:
 
     static TempSensorService *instance;
 };
-
-#endif // TEMPERATURE_HPP

@@ -1,5 +1,4 @@
-#ifndef BASELIST_HPP
-#define BASELIST_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -35,4 +34,3 @@ private:
 };
 
 #include "BaseList.tpp"
-#endif // BASELIST_HPP

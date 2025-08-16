@@ -1,5 +1,4 @@
-#ifndef SYSTEMTIME_HPP
-#define SYSTEMTIME_HPP
+#pragma once
 
 #include <ESP32Time.h>
 #include <time.h>
@@ -98,5 +97,3 @@ private:
 
     static SystemTimeService *instance;
 };
-
-#endif // SYSTEMTIME_HPP

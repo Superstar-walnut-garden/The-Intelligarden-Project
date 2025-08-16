@@ -1,5 +1,5 @@
-#ifndef ISIGNALCOMPATIBLEMANAGER_HPP
-#define ISIGNALCOMPATIBLEMANAGER_HPP
+#pragma once
+
 #include <string>
 #include <vector>
 #include "ISignalCompatibleItem.hpp"
@@ -11,5 +11,3 @@ public:
     virtual std::string getName() = 0;
     virtual std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() = 0;
 };
-
-#endif

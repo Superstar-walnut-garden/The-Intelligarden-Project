@@ -1,5 +1,4 @@
-#ifndef CONFIGURATION_HPP
-#define CONFIGURATION_HPP
+#pragma once
 
 #include "Time.hpp"
 #include "SystemTimeService.hpp"
@@ -62,5 +61,3 @@ public:
     void setTimeConfig(const std::string& json);
 
 };
-
-#endif // CONFIGURATION_HPP

@@ -1,5 +1,4 @@
-#ifndef SCHEDULER_HPP
-#define SCHEDULER_HPP
+#pragma once
 
 #include "SchedulerList.hpp"
 #include "Time.hpp"
@@ -40,5 +39,3 @@ private:
     static SchedulerService* instance;
     SchedulerList list;
 };
-
-#endif // SCHEDULER_HPP

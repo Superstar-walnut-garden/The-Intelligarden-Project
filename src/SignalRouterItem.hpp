@@ -1,5 +1,5 @@
-#ifndef SIGNALITEM_HPP
-#define SIGNALITEM_HPP
+#pragma once
+
 #include <ArduinoJson.h>
 #include <string>
 #include <vector>
@@ -57,5 +57,3 @@ private:
     SignalEndpoint broadcaster, auxiliaryBroadcaster;
     Mode mode;
 };
-
-#endif

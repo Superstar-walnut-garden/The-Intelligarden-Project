@@ -1,5 +1,4 @@
-#ifndef WEBAPIMANAGER_HPP
-#define WEBAPIMANAGER_HPP
+#pragma once
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -31,5 +30,3 @@ private:
     std::string baseUrl;
     WifiHotspotConfig hotspotCred;
 };
-
-#endif

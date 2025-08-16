@@ -1,5 +1,4 @@
-#ifndef TEMPSENSORLIST_HPP
-#define TEMPSENSORLIST_HPP
+#pragma once
 
 #include "TempSensorItem.hpp"
 #include "BaseList.hpp"
@@ -14,5 +13,3 @@ public:
     TempSensorItem &getItem(std::string name);
     using BaseList::getItem;
 };
-
-#endif // TEMPSENSORLIST_HPP

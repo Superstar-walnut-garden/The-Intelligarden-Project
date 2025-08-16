@@ -1,5 +1,5 @@
-#ifndef SCHEDULERLIST_HPP
-#define SCHEDULERLIST_HPP
+#pragma once
+
 #include "SchedulerItem.hpp"
 #include "BaseList.hpp"
 #include <ArduinoJson.h>
@@ -16,5 +16,3 @@ class SchedulerList: public BaseList<SchedulerItem> // SchedulerItem Manager Cla
     void printList() override;
     private:
 };
-
-#endif

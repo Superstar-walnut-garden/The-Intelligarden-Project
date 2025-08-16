@@ -1,5 +1,3 @@
-#ifndef CPPVIRTUALINTERFACE
-#define CPPVIRTUALINTERFACE
-int virtualMain();
+#pragma once
 
-#endif
+int virtualMain();

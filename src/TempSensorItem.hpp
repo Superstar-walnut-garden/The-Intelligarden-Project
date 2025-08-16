@@ -1,5 +1,4 @@
-#ifndef TEMPSENSORITEM_HPP
-#define TEMPSENSORITEM_HPP
+#pragma once
 
 #include <vector>
 #include <string>
@@ -22,5 +21,3 @@ public:
 private:
     double temp;
 };
-
-#endif // TEMPSENSORITEM_HPP

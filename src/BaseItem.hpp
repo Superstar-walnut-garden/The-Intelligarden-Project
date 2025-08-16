@@ -1,5 +1,5 @@
-#ifndef BASEITEM_HPP
-#define BASEITEM_HPP
+#pragma once
+
 #include <string>
 #include <ArduinoJson.h>
 #include "IJsonSerializable.hpp"
@@ -29,5 +29,3 @@ private:
     std::string name;
     bool status;
 };
-
-#endif // BASEITEM_HPP

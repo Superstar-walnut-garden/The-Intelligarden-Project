@@ -1,5 +1,5 @@
-#ifndef CENTRALIZEDSIGNALHUB_HPP
-#define CENTRALIZEDSIGNALHUB_HPP
+#pragma once
+
 #include <vector>
 #include "ISignalCompatibleService.hpp"
 #include "Subject.hpp"
@@ -20,5 +20,3 @@ private:
     CentralizedSignalHubService(){}; // private constructor
     static CentralizedSignalHubService *instance; // singleton instance
 };
-
-#endif

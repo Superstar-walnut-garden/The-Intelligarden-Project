@@ -1,5 +1,5 @@
-#ifndef TIMECONFIGDATA_HPP
-#define TIMECONFIGDATA_HPP
+#pragma once
+
 #include <ArduinoJson.h>
 #include <string>
 #include <iostream>
@@ -44,5 +44,3 @@ class SystemTimeConfig: public IJsonSerializable
     bool manualTimeSetFlag; // true temporarily by web api to set time manually, false otherwise
     unsigned long manualTimeEpoch; // epoch time in seconds, used to set time manually
 };
-
-#endif

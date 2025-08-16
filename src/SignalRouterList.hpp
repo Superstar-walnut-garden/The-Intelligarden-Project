@@ -1,5 +1,4 @@
-#ifndef SIGNALLIST_HPP
-#define SIGNALLIST_HPP
+#pragma once
 
 #include "SignalRouterItem.hpp"
 #include "BaseList.hpp"
@@ -20,5 +19,3 @@ public:
 
 private:
 };
-
-#endif // EVENTLIST_HPP
