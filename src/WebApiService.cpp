@@ -131,7 +131,7 @@ void WebApiService::init()
     createIManagerEndpoints<TempSensorItem>("/TempSensor", TempSensorService::getInstance());
     createIManagerEndpoints<GpioItem>("/GPIO", GpioService::getInstance());
     createIManagerEndpoints<ThermostatItem>("/Thermostat", ThermostatService::getInstance());
-    createIManagerEndpoints<SchedulerItem>("/SchedulerService", SchedulerService::getInstance());
+    createIManagerEndpoints<SchedulerItem>("/Scheduler", SchedulerService::getInstance());
     createIManagerEndpoints<SignalRouterItem>("/signal", SignalRouterService::getInstance());
     server.begin();
 }
