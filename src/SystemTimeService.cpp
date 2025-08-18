@@ -26,7 +26,7 @@ SystemTimeService *SystemTimeService::getInstance()
 SystemTimeService::SystemTimeService() 
 : rtc(0)
 {
-    loadState(); // load the saved configuraion state from SPIFFS
+    restoreAll(); // load the saved configuraion state from SPIFFS
     // set realtime variables startup default values
     currentConfigData.setExternalRTCAvailability(false);
     currentConfigData.setTimeSubsystemInitialized(false);
@@ -205,11 +205,10 @@ std::string SystemTimeService::getConfig()
 /**
  * @brief Set the configuration of the system time (for web-api purposes).
  * 
- * @param configJson 
+ * @param newConfig 
  */
-void SystemTimeService::setConfig(const std::string& configJson)
+void SystemTimeService::updateConfig(SystemTimeConfig newConfig)
 {
-    auto newConfig = SystemTimeConfig(configJson);
     // keeping realtime variables intact to prevent wrong
     newConfig.setTimeSubsystemInitialized(currentConfigData.isTimeSubsystemInitialized());
     newConfig.setExternalRTCAvailability(currentConfigData.isExternalRTCAvailable());
@@ -240,14 +239,14 @@ void SystemTimeService::setConfig(const std::string& configJson)
         }
     }
     currentConfigData = newConfig; // update the time configuration data
-    saveState();
+    storeAll();
 }
 
 /**
  * @brief Save the current state of the system time to internal storage.
  * This function is called to save the current time and configuration to persistent storage.
  */
-void SystemTimeService::saveState()
+void SystemTimeService::storeAll()
 {
     Configuration::getInstance()->setTimeConfig(currentConfigData.toJson());   
 }
@@ -256,7 +255,7 @@ void SystemTimeService::saveState()
  * @brief load the saved state of the system time from internal storage.
  * This function is called to load the previously saved time and configuration from persistent storage.
  */
-void SystemTimeService::loadState()
+void SystemTimeService::restoreAll()
 {
     auto state = Configuration::getInstance()->getTimeConfig();
     if (state.empty())

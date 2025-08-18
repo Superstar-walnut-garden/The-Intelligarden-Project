@@ -15,8 +15,13 @@
 #include "esp_sntp.h"
 #include <WiFiClient.h>
 #include "SystemTimeConfig.hpp"
+#include "IConfigController.hpp"
+#include "IResourcePersistenceService.hpp"
 
-class SystemTimeService: public Subject<SystemTimeService>
+class SystemTimeService: 
+    public IConfigController<SystemTimeConfig>, 
+    public IResourcePersistenceService, 
+    public Subject<SystemTimeService>
 {
 public:
     static SystemTimeService *getInstance();
@@ -77,14 +82,14 @@ public:
     short getMonth();
     short getYear();
 
-    std::string getConfig();
-    void setConfig(const std::string& configJson);
+    std::string getConfig() override;
+    void updateConfig(SystemTimeConfig newConfig) override;
 
 private:
     SystemTimeService();
     void lostTrackOfTime();
-    void saveState();
-    void loadState();
+    void storeAll() override;
+    void restoreAll() override;
     int getTimezoneOffset();
 
     // Date and time variables
