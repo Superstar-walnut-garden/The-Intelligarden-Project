@@ -123,7 +123,7 @@ def visit(cursor: cindex.Cursor, namespace: List[str], results: List[EnumMeta]) 
         if cursor.spelling:
             qualified = "::".join(namespace + [cursor.spelling])
             is_scoped = cursor.is_scoped_enum()
-            file = cursor.location.file.name
+            file = str(Path(cursor.location.file.name).resolve())
             line = cursor.location.line
             enumerators: List[Enumerator] = []
             for enum_constant in cursor.get_children():
