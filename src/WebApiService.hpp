@@ -9,6 +9,7 @@
 #include "IResourceController.hpp"
 #include "IConfigController.hpp"
 #include "IResourcePersistenceService.hpp"
+#include "IReadOnlyResourceController.hpp"
 #include "WifiHotspotConfig.hpp"
 
 class WebApiService: public IConfigController<WifiHotspotConfig>, public IResourcePersistenceService
@@ -21,11 +22,20 @@ public:
     std::string getConfig() override;
     void storeAll() override;
     void restoreAll() override;
+    enum class Method{ Get, Post, Put, Delete };
     
 private:
-    void createEndpoint(std::string uri, std::function<std::string(std::string)> handler, bool post = false);
+    void createEndpoint(std::string uri, std::function<std::string(std::optional<uint64_t>, std::string)> handler, Method method = Method::Get);
+    
     template <typename ItemType>
-    void createIManagerEndpoints(std::string uri, IResourceController<ItemType>* manager);
+    void createEndpoint(std::string uri, IConfigController<ItemType>* configController);
+    
+    template <typename ItemType>
+    void createEndpoint(std::string uri, IResourceController<ItemType>* resourceController);
+    
+    template <typename ItemType>
+    void createEndpoint(std::string uri, IReadOnlyResourceController<ItemType>* resourceController);
+    
     AsyncWebServer server; // Server object
     std::string baseUrl;
     WifiHotspotConfig hotspotCred;
