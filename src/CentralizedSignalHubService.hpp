@@ -12,15 +12,15 @@ class CentralizedSignalHubService:
 {
 public:
     static CentralizedSignalHubService* getInstance();
-    void registerManager(ISignalCompatibleService *manager);
-    std::vector<ISignalCompatibleService *> getManagers();
+    void registerService(ISignalCompatibleService *service);
+    std::vector<ISignalCompatibleService *> getServices();
     bool isSignalPathValid(std::string fullSignalPath);
     std::string get(uint64_t id) override { return "{}"; }; // get is unsupported
     std::string getAll() override;
     void update(ISignalCompatibleService *scm) override;
 
 private:
-    std::vector<ISignalCompatibleService *> managers;
+    std::vector<ISignalCompatibleService *> services;
 
     CentralizedSignalHubService(){}; // private constructor
     static CentralizedSignalHubService *instance; // singleton instance

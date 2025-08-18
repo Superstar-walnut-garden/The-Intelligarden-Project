@@ -55,10 +55,10 @@ int virtualMain()
     // systemTime->attach(scheduler); // attach scheduler as an observer
     // eventManager->registerListener(scheduler); // attach scheduler as an observer
 
-    centralizedSignalHub->registerManager(SignalRouterService::getInstance());
-    centralizedSignalHub->registerManager(ioManager);
-    centralizedSignalHub->registerManager(thermostatManager);
-    centralizedSignalHub->registerManager(scheduler);
+    centralizedSignalHub->registerService(SignalRouterService::getInstance());
+    centralizedSignalHub->registerService(ioManager);
+    centralizedSignalHub->registerService(thermostatManager);
+    centralizedSignalHub->registerService(scheduler);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog

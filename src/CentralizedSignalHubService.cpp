@@ -22,22 +22,22 @@ CentralizedSignalHubService* CentralizedSignalHubService::getInstance()
 }
 
 /**
- * @brief register a signal compatible subsystem (manager) 
- * @param manager a refrence of the desired manager to be added to the manager registry
+ * @brief register a signal compatible subsystem (service) 
+ * @param service a refrence of the desired service to be added to the service registry
  */
-void CentralizedSignalHubService::registerManager(ISignalCompatibleService *manager)
+void CentralizedSignalHubService::registerService(ISignalCompatibleService *service)
 {
-    managers.push_back(manager);
-    manager->attach(this); // listen to changes in manager items
+    services.push_back(service);
+    service->attach(this); // listen to changes in service items
 }
 
 /**
- * @brief get manager registry
- * @return a list (vector) of managers
+ * @brief get service registry
+ * @return a list (vector) of services
  */
-std::vector<ISignalCompatibleService *> CentralizedSignalHubService::getManagers()
+std::vector<ISignalCompatibleService *> CentralizedSignalHubService::getServices()
 {
-    return managers;
+    return services;
 }
 
 /**
@@ -47,14 +47,14 @@ std::vector<ISignalCompatibleService *> CentralizedSignalHubService::getManagers
  */
 bool CentralizedSignalHubService::isSignalPathValid(std::string fullSignalPath)
 {
-    for(auto *manager : managers) // iterate over managers
+    for(auto *service : services) // iterate over services
     {
-        for(auto &item : manager->getSignalCompatibleItems()) // iterate over items
+        for(auto &item : service->getSignalCompatibleItems()) // iterate over items
         {
             for(auto &localPath : item->getLocalSignalNames()) // iterate over local signals
             {
                 SignalNameResolver::SignalNameParameters signalParams;
-                signalParams.subsystemName = manager->getName();
+                signalParams.subsystemName = service->getName();
                 signalParams.id = item->getId();
                 signalParams.localSignalName = localPath;
                 if(SignalNameResolver::toString(signalParams) == fullSignalPath)
@@ -72,13 +72,13 @@ bool CentralizedSignalHubService::isSignalPathValid(std::string fullSignalPath)
 std::string CentralizedSignalHubService::getAll()
 {
     JsonDocument doc;
-    JsonArray managersArray = doc.to<JsonArray>();
-    for(auto *manager : managers) // iterate over managers
+    JsonArray servicesArray = doc.to<JsonArray>();
+    for(auto *service : services) // iterate over services
     {
-        JsonObject managerObj = managersArray.createNestedObject();
-        managerObj["name"] = manager->getName();
-        JsonArray itemsArray = managerObj.createNestedArray("items");
-        for(auto &item : manager->getSignalCompatibleItems()) // iterate over items
+        JsonObject serviceObj = servicesArray.createNestedObject();
+        serviceObj["name"] = service->getName();
+        JsonArray itemsArray = serviceObj.createNestedArray("items");
+        for(auto &item : service->getSignalCompatibleItems()) // iterate over items
         {
             JsonObject itemObj = itemsArray.createNestedObject();
             itemObj["name"] = item->getName();
@@ -86,7 +86,7 @@ std::string CentralizedSignalHubService::getAll()
             for(auto &localPath : item->getLocalSignalNames())
             {
                 SignalNameResolver::SignalNameParameters signalParams;
-                signalParams.subsystemName = manager->getName();
+                signalParams.subsystemName = service->getName();
                 signalParams.id = item->getId();
                 signalParams.localSignalName = localPath;
                 signalPathArray.add(SignalNameResolver::toString(signalParams));
@@ -99,7 +99,7 @@ std::string CentralizedSignalHubService::getAll()
 }
 
 /**
- * @brief this is automaticaly called when any of the registered managers changes (item modification or removal).
+ * @brief this is automaticaly called when any of the registered services changes (item modification or removal).
  * 
  */
 void CentralizedSignalHubService::update(ISignalCompatibleService *scm)
