@@ -69,7 +69,7 @@ bool CentralizedSignalHubService::isSignalPathValid(std::string fullSignalPath)
  * @brief get a complete list of signal-compatible items
  * @return json list of signal-compatible items including their local signals
  */
-std::string CentralizedSignalHubService::getListJson()
+std::string CentralizedSignalHubService::getAll()
 {
     JsonDocument doc;
     JsonArray managersArray = doc.to<JsonArray>();
