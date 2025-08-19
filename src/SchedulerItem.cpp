@@ -8,7 +8,7 @@ SchedulerItem::SchedulerItem()
     : SignalCompatibleBaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) {}
 
 /**
- * @brief Construct a new Scheduler Item:: Scheduler Item object
+ * @brief Construct a new SchedulerService Item:: SchedulerService Item object
  * 
  * @param id the ID of the SchedulerItem
  * @param name the name of the SchedulerItem

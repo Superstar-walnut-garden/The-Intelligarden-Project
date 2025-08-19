@@ -1,5 +1,4 @@
-#ifndef THERMOSTATITEM_HPP
-#define THERMOSTATITEM_HPP
+#pragma once
 
 #include "SignalCompatibleBaseItem.hpp"
 #include <string>
@@ -29,5 +28,3 @@ private:
     bool enabled;
     uint64_t sensor;
 };
-
-#endif // GPIOITEM_HPP

@@ -1,13 +1,12 @@
-#ifndef CONFIGURATION_HPP
-#define CONFIGURATION_HPP
+#pragma once
 
 #include "Time.hpp"
-#include "SystemTime.hpp"
+#include "SystemTimeService.hpp"
 #include "Subject.hpp"
 #include <vector>
 #include <SPIFFS.h>
-#include "WifiHotspotData.hpp"
-#include "FBData.hpp"
+#include "WifiHotspotConfig.hpp"
+#include "FirebaseServiceConfig.hpp"
 #include <string>
 
 constexpr auto pumpFileAddress = "/schedule.txt";
@@ -22,45 +21,29 @@ constexpr auto thermostatFileAddress = "/thermostat.json";
 constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
 constexpr auto timeConfigFileAddress = "/time_config.json";
 
-class Configuration : public Subject<Configuration>, public IObserver<SystemTime>
+class Configuration
 {
 private:
     Configuration();
     static Configuration *instance;
-    Time currentTime;
-    int currentWeekday;
-
-    void retriveSavedSensorList();
 
 public:
     static Configuration *getInstance();
 
-    struct PumpSchedule
-    {
-        Time start;
-        Time duration;
-    };
-    struct WifiCred
-    {       
-        String ssid;
-        String pwd;
-    };
-    WifiHotspotData getWifiCredentials();
-    void setWifiCredentials(WifiHotspotData data);
+    std::string getWifiCredentials();
+    void setWifiCredentials(std::string data);
 
-    WifiHotspotData getHotspotCredentials();
-    void setHotspotCredentials(WifiHotspotData data);
+    std::string getHotspotCredentials();
+    void setHotspotCredentials(std::string json);
 
-    FBData getFirebaseData();
-    void setFirebaseData(FBData data);
-    
-    void update(SystemTime *systemTime);
+    std::string getFirebaseData();
+    void setFirebaseData(std::string json);
 
     std::string getSchedulerList();
     void setSchedulerList(std::string json);
 
-    std::string getGPIOList();
-    void setGPIOList(std::string json);
+    std::string getGpioList();
+    void setGpioList(std::string json);
 
     std::string getEventList();
     void setEventList(const std::string& state);
@@ -78,5 +61,3 @@ public:
     void setTimeConfig(const std::string& json);
 
 };
-
-#endif // CONFIGURATION_HPP

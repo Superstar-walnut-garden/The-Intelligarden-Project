@@ -1,5 +1,4 @@
-#ifndef THERMOSTATLIST_HPP
-#define THERMOSTATLIST_HPP
+#pragma once
 
 #include "ThermostatItem.hpp"
 #include "BaseList.hpp"
@@ -10,5 +9,3 @@ public:
     ThermostatList();
     ThermostatList(std::string json);
 };
-
-#endif // GPIOLIST_HPP

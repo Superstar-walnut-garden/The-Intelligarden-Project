@@ -1,5 +1,5 @@
-#ifndef SIGNALCOMPATIBLEBASEITEM_HPP
-#define SIGNALCOMPATIBLEBASEITEM_HPP
+#pragma once
+
 #include "BaseItem.hpp"
 #include "ISignalCompatibleItem.hpp"
 
@@ -19,5 +19,3 @@ class SignalCompatibleBaseItem: public BaseItem, public ISignalCompatibleItem
         return BaseItem::getId();
     }
 };
-
-#endif

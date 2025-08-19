@@ -19,7 +19,7 @@ from clang import cindex
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s │ %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 SOURCE_ROOTS: List[Path] = []  # Populated from config
@@ -45,9 +45,7 @@ def parse_args() -> argparse.Namespace:
         description="Scan C++ files and emit enum metadata as JSON."
     )
     parser.add_argument(
-        "config",
-        type=Path,
-        help="Path to JSON config file (see sample below)."
+        "config", type=Path, help="Path to JSON config file (see sample below)."
     )
     return parser.parse_args()
 
@@ -97,19 +95,14 @@ def is_project_file(file_path: Optional[str]) -> bool:
 
 
 def build_index(include_dirs: List[str]) -> cindex.Index:
-    args = [
-        "-x", "c++",
-        "-std=c++17",
-        "-fsyntax-only",
-        "-w"
-    ] + [f"-I{d}" for d in include_dirs]
+    args = ["-x", "c++", "-std=c++17", "-fsyntax-only", "-w"] + [
+        f"-I{d}" for d in include_dirs
+    ]
     logging.info(f"libclang args: {args}")
     return cindex.Index.create(), args
 
 
-def visit(cursor: cindex.Cursor,
-          namespace: List[str],
-          results: List[EnumMeta]) -> None:
+def visit(cursor: cindex.Cursor, namespace: List[str], results: List[EnumMeta]) -> None:
     from clang.cindex import CursorKind
 
     # Skip non-project files
@@ -118,7 +111,11 @@ def visit(cursor: cindex.Cursor,
         if not is_project_file(file_path):
             return
 
-    if cursor.kind in (CursorKind.NAMESPACE, CursorKind.STRUCT_DECL, CursorKind.CLASS_DECL):
+    if cursor.kind in (
+        CursorKind.NAMESPACE,
+        CursorKind.STRUCT_DECL,
+        CursorKind.CLASS_DECL,
+    ):
         name = cursor.spelling or "<anon>"
         namespace.append(name)
 
@@ -126,7 +123,7 @@ def visit(cursor: cindex.Cursor,
         if cursor.spelling:
             qualified = "::".join(namespace + [cursor.spelling])
             is_scoped = cursor.is_scoped_enum()
-            file = cursor.location.file.name
+            file = str(Path(cursor.location.file.name).resolve())
             line = cursor.location.line
             enumerators: List[Enumerator] = []
             for enum_constant in cursor.get_children():
@@ -135,34 +132,34 @@ def visit(cursor: cindex.Cursor,
                     enumerators.append(
                         Enumerator(name=enum_constant.spelling, value=val)
                     )
-            results.append(EnumMeta(
-                qualified_name=qualified,
-                file=file,
-                line=line,
-                is_scoped=is_scoped,
-                enumerators=enumerators
-            ))
+                results.append(
+                    EnumMeta(
+                        qualified_name=qualified,
+                        file=file,
+                        line=line,
+                        is_scoped=is_scoped,
+                        enumerators=enumerators,
+                    )
+                )
 
     for child in cursor.get_children():
         visit(child, namespace.copy(), results)
 
 
-def parse_file(index: cindex.Index,
-               args: List[str],
-               filepath: Path) -> List[EnumMeta]:
+def parse_file(index: cindex.Index, args: List[str], filepath: Path) -> List[EnumMeta]:
     tu = index.parse(
         str(filepath),
         args=args,
-        options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES
+        options=cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES,
     )
     results: List[EnumMeta] = []
     visit(tu.cursor, [], results)
     return results
 
 
-def parse_all(index: cindex.Index,
-              args: List[str],
-              sources: List[Path]) -> List[EnumMeta]:
+def parse_all(
+    index: cindex.Index, args: List[str], sources: List[Path]
+) -> List[EnumMeta]:
     seen = set()
     all_results: List[EnumMeta] = []
 
@@ -182,6 +179,7 @@ def parse_all(index: cindex.Index,
             all_results.extend(f.result())
 
     return all_results
+
 
 def main() -> None:
     opts = parse_args()

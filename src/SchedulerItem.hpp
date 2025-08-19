@@ -1,5 +1,5 @@
-#ifndef SCHEDULERITEM_HPP
-#define SCHEDULERITEM_HPP
+#pragma once
+
 #include "Time.hpp"
 #include <ArduinoJson.h>
 #include <string>
@@ -40,5 +40,3 @@ class SchedulerItem: public SignalCompatibleBaseItem
     short skipEvent_id;
     bool skipped;
 };
-
-#endif

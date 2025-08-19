@@ -11,8 +11,9 @@
 
 #pragma once
 
-#include "src/SignalItem.hpp"
+#include "src/DisplayConfig.hpp"
 #include "src/SignalNameResolver.hpp"
+#include "src/SignalRouterItem.hpp"
 #include "src/StatusCode.hpp"
 
 #include <array>
@@ -35,11 +36,11 @@ constexpr std::string_view toString(SignalNameResolver::SignalType e) {
     }
 }
 
-constexpr std::string_view toString(SignalItem::Mode e) {
+constexpr std::string_view toString(SignalRouterItem::Mode e) {
     switch (e) {
-        case SignalItem::Mode::SingleSource: return "SingleSource";
-        case SignalItem::Mode::AndWithAuxiliary: return "AndWithAuxiliary";
-        case SignalItem::Mode::OrWithAuxiliary: return "OrWithAuxiliary";
+        case SignalRouterItem::Mode::SingleSource: return "SingleSource";
+        case SignalRouterItem::Mode::AndWithAuxiliary: return "AndWithAuxiliary";
+        case SignalRouterItem::Mode::OrWithAuxiliary: return "OrWithAuxiliary";
         default: return "???";
     }
 }
@@ -53,6 +54,14 @@ constexpr std::string_view toString(StatusCode e) {
     }
 }
 
+constexpr std::string_view toString(DisplayConfig::DisplayType e) {
+    switch (e) {
+        case DisplayConfig::DisplayType::Oled: return "Oled";
+        case DisplayConfig::DisplayType::CharLcd: return "CharLcd";
+        default: return "???";
+    }
+}
+
 template<>
 constexpr std::optional<SignalNameResolver::SignalType> parse<SignalNameResolver::SignalType>(std::string_view s) {
     if (s == "Broadcaster") return SignalNameResolver::SignalType::Broadcaster;
@@ -61,10 +70,10 @@ constexpr std::optional<SignalNameResolver::SignalType> parse<SignalNameResolver
 }
 
 template<>
-constexpr std::optional<SignalItem::Mode> parse<SignalItem::Mode>(std::string_view s) {
-    if (s == "SingleSource") return SignalItem::Mode::SingleSource;
-    if (s == "AndWithAuxiliary") return SignalItem::Mode::AndWithAuxiliary;
-    if (s == "OrWithAuxiliary") return SignalItem::Mode::OrWithAuxiliary;
+constexpr std::optional<SignalRouterItem::Mode> parse<SignalRouterItem::Mode>(std::string_view s) {
+    if (s == "SingleSource") return SignalRouterItem::Mode::SingleSource;
+    if (s == "AndWithAuxiliary") return SignalRouterItem::Mode::AndWithAuxiliary;
+    if (s == "OrWithAuxiliary") return SignalRouterItem::Mode::OrWithAuxiliary;
     return std::nullopt;
 }
 
@@ -77,12 +86,22 @@ constexpr std::optional<StatusCode> parse<StatusCode>(std::string_view s) {
 }
 
 template<>
+constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
+    if (s == "Oled") return DisplayConfig::DisplayType::Oled;
+    if (s == "CharLcd") return DisplayConfig::DisplayType::CharLcd;
+    return std::nullopt;
+}
+
+template<>
 constexpr std::array<SignalNameResolver::SignalType, 2> makeIterable<SignalNameResolver::SignalType> = { SignalNameResolver::SignalType::Broadcaster, SignalNameResolver::SignalType::Listener };
 
 template<>
-constexpr std::array<SignalItem::Mode, 3> makeIterable<SignalItem::Mode> = { SignalItem::Mode::SingleSource, SignalItem::Mode::AndWithAuxiliary, SignalItem::Mode::OrWithAuxiliary };
+constexpr std::array<SignalRouterItem::Mode, 3> makeIterable<SignalRouterItem::Mode> = { SignalRouterItem::Mode::SingleSource, SignalRouterItem::Mode::AndWithAuxiliary, SignalRouterItem::Mode::OrWithAuxiliary };
 
 template<>
 constexpr std::array<StatusCode, 3> makeIterable<StatusCode> = { StatusCode::SUCCESS, StatusCode::NOT_FOUND, StatusCode::ERROR };
+
+template<>
+constexpr std::array<DisplayConfig::DisplayType, 2> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
 
 } // namespace EnumCrafter

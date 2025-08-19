@@ -1,5 +1,5 @@
-#ifndef ISIGNALCOMPATIBLEITEM_HPP
-#define ISIGNALCOMPATIBLEITEM_HPP
+#pragma once
+
 #include <string>
 #include <vector>
 
@@ -10,5 +10,3 @@ public:
     virtual std::string getName() const = 0;
     virtual uint64_t getId() const = 0;
 };
-
-#endif
