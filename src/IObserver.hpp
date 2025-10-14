@@ -1,5 +1,4 @@
-#ifndef IOBSERVER_HPP
-#define IOBSERVER_HPP
+#pragma once
 
 template <class T>
 class IObserver
@@ -8,5 +7,3 @@ class IObserver
   virtual ~IObserver() = default;
   virtual void update(T *subject) = 0;
 };
-
-#endif

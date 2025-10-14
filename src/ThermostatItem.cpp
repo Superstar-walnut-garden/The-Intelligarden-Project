@@ -1,55 +1,134 @@
 #include "ThermostatItem.hpp"
+#include "SignalNameResolver.hpp"
 
+/**
+ * @brief Construct a new ThermostatItem object
+ * 
+ */
 ThermostatItem::ThermostatItem()
-    : BaseItem(), heaterEvent_id(-1), coolerEvent_id(-1), setpoint(0), altSetpoint(0), hysteresis(0), enabled(true)
+    : SignalCompatibleBaseItem(), setpoint(0), altSetpoint(0), hysteresis(0), enabled(true)
 {
 }
 
-ThermostatItem::ThermostatItem(int id, int event_id, int heaterEvent_id, int coolerEvent_id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor)
-    : BaseItem(id, event_id, name, true), 
-    heaterEvent_id(heaterEvent_id), coolerEvent_id(coolerEvent_id), setpoint(setpoint), altSetpoint(altSetpoint), hysteresis(hysteresis), enabled(enabled), sensor(sensor)
+/**
+ * @brief Construct a new ThermostatItem object
+ * 
+ * @param id The ID of the thermostat item.
+ * @param name The name of the thermostat item.
+ * @param setpoint The temperature setpoint for the thermostat.
+ * @param altSetpoint The alternative temperature setpoint for the thermostat.
+ * @param hysteresis The hysteresis value for the thermostat.
+ * @param enabled Whether the thermostat is enabled or not.
+ * @param sensor The ID of the temperature sensor associated with the thermostat.
+ */
+ThermostatItem::ThermostatItem(int id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor)
+    : SignalCompatibleBaseItem(id, name, true)
+    , setpoint(setpoint), altSetpoint(altSetpoint), hysteresis(hysteresis), enabled(enabled), sensor(sensor)
 {
 }
 
-int ThermostatItem::getHeaterEvent_id()
+/**
+ * @brief Get the local signal name for the heater.
+ * 
+ * @return std::string The local signal name for the heater.
+ */
+std::string ThermostatItem::getHeaterLocalSignalName()
 {
-    return this->heaterEvent_id;
+    return SignalNameResolver::generateLocalSignalName("heater", SignalNameResolver::SignalType::Broadcaster);
 }
 
-int ThermostatItem::getCoolerEvent_id()
+/**
+ * @brief Get the local signal name for the cooler.
+ * 
+ * @return std::string The local signal name for the cooler.
+ */
+std::string ThermostatItem::getCoolerLocalSignalName()
 {
-    return this->coolerEvent_id;
+    return SignalNameResolver::generateLocalSignalName("cooler", SignalNameResolver::SignalType::Broadcaster);
 }
 
+/**
+ * @brief Get the local signal name for the alternative setpoint.
+ * 
+ * @return std::string The local signal name for the alternative setpoint.
+ */
+std::string ThermostatItem::getAltSetpointLocalSignalName()
+{
+    return SignalNameResolver::generateLocalSignalName("altSetpoint", SignalNameResolver::SignalType::Listener);
+}
+
+/**
+ * @brief Get the setpoint of the ThermostatItem.
+ * 
+ * @return double The setpoint temperature.
+ */
 double ThermostatItem::getSetpoint()
 {
     return this->setpoint;
 }
 
+/**
+ * @brief Get the alternative setpoint of the ThermostatItem.
+ * 
+ * @return double The alternative setpoint temperature.
+ */
 double ThermostatItem::getAltSetpoint()
 {
     return this->altSetpoint;
 }
 
+/**
+ * @brief Get the hysteresis value of the ThermostatItem.
+ * 
+ * @return double The hysteresis value.
+ */
 double ThermostatItem::getHysteresis()
 {
     return this->hysteresis;
 }
 
+/**
+ * @brief Check if the ThermostatItem is enabled.
+ * 
+ * @return true if the ThermostatItem is enabled, false otherwise.
+ */
 bool ThermostatItem::isEnabled()
 {
     return this->enabled;
 }
 
+/**
+ * @brief Get the sensor ID associated with the ThermostatItem.
+ * 
+ * @return uint64_t The ID of the temperature sensor.
+ */
 uint64_t ThermostatItem::getSensor()
 {
     return this->sensor;
 }
 
+/**
+ * @brief Get the local signal names associated with the ThermostatItem (for CentralizedSignalHub).
+ * 
+ * @return std::vector<std::string> A vector of local signal names.
+ */
+std::vector<std::string> ThermostatItem::getLocalSignalNames()
+{
+    return 
+    {
+        getCoolerLocalSignalName(),
+        getHeaterLocalSignalName(),
+        getAltSetpointLocalSignalName()
+    };
+}
+
+/**
+ * @brief Populate the ThermostatItem from a JSON document.
+ * 
+ * @param doc The JSON document containing the ThermostatItem data.
+ */
 void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
-    this->coolerEvent_id = doc["coolerEvent_id"].as<int>();
-    this->heaterEvent_id = doc["heaterEvent_id"].as<int>();
     this->setpoint = doc["setpoint"].as<double>();
     this->altSetpoint = doc["altSetpoint"].as<double>();
     this->hysteresis = doc["hysteresis"].as<double>();
@@ -57,10 +136,13 @@ void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
     this->sensor = std::stoull(doc["sensor"].as<std::string>()); // use string in json to handle 64bit integers
 }
 
+/**
+ * @brief Convert the ThermostatItem to a JSON document.
+ * 
+ * @param doc The JSON document to populate with the ThermostatItem data.
+ */
 void ThermostatItem::derivedClassToJson(JsonDocument &doc)
 {
-    doc["coolerEvent_id"] = this->coolerEvent_id;
-    doc["heaterEvent_id"] = this->heaterEvent_id;
     doc["setpoint"] = this->setpoint;
     doc["altSetpoint"] = this->altSetpoint;
     doc["hysteresis"] = this->hysteresis;

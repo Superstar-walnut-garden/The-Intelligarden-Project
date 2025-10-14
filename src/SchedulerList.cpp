@@ -23,7 +23,6 @@ void SchedulerList::printList()
     for(auto & item : getList())
         std::cout <<
             "ID: " << item.getId() << "\n" <<
-            "event_ID: " << item.getEventId() << "\n" <<
             "Start: " << item.getStartTime().toString() << "\n" <<
             "Duration: " << item.getDuration().toString() << "\n" <<
             "Weekday: " << item.getWeekday() << "\n" <<

@@ -1,5 +1,4 @@
-#ifndef TIME_HPP
-#define TIME_HPP
+#pragma once
 
 #include <Arduino.h>  // Needed for the String class
 #include <cstdio>
@@ -35,5 +34,3 @@ private:
     short hour;
     short minute;
 };
-
-#endif // TIME_HPP

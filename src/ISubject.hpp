@@ -1,5 +1,5 @@
-#ifndef ISUBJECT_HPP
-#define ISUBJECT_HPP
+#pragma once
+
 #include "IObserver.hpp"
 
 template <class T>
@@ -11,5 +11,3 @@ class ISubject
   protected:
     virtual void notify() = 0;
 };
-
-#endif

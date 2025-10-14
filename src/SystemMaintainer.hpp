@@ -1,5 +1,4 @@
-#ifndef SYSTEMMAINTAINER_HPP
-#define SYSTEMMAINTAINER_HPP
+#pragma once
 
 #include <thread>
 #include <mutex>
@@ -47,5 +46,3 @@ private:
     bool restartDelayed;
     std::chrono::steady_clock::time_point disableRestartUntil;
 };
-
-#endif // SYSTEMMAINTAINER_HPP

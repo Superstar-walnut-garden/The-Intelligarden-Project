@@ -1,5 +1,5 @@
-#ifndef SUBJECT_HPP
-#define SUBJECT_HPP
+#pragma once
+
 #include "IObserver.hpp"
 #include "ISubject.hpp"
 #include <iterator>
@@ -24,5 +24,3 @@ class Subject: public ISubject<T>
   private:
       std::vector<IObserver<T> *> m_observers;
 };
-
-#endif
