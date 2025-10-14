@@ -145,18 +145,14 @@ void ThermostatService::update(TempSensorService* temperature)
         signalNameParameters.id = item.getId();
 
         auto temp = temperature->getData(item.getSensor()); // retrive temp value
-        auto setpoint = 0.00;
+        auto setpoint = item.getSetpoint(); // use the main setpoint by default;
         auto hysteresis = item.getHysteresis();
         auto altTempSignal = SignalRouterService::getInstance()->getSignalValue(SignalNameResolver::toString(
             SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getAltSetpointLocalSignalName())));
         
         if(altTempSignal.has_value()) // if it's associated with a signal
-        {
             if(altTempSignal.value() == true) // if signal value is true
                 setpoint = item.getAltSetpoint(); // use the secondary setpoint
-        }
-        else
-            setpoint = item.getSetpoint(); // use the main setpoint
         
         // TempSensorService control algorithm
         if(temp > (setpoint + hysteresis)) // if temperature rises
