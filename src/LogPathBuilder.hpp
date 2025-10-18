@@ -1,0 +1,53 @@
+#pragma once
+
+#include <string>
+#include <cstdint>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
+
+class LogPathBuilder
+{
+public:
+    static std::string build(std::string subsystem, std::string itemName, uint64_t itemId, int index = 0)
+    {
+        std::string basePath = "/dataLogs";
+        std::string id = std::to_string(itemId);
+        std::string currentDate = getCurrentDate();
+        if(itemId > 65535) // if larger than 16bits
+            id = encode64BitNumberToBase62(itemId); // encode to base62 to shorten the string length (for ds18b20 temp sensor addresses)
+        
+        return basePath + "/" + subsystem + "/" + itemName + "-id(" + id + ")" + "/" + currentDate + "(" + std::to_string(index) + ")" + ".json";
+    }
+
+private:
+    static std::string encode64BitNumberToBase62(uint64_t num) 
+    {
+        const std::string BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+        // Apply the same bitmask: shift right 8 bits, then mask to 48 bits 
+        // because ds18b20 temp sensor addresses differ only in their middle 48 bits
+        uint64_t masked = (num >> 8) & ((1ULL << 48) - 1);
+
+        std::string base62String;
+        do 
+        {
+            uint64_t remainder = masked % 62;
+            base62String = BASE62[remainder] + base62String;
+            masked /= 62;
+        } while (masked > 0);
+
+        return base62String;
+    }
+
+    static std::string getCurrentDate() 
+    {
+        std::time_t now = std::time(nullptr);               // Get current time
+        std::tm* localTime = std::localtime(&now);          // Convert to local time
+
+        std::ostringstream oss;
+        oss << std::put_time(localTime, "%Y-%m-%d");        // Format as YYYY-MM-DD
+        return oss.str();
+    }
+
+};
