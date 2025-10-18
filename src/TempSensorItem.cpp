@@ -36,7 +36,7 @@ bool TempSensorItem::operator == (TempSensorItem &obj)
  * @return true If the object is connected.
  * @return false If the object is not connected.
  */
-bool TempSensorItem::isConnected()
+bool TempSensorItem::isConnected() const
 {
     return this->getStatus();
 }
@@ -76,7 +76,73 @@ void TempSensorItem::setTemp(double temp)
  * 
  * @return double The temperature of the object.
  */
-double TempSensorItem::getTemp()
+double TempSensorItem::getTemp() const
 {
     return this->temp;
+}
+
+/**
+ * @brief Get the name of the TempSensorItem object (for ambiguity resolving).
+ * 
+ * @return std::string The name of the object.
+ */
+std::string TempSensorItem::getName() const
+{
+    return BaseItem::getName();
+}
+
+/**
+ * @brief Get the ID of the TempSensorItem object (for ambiguity resolving).
+ * 
+ * @return uint64_t The ID of the object.
+ */
+uint64_t TempSensorItem::getId() const
+{
+    return BaseItem::getId();
+}
+
+/**
+ * @brief Get the logging interval for the TempSensorItem object.
+ * 
+ * @return uint64_t The logging interval in milliseconds.
+ */
+uint64_t TempSensorItem::getInterval() const
+{
+    return 5000; // log every 5 seconds
+}
+
+/**
+ * @brief Check if the TempSensorItem object should log only on change.
+ * 
+ * @return true If the object should log only on change.
+ * @return false If the object should log at every interval.
+ */
+bool TempSensorItem::logOnlyOnChange() const
+{
+    return false; // log at every interval
+}
+
+/**
+ * @brief Get the data of the TempSensorItem object as a JSON string.
+ * 
+ * @return std::optional<std::string> The JSON string of the object's data.
+ */
+std::optional<std::string> TempSensorItem::getData() const
+{
+    JsonDocument doc;
+    doc["temp"] = this->getTemp();
+    std::string jsonString;
+    serializeJson(doc, jsonString);
+    return jsonString;
+}
+
+/**
+ * @brief Check if logging is enabled for the TempSensorItem object.
+ * 
+ * @return true If logging is enabled.
+ * @return false If logging is disabled.
+ */
+bool TempSensorItem::isLoggingEnabled() const
+{
+    return true;
 }
