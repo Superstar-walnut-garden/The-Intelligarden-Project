@@ -14,5 +14,5 @@ public:
     virtual std::optional<std::string> getData() const = 0;
     virtual bool isLoggingEnabled() const = 0;
 
-    virtual ~ILoggableItem() = default;
+    virtual ~ILoggableItem() = default; // this line is super important. Never forget it!
 };
