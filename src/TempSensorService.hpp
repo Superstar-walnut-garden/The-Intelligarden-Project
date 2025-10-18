@@ -14,8 +14,13 @@
 #include <mutex>
 #include "IResourceController.hpp"
 #include "IResourcePersistenceService.hpp"
+#include "ILoggableService.hpp"
 
-class TempSensorService : public IResourceController<TempSensorItem>, public IResourcePersistenceService, public Subject<TempSensorService>
+class TempSensorService : 
+    public IResourceController<TempSensorItem>, 
+    public IResourcePersistenceService, 
+    public Subject<TempSensorService>, 
+    public ILoggableService
 {
 public:
     static TempSensorService *getInstance(); // get singleton instance
@@ -32,12 +37,15 @@ public:
     void storeAll() override;
     void restoreAll() override;
 
+    std::string getName() const override;
+    std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const override;
+
 private:
     TempSensorService(); // private constructor for singleton pattern
     void obtainSensors(); // helper function to obtain sensors
     static void mergeAndCopy(TempSensorList &primary, TempSensorList secondary);
 
-    TempSensorList getCompleteList(); // get a complete list of sensors
+    TempSensorList getCompleteList() const; // get a complete list of sensors
     double getTempFromSensor(uint64_t address);
 
     OneWire oneWireBus;

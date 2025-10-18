@@ -161,7 +161,7 @@ double TempSensorService::getData(uint64_t id)
  * 
  * @return TempSensorList The complete list of sensors.
  */
-TempSensorList TempSensorService::getCompleteList()
+TempSensorList TempSensorService::getCompleteList() const
 {
     auto completeList = liveSensorList; // take a copy of the live list
     mergeAndCopy(completeList, registeredSensorList); // copy registered sensor names to the live list
@@ -273,4 +273,30 @@ void TempSensorService::mergeAndCopy(TempSensorList &primary, TempSensorList sec
         if (!alreadyExist)
             primary.addItem(sDev);
     }
+}
+
+/**
+ * @brief Get the name of the TempSensorService.
+ * 
+ * @return std::string The name of the TempSensorService.
+ */
+std::string TempSensorService::getName() const
+{
+    return "TempSensor";
+}
+
+/**
+ * @brief Get the list of loggable items.
+ * 
+ * @return std::vector<ILoggableItem*> The list of loggable items.
+ */
+std::vector<std::unique_ptr<ILoggableItem>> TempSensorService::getLoggableItems() const
+{
+    std::vector<std::unique_ptr<ILoggableItem>> loggableItems;
+    for(const auto item : getCompleteList().getList())
+    {
+        if(item.isConnected()) // only add if sensor is connected
+            loggableItems.push_back(std::make_unique<TempSensorItem>(item));
+    }
+    return loggableItems;
 }
