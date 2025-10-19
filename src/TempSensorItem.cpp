@@ -104,11 +104,11 @@ uint64_t TempSensorItem::getId() const
 /**
  * @brief Get the logging interval for the TempSensorItem object.
  * 
- * @return uint64_t The logging interval in milliseconds.
+ * @return uint64_t The logging interval in seconds.
  */
 uint64_t TempSensorItem::getInterval() const
 {
-    return 5000; // log every 5 seconds
+    return 60; // log every 60 seconds
 }
 
 /**
@@ -125,9 +125,9 @@ bool TempSensorItem::logOnlyOnChange() const
 /**
  * @brief Get the data of the TempSensorItem object as a JSON string.
  * 
- * @return std::optional<std::string> The JSON string of the object's data.
+ * @return std::string The JSON string of the object's data.
  */
-std::optional<std::string> TempSensorItem::getData() const
+std::string TempSensorItem::getData() const
 {
     JsonDocument doc;
     doc["temp"] = this->getTemp();

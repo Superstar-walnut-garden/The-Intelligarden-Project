@@ -21,7 +21,7 @@ public:
     uint64_t getId() const override;
     uint64_t getInterval() const override;
     bool logOnlyOnChange() const override;
-    std::optional<std::string> getData() const override;
+    std::string getData() const override;
     bool isLoggingEnabled() const override;
 
     void populateDerivedClassFromJson(JsonDocument &json) override;
