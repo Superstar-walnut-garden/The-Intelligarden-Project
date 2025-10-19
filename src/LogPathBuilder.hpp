@@ -16,8 +16,18 @@ public:
         std::string currentDate = getCurrentDate();
         if(itemId > 65535) // if larger than 16bits
             id = encode64BitNumberToBase62(itemId); // encode to base62 to shorten the string length (for ds18b20 temp sensor addresses)
+        if(itemName.empty())
+            itemName = "untitled";
         
         return basePath + "/" + subsystem + "/" + itemName + "-id(" + id + ")" + "/" + currentDate + "(" + std::to_string(index) + ")" + ".json";
+    }
+    static std::string buildTimestamp() 
+    {
+        std::time_t now = std::time(nullptr);
+        std::tm* localTime = std::localtime(&now);
+        char buffer[9]; // HH:MM:SS + null terminator
+        std::strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
+        return buffer;
     }
 
 private:
