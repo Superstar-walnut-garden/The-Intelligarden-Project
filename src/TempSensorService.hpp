@@ -39,6 +39,7 @@ public:
 
     std::string getName() const override;
     std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const override;
+    void setLastLogTime(uint64_t itemId, std::chrono::time_point<std::chrono::system_clock> time) override;
 
 private:
     TempSensorService(); // private constructor for singleton pattern
