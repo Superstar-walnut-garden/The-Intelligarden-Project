@@ -62,22 +62,25 @@ void LogDispatcherService::loop()
                     std::string path = LogPathBuilder::build(service->getName(), item->getName(), item->getId(), fileRotationCount++);
                     if(storage->getFileSize(path) < 10 * 1024) // limit file size to 10KB
                     {
-                        auto dataOpt = item->getData();
-                        if(dataOpt.has_value()) // if data is available
+                        auto nowTime = std::chrono::system_clock::now();
+                        if(item->shouldLog(nowTime)) // if item should be logged now (based on interval and last log time and non-redundant data)
                         {
                             auto fileContents = storage->readFile(path); // read existing file (to keep previous logs)
                             JsonDocument doc, nested;
                             deserializeJson(doc, fileContents);
-                            if (!deserializeJson(nested, item->getData().value())) // if data is valid JSON and deserialized successfully
-                                doc["data"] = nested;
+                            if (!deserializeJson(nested, item->getData())) // if data is valid JSON and deserialized successfully
+                            { 
+                                doc[LogPathBuilder::buildTimestamp()] = nested; // add new log entry with current timestamp
+                                service->setLastLogTime(item->getId(), nowTime); // update last log time for the item
+                            }
                             else
                                 Serial.println("error: logDispatcherService: Failed to parse JSON");
                             serializeJson(doc, fileContents); // serialize back to string
                             storage->writeFile(path, fileContents); // write updated contents back to file
-                            break; // exit the loop after successful write
                         }
+                        break; // exit the loop after finding a suitable file
                     }
-                } while(fileRotationCount < 9); // limit to 9 rotated files
+                } while(fileRotationCount < 128); // limit to 128 rotated files
 
             }
         }
