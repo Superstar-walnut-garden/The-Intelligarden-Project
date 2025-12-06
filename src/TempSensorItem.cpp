@@ -6,7 +6,7 @@
  * 
  */
 TempSensorItem::TempSensorItem()
-    : BaseItem(-1, "", false) {}
+    : BaseItem(-1, "", false), loggingEnabled(false), logInterval(60), logOnlyOnDataChange(false) {}
 
 /**
  * @brief Construct a new Temp Sensor Item:: Temp Sensor Item object
@@ -14,9 +14,12 @@ TempSensorItem::TempSensorItem()
  * @param id 
  * @param name 
  * @param isConnected 
+ * @param loggingEnabled
+ * @param logInterval
+ * @param logOnlyOnDataChange
  */
-TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected)
-    : BaseItem(id, name, isConnected) {}
+TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected, bool loggingEnabled, uint64_t logInterval, bool logOnlyOnDataChange)
+    : BaseItem(id, name, isConnected), loggingEnabled(loggingEnabled), logInterval(logInterval), logOnlyOnDataChange(logOnlyOnDataChange) {}
 
 /**
  * @brief Overloaded operator to compare two TempSensorItem objects based on their address (id).
@@ -49,6 +52,10 @@ void TempSensorItem::populateDerivedClassFromJson(JsonDocument &json)
 {
     this->temp = json["temp"].as<double>();
     this->setId(std::stoull(json["id"].as<std::string>())); // passing 64bit id as string to prevent json and web api js issues with large numbers
+    
+    this->logInterval = json["logInterval"].as<uint64_t>();
+    this->logOnlyOnDataChange = json["logOnlyOnChange"].as<bool>();
+    this->loggingEnabled = json["loggingEnabled"].as<bool>();
 }
 
 /**
@@ -59,6 +66,10 @@ void TempSensorItem::derivedClassToJson(JsonDocument &doc)
 {
     doc["temp"] = this->temp;
     doc["id"] = std::to_string(this->getId()); // passing 64bit id as string to prevent json and web api js issues with large numbers
+
+    doc["logInterval"] = this->logInterval;
+    doc["logOnlyOnChange"] = this->logOnlyOnDataChange;
+    doc["loggingEnabled"] = this->loggingEnabled;
 }
 
 /**
@@ -108,7 +119,7 @@ uint64_t TempSensorItem::getId() const
  */
 uint64_t TempSensorItem::getInterval() const
 {
-    return 60; // log every 60 seconds
+    return logInterval;
 }
 
 /**
@@ -119,7 +130,7 @@ uint64_t TempSensorItem::getInterval() const
  */
 bool TempSensorItem::logOnlyOnChange() const
 {
-    return false; // log at every interval
+    return logOnlyOnDataChange;
 }
 
 /**
@@ -144,5 +155,35 @@ std::string TempSensorItem::getData() const
  */
 bool TempSensorItem::isLoggingEnabled() const
 {
-    return true;
+    return loggingEnabled;
+}
+
+/**
+ * @brief Set the logging interval of the TempSensorItem object.
+ * 
+ * @param interval The interval in seconds to set.
+ */
+void TempSensorItem::setInterval(uint64_t interval)
+{
+    this->logInterval = interval;
+}
+
+/**
+ * @brief Set the status of shouldLogOnlyOnChange parameter of the TempSensorItem object.
+ * 
+ * @param status should log only on change???
+ */
+void TempSensorItem::setLogOnlyOnChange(bool status)
+{
+    this->logOnlyOnDataChange = status;
+}
+
+/**
+ * @brief Set the status of dataLogging of the TempSensorItem object.
+ * 
+ * @param status set logging enabled or not.
+ */
+void TempSensorItem::setLoggingEnabled(bool status)
+{
+    this->loggingEnabled = status;
 }
