@@ -11,7 +11,6 @@ class LogPathBuilder
 public:
     static std::string build(std::string subsystem, std::string itemName, uint64_t itemId, int index = 0)
     {
-        std::string basePath = "/dataLogs";
         std::string id = std::to_string(itemId);
         std::string currentDate = getCurrentDate();
         if(itemId > 65535) // if larger than 16bits
@@ -19,7 +18,7 @@ public:
         if(itemName.empty())
             itemName = "untitled";
         
-        return basePath + "/" + subsystem + "/" + itemName + "-id(" + id + ")" + "/" + currentDate + "(" + std::to_string(index) + ")" + ".json";
+        return subsystem + "/" + itemName + "-id(" + id + ")" + "/" + currentDate + "(" + std::to_string(index) + ")" + ".json";
     }
     static std::string buildTimestamp() 
     {
