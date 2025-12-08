@@ -20,6 +20,7 @@ constexpr auto displayFileAddress = "/display.json";
 constexpr auto thermostatFileAddress = "/thermostat.json";
 constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
 constexpr auto timeConfigFileAddress = "/time_config.json";
+constexpr auto logDispatcherConfigFileAddress = "/log_config.json";
 
 class Configuration
 {
@@ -59,5 +60,8 @@ public:
 
     std::string getTimeConfig();
     void setTimeConfig(const std::string& json);
+
+    std::string getLogDispatcherConfig();
+    void setLogDispatcherConfig(const std::string& json);
 
 };
