@@ -3,11 +3,9 @@
 #include <cstdint>
 #include "IService.hpp"
 
-/** * @brief Interface for read-only resource controllers that manage a collection of items.
- * 
- * @tparam T Type of the items managed by the controller.
+/**
+ * @brief Interface for read-only resource controllers that manage a collection of items.
  */
-template <class T>
 class IReadOnlyResourceController : public IService 
 {
 public:
