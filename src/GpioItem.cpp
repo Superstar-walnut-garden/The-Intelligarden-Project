@@ -157,10 +157,10 @@ bool GpioItem::logOnlyOnChange() const
 std::string GpioItem::getData() const
 {
     JsonDocument doc;
-    doc["pin"] = this->getPin();
+    // doc["pin"] = this->getPin();
     doc["status"] = this->getStatus();
-    doc["mode"] = this->getMode();
-    doc["extraParameters"] = this->getExtraParameters();
+    // doc["mode"] = this->getMode();
+    // doc["extraParameters"] = this->getExtraParameters();
     
     std::string output;
     serializeJson(doc, output);
