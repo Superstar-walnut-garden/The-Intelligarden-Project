@@ -12,7 +12,7 @@ class FirebaseServiceConfig: public IJsonSerializable
     FirebaseServiceConfig();
     FirebaseServiceConfig(std::string json);
 
-    std::string toJson() override;
+    std::string toJson() const override;
     void populateFromJson(std::string) override;
 
     std::string getApiKey();

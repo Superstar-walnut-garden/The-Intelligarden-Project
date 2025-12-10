@@ -11,11 +11,11 @@ public:
     class SignalEndpoint; // prototype declaration
     enum class Mode; // prototype declaration
     SignalRouterItem();
-    std::vector<SignalEndpoint> getListeners();
-    SignalEndpoint getBroadcaster();
-    SignalEndpoint getAuxiliaryBroadcaster();
+    std::vector<SignalEndpoint> getListeners() const;
+    SignalEndpoint getBroadcaster() const;
+    SignalEndpoint getAuxiliaryBroadcaster() const;
     static std::string getEmittedSignalLocalSignalName();
-    Mode getMode();
+    Mode getMode() const;
 
     void setBroadcasterStatus(bool value);
     void setAuxiliaryBroadcasterStatus(bool value);
@@ -30,9 +30,9 @@ public:
         SignalEndpoint(std::string signalPath, bool inverted) : signalPath(signalPath), status(false), inverted(inverted) {}
 
         // getters and setters
-        std::string getSignalPath() { return signalPath; }
-        bool isInverted() { return inverted; }
-        bool getStatus() { return isInverted() ? !status : status; }
+        std::string getSignalPath() const { return signalPath; }
+        bool isInverted() const { return inverted; }
+        bool getStatus() const { return isInverted() ? !status : status; }
         void setStatus(bool value) { status = value; }
 
         private:
@@ -48,7 +48,7 @@ public:
 
 private:
     void populateDerivedClassFromJson(JsonDocument &doc) override;
-    void derivedClassToJson(JsonDocument &doc) override;
+    void derivedClassToJson(JsonDocument &doc) const override;
     std::vector<std::string> getLocalSignalNames() override;
     void evaluateStatus();
     using SignalCompatibleBaseItem::setStatus; // hide the base class setStatus method

@@ -42,7 +42,7 @@ void WifiHotspotConfig::populateFromJson(std::string json)
  * 
  * @return std::string JSON string representation of the WifiHotspotConfig object
  */
-std::string WifiHotspotConfig::toJson()
+std::string WifiHotspotConfig::toJson() const
 {
     JsonDocument doc;
     doc["ssid"] = ssid;

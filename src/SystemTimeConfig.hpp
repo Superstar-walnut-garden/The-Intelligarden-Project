@@ -15,7 +15,7 @@ class SystemTimeConfig: public IJsonSerializable
     SystemTimeConfig();
     SystemTimeConfig(std::string json);
     void populateFromJson(std::string json) override;
-    std::string toJson() override;
+    std::string toJson() const override;
 
     std::string getTimezone();
     void setTimezone(std::string& tz);

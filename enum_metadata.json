@@ -18,7 +18,7 @@
   {
     "qualified_name": "WebApiService::Method",
     "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
-    "line": 24,
+    "line": 25,
     "is_scoped": true,
     "enumerators": [
       {
@@ -34,7 +34,7 @@
         "value": 2
       },
       {
-        "name": "Remove",
+        "name": "Delete",
         "value": 3
       }
     ]
@@ -92,6 +92,30 @@
       {
         "name": "CharLcd",
         "value": 1
+      }
+    ]
+  },
+  {
+    "qualified_name": "LogDispatcherStatus",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
+    "line": 8,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Idle",
+        "value": 0
+      },
+      {
+        "name": "Running",
+        "value": 1
+      },
+      {
+        "name": "StorageFullError",
+        "value": 2
+      },
+      {
+        "name": "StorageNotReadyError",
+        "value": 3
       }
     ]
   }

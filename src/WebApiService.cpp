@@ -14,6 +14,8 @@
 #include "DisplayService.hpp"
 #include "FirebaseService.hpp"
 #include "WifiHotspotConfig.hpp"
+#include "LogDispatcherService.hpp"
+#include "FileExplorerService.hpp"
 
 /**
  * @brief Construct a new WebApiService object
@@ -60,18 +62,33 @@ void WebApiService::init()
         return "";
     }, Method::Post);
 
+    // create custom endpoint for retriving a file using path
+    server.on((baseUrl + "/file").c_str(), HTTP_GET, [](AsyncWebServerRequest *request)
+    {
+        if (!request->hasParam("path")) 
+        {
+            request->send(400, "text/plain", "Missing 'path' parameter");
+            return;
+        }
+        std::string path = request->getParam("path")->value().c_str();
+        std::string fileContent = FileExplorerService::getInstance()->get(path);
+        request->send(200, "application/json", fileContent.c_str());
+    });
+
     createEndpoint<WifiHotspotConfig>("/wifi-config", WifiService::getInstance());
     createEndpoint<WifiHotspotConfig>("/hotspot-config", this);
     createEndpoint<FirebaseServiceConfig>("/firebase-config", FirebaseService::getInstance());
     createEndpoint<DisplayConfig>("/display-config", DisplayService::getInstance());
     createEndpoint<SystemTimeConfig>("/time-config", SystemTimeService::getInstance());
-    createEndpoint<ISignalCompatibleService>("/signal-hub", CentralizedSignalHubService::getInstance());
+    createEndpoint<LogDispatcherConfig>("/log-config", LogDispatcherService::getInstance());
+    createEndpoint("/signal-hub", CentralizedSignalHubService::getInstance());
 
     createEndpoint<TempSensorItem>("/temp-sensor", TempSensorService::getInstance());
     createEndpoint<GpioItem>("/gpio", GpioService::getInstance());
     createEndpoint<ThermostatItem>("/thermostat", ThermostatService::getInstance());
     createEndpoint<SchedulerItem>("/scheduler", SchedulerService::getInstance());
     createEndpoint<SignalRouterItem>("/signal", SignalRouterService::getInstance());
+    createEndpoint("/files", FileExplorerService::getInstance());
     server.begin();
 }
 
@@ -182,12 +199,10 @@ void WebApiService::createEndpoint(std::string uri, IResourceController<ItemType
 /**
  * @brief Method to create endpoints for IReadOnlyResourceController objects
  * 
- * @tparam ItemType Type of the item managed by the IReadOnlyResourceController object
  * @param uri URI of the endpoint
  * @param resourceController IReadOnlyResourceController object
  */
-template <typename ItemType>
-void WebApiService::createEndpoint(std::string uri, IReadOnlyResourceController<ItemType>* resourceController)
+void WebApiService::createEndpoint(std::string uri, IReadOnlyResourceController* resourceController)
 {
     createEndpoint(uri, [resourceController] (std::optional<uint64_t> id, std::string data) -> std::string
     {

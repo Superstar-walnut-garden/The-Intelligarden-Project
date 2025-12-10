@@ -123,7 +123,7 @@ void GpioService::restoreAll()
  * @brief get unique name of subsystem (manager)
  * @return Subsystem Name
  */
-std::string GpioService::getName()
+std::string GpioService::getName() const
 {
     return "Gpio";
 }
@@ -168,4 +168,20 @@ void GpioService::syncHardware()
             SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
         }
     }
+}
+
+/**
+ * @brief Get the list of loggable items.
+ * 
+ * @return std::vector<std::unique_ptr<ILoggableItem>> The list of loggable items.
+ */
+std::vector<std::unique_ptr<ILoggableItem>> GpioService::getLoggableItems() const
+{
+    std::vector<std::unique_ptr<ILoggableItem>> loggableItems;
+    for(const auto item : list.getList())
+    {
+        if(!item.getName().empty() and item.isLoggingEnabled()) // only add if it has a name and logging is enabled
+            loggableItems.push_back(std::make_unique<GpioItem>(item)); // add to list
+    }
+    return loggableItems;
 }

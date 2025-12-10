@@ -11,7 +11,7 @@ public:
 
     enum class DisplayType { Oled, CharLcd };
 
-    std::string toJson() override;
+    std::string toJson() const override;
     void populateFromJson(std::string json) override;
 
 

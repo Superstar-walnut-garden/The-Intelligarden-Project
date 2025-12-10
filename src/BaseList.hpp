@@ -16,8 +16,8 @@ public:
     BaseList();
     BaseList(std::string json);
     virtual T &getItem(uint64_t id);
-    virtual std::vector<T> getList();
-    virtual std::string toJson();
+    virtual std::vector<T> getList() const;
+    virtual std::string toJson() const;
     virtual void addItem(T Item);
     virtual void repopulateWith(std::string json);
     virtual void printList();

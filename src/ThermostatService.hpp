@@ -24,7 +24,7 @@ public:
     void storeAll() override;
     void restoreAll() override;
 
-    std::string getName() override;
+    std::string getName() const override;
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
     
     void update(TempSensorService* temperature) override;
