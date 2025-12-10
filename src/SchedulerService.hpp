@@ -15,7 +15,7 @@ class SchedulerService: public IResourceController<SchedulerItem>, public IResou
 public:
     static SchedulerService* getInstance();
 
-    std::string getName() override { return "Scheduler"; }
+    std::string getName() const override { return "Scheduler"; }
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
     void loop();
 

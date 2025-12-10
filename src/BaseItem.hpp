@@ -18,11 +18,11 @@ public:
     virtual bool getStatus() const;
     virtual void setStatus(bool status);
     virtual void populateFromJson(std::string json) override;
-    virtual std::string toJson() override;
+    virtual std::string toJson() const override;
 
 protected:
     virtual void populateDerivedClassFromJson(JsonDocument &doc) {};
-    virtual void derivedClassToJson(JsonDocument &doc) {};
+    virtual void derivedClassToJson(JsonDocument &doc) const {};
 
 private:
     uint64_t id;

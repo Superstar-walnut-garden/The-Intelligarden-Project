@@ -30,7 +30,7 @@ public:
     
 
     void populateDerivedClassFromJson(JsonDocument &json) override;
-    void derivedClassToJson(JsonDocument &doc) override;
+    void derivedClassToJson(JsonDocument &doc) const override;
 
 private:
     double temp;

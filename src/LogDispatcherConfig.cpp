@@ -45,7 +45,7 @@ void LogDispatcherConfig::populateFromJson(std::string json)
  * 
  * @return std::string JSON string representation of the LogDispatcherConfig object
  */
-std::string LogDispatcherConfig::toJson()
+std::string LogDispatcherConfig::toJson() const
 {
     JsonDocument doc;
     doc["maxFileSizeBytes"] = maxFileSizeBytes;

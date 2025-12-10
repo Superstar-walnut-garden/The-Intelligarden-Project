@@ -28,7 +28,7 @@ SchedulerItem::SchedulerItem(uint64_t id, std::string name, Time start, Time dur
  * 
  * @return Time 
  */
-Time SchedulerItem::getStartTime() 
+Time SchedulerItem::getStartTime() const
 {
     return start;
 }
@@ -38,7 +38,7 @@ Time SchedulerItem::getStartTime()
  * 
  * @return Time 
  */
-Time SchedulerItem::getDuration() 
+Time SchedulerItem::getDuration() const
 {
     return duration;
 }
@@ -68,7 +68,7 @@ void SchedulerItem::setDuration(Time duration)
  * 
  * @return std::string The weekday as a binary string (e.g., "0000001" for Sunday).
  */
-std::string SchedulerItem::getWeekday() 
+std::string SchedulerItem::getWeekday() const
 {
     return weekday;
 }
@@ -78,7 +78,7 @@ std::string SchedulerItem::getWeekday()
  * 
  * @param weekday The weekday to set as a binary string.
  */
-bool SchedulerItem::isEnabled() 
+bool SchedulerItem::isEnabled()  const
 {
     return enabled;
 }
@@ -108,7 +108,7 @@ void SchedulerItem::setMode(std::string mode)
  * 
  * @return std::string The mode of the SchedulerItem.
  */
-std::string SchedulerItem::getMode()
+std::string SchedulerItem::getMode() const
 {
     return mode;
 }
@@ -128,7 +128,7 @@ void SchedulerItem::setSkipped(bool skipped)
  * 
  * @return true if the SchedulerItem is skipped, false otherwise.
  */
-bool SchedulerItem::isSkipped()
+bool SchedulerItem::isSkipped() const
 {
     return skipped;
 }
@@ -138,7 +138,7 @@ bool SchedulerItem::isSkipped()
  * 
  * @return std::string The main local signal name.
  */
-std::string SchedulerItem::getMainLocalSignalName() 
+std::string SchedulerItem::getMainLocalSignalName() const
 {
     return SignalNameResolver::generateLocalSignalName("Main", SignalNameResolver::SignalType::Broadcaster);
 }
@@ -148,7 +148,7 @@ std::string SchedulerItem::getMainLocalSignalName()
  * 
  * @return std::string The local signal name for skipping.
  */
-std::string SchedulerItem::getSkipLocalSignalName() 
+std::string SchedulerItem::getSkipLocalSignalName() const
 {
     return SignalNameResolver::generateLocalSignalName("Skip", SignalNameResolver::SignalType::Listener);
 }
@@ -158,7 +158,7 @@ std::string SchedulerItem::getSkipLocalSignalName()
  * 
  * @return std::string The local signal name for pausing.
  */
-std::string SchedulerItem::getPauseLocalSignalName() 
+std::string SchedulerItem::getPauseLocalSignalName() const
 {
     return SignalNameResolver::generateLocalSignalName("Pause", SignalNameResolver::SignalType::Listener);
 }
@@ -198,7 +198,7 @@ void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
  * 
  * @param doc The JSON document to populate with the SchedulerItem data.
  */
-void SchedulerItem::derivedClassToJson(JsonDocument &doc)
+void SchedulerItem::derivedClassToJson(JsonDocument &doc) const
 {
     doc["start"] = getStartTime().toString();
     doc["duration"] = getDuration().toString();

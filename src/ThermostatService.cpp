@@ -117,7 +117,7 @@ void ThermostatService::restoreAll()
     list.repopulateWith(state.c_str());
 }
 
-std::string ThermostatService::getName()
+std::string ThermostatService::getName() const
 {
     return "Thermostat";
 }

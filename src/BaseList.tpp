@@ -51,7 +51,7 @@ T &BaseList<T>::getItem(uint64_t id)
  * @return std::vector<T> 
  */
 template <class T>
-std::vector<T> BaseList<T>::getList()
+std::vector<T> BaseList<T>::getList() const
 {
     return list;
 }
@@ -63,7 +63,7 @@ std::vector<T> BaseList<T>::getList()
  * @return std::string of the list in JSON format
  */
 template <class T>
-std::string BaseList<T>::toJson()
+std::string BaseList<T>::toJson() const
 {
     JsonDocument doc;
     JsonArray array = doc.to<JsonArray>();

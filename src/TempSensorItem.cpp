@@ -62,7 +62,7 @@ void TempSensorItem::populateDerivedClassFromJson(JsonDocument &json)
  * @brief convert the parameters to JSON
  * 
  */
-void TempSensorItem::derivedClassToJson(JsonDocument &doc)
+void TempSensorItem::derivedClassToJson(JsonDocument &doc) const
 {
     doc["temp"] = this->temp;
     doc["id"] = std::to_string(this->getId()); // passing 64bit id as string to prevent json and web api js issues with large numbers

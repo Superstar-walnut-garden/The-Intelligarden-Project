@@ -10,7 +10,7 @@ class LogDispatcherConfig: public IJsonSerializable
     public:
     LogDispatcherConfig();
     LogDispatcherConfig(std::string json);
-    std::string toJson() override;
+    std::string toJson() const override;
     void populateFromJson(std::string json) override;
 
     std::string getBasePath();
