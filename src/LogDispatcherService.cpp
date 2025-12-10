@@ -1,10 +1,11 @@
 #include "LogDispatcherService.hpp"
 #include "SpiMicroSd.hpp"
-#include "LogPathBuilder.hpp"
+#include "LogUtils.hpp"
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "Configuration.hpp"
 #include <functional>
+#include "JsonUtils.hpp"
 
 /**
  * @brief static member initialization
@@ -53,32 +54,61 @@ void LogDispatcherService::attachLoggableService(ILoggableService* service)
 void LogDispatcherService::loop()
 {
     determineStatus();
-    if(config.getStatus() == LogDispatcherStatus::Running)
+    if(config.getStatus() == LogDispatcherStatus::Running) // only log if status is Running (everything is ok)
     {
-        for (const auto& service : loggableServices)
+        for (const auto& service : loggableServices) // iterate through services
         {
             auto items = service->getLoggableItems();
-            for (const auto& item : items)
+            for (const auto& item : items) // iterate through loggable items
             {
                 int fileRotationCount = 0;
-                do
+                do // try to find a suitable file to log into
                 {                
-                    std::string path = config.getBasePath() + "/" + LogPathBuilder::build(service->getName(), item->getName(), item->getId(), fileRotationCount++);
-                    if(storage->getFileSize(path) < config.getMaxFileSizeBytes()) // limit file size to 10KB
+                    std::string path = config.getBasePath() + "/" + LogUtils::buildPath(service->getName(), item->getName(), item->getId(), fileRotationCount++);
+                    if(storage->getFileSize(path) < config.getMaxFileSizeBytes()) // check file size limit
                     {
-                        auto nowTime = std::chrono::system_clock::now();
-                        if(item->shouldLog(nowTime)) // if item should be logged now (based on interval and last log time and non-redundant data)
+                        bool fileUpdated = false;
+                        auto fileContents = storage->readFile(path); // read existing file (to keep previous logs)
+                        JsonDocument doc, nested;
+                        deserializeJson(doc, fileContents);
+                        if (!deserializeJson(nested, item->getData())) // if data is valid JSON and deserialized successfully
                         {
-                            auto fileContents = storage->readFile(path); // read existing file (to keep previous logs)
-                            JsonDocument doc, nested;
-                            deserializeJson(doc, fileContents);
-                            if (!deserializeJson(nested, item->getData())) // if data is valid JSON and deserialized successfully
-                            { 
-                                doc[LogPathBuilder::buildTimestamp()] = nested; // add new log entry with current timestamp
-                                service->setLastLogTime(item->getId(), nowTime); // update last log time for the item
+                            auto addNewLogEntry = [&]()
+                            {
+                                fileUpdated = true;
+                                doc[LogUtils::buildTimestamp()] = nested; // add new log entry with current timestamp
+                            };
+                            auto lastEntry = JsonUtils::getLastEntry(doc);
+                            if(lastEntry) // if there is a last entry (a data point already logged for this day).
+                            {
+                                // compare their timestamps and based on the interval decide whether to log or not
+                                auto lastTimestamp = LogUtils::parseTimestamp(lastEntry->key);
+                                auto currentTimestamp = LogUtils::parseTimestamp(LogUtils::buildTimestamp());
+                                auto interval = std::chrono::seconds(item->getInterval());
+                                if(currentTimestamp - lastTimestamp >= interval) // if should log now (based on interval)
+                                {
+                                    if(item->logOnlyOnChange())
+                                    {
+                                        // compare last logged value with current value
+                                        JsonDocument lastValueDoc, currentValueDoc;
+                                        deserializeJson(lastValueDoc, lastEntry->value);
+                                        deserializeJson(currentValueDoc, item->getData());
+                                        if(!JsonUtils::jsonEquals(lastValueDoc.as<JsonObject>(), currentValueDoc.as<JsonObject>()))
+                                            addNewLogEntry();
+                                    }
+                                    else
+                                        addNewLogEntry();
+                                } // else do not log (interval not reached)
                             }
                             else
-                                Serial.println("error: logDispatcherService: Failed to parse JSON");
+                            {
+                                addNewLogEntry();
+                            }
+                        }
+                        else
+                            Serial.println("error: logDispatcherService: Failed to parse JSON");
+                        if(fileUpdated)
+                        {
                             serializeJson(doc, fileContents); // serialize back to string
                             storage->writeFile(path, fileContents); // write updated contents back to file
                         }
@@ -111,71 +141,6 @@ void LogDispatcherService::updateConfig(LogDispatcherConfig config)
     config.setStatus(this->config.getStatus()); // preserve current status
     this->config = config;
     storeAll(); // save updated config to storage
-}
-
-/**
- * @brief Get all log data as a JSON string.
- * 
- * @return std::string JSON string representation of all log data.
- */
-std::string LogDispatcherService::getAll()
-{
-    JsonDocument doc;
-    JsonObject root = doc.to<JsonObject>();
-    root["path"] = config.getBasePath();
-
-    auto ensureTrailingSlash = [](const std::string& p) {
-        if (p.empty()) return std::string("/");
-        if (p.back() == '/') return p;
-        return p + '/';
-    };
-
-    std::function<void(const std::string&, JsonObject)> recurse;
-    recurse = [&](const std::string& currentPath, JsonObject parentObj)
-    {
-        JsonArray foldersArray = parentObj.createNestedArray("folders");
-        JsonArray filesArray   = parentObj.createNestedArray("files");
-
-        auto list = storage->listEntries(currentPath);
-        for (const auto& entry : list)
-        {
-            std::string fullPath = ensureTrailingSlash(currentPath) + entry.name;
-
-            if (entry.isDirectory)
-            {
-                JsonObject folderObj = foldersArray.createNestedObject();
-                folderObj["name"] = entry.name;       // raw string
-                folderObj["path"] = fullPath;         // raw string
-                recurse(fullPath, folderObj);         // recurse into folder
-            }
-            else
-            {
-                JsonObject fileObj = filesArray.createNestedObject();
-                fileObj["name"] = entry.name;         // raw string
-                fileObj["path"] = fullPath;           // raw string
-                fileObj["size"] = storage->getFileSize(fullPath);
-                // fileObj["lastModified"] = storage->getLastModified(fullPath);
-            }
-        }
-    };
-
-    recurse(config.getBasePath(), root);
-
-    std::string output;
-    serializeJson(doc, output);
-    return output;
-}
-
-/**
- * @brief Get log data for a specific path.
- * 
- * @param path The path to retrieve log data from.
- * @return std::string JSON string representation of the log data at the specified path.
- */
-std::string LogDispatcherService::get(std::string path)
-{
-    // read file contents from storage based on the provided path
-    return storage->readFile(path);
 }
 
 /**
