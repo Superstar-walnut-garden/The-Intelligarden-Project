@@ -42,7 +42,7 @@ private:
     SignalRouterService(const SignalRouterService&) = delete;
     SignalRouterService& operator=(const SignalRouterService&) = delete;
 
-    std::string getName() override { return "SignalRouter"; };
+    std::string getName() const override { return "SignalRouter"; };
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
     static SignalRouterService* instance;

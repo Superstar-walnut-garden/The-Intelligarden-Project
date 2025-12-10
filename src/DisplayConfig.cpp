@@ -26,7 +26,7 @@ DisplayConfig::DisplayConfig(std::string json) {
  * 
  * @return std::string 
  */
-std::string DisplayConfig::toJson()
+std::string DisplayConfig::toJson() const
 {
     JsonDocument doc;
     doc["type"] = EnumCrafter::toString(displayType);

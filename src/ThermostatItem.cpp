@@ -141,7 +141,7 @@ void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
  * 
  * @param doc The JSON document to populate with the ThermostatItem data.
  */
-void ThermostatItem::derivedClassToJson(JsonDocument &doc)
+void ThermostatItem::derivedClassToJson(JsonDocument &doc) const
 {
     doc["setpoint"] = this->setpoint;
     doc["altSetpoint"] = this->altSetpoint;

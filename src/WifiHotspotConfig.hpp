@@ -9,7 +9,7 @@ class WifiHotspotConfig: public IJsonSerializable
     public:
     WifiHotspotConfig();
     WifiHotspotConfig(std::string json);
-    std::string toJson() override;
+    std::string toJson() const override;
     void populateFromJson(std::string json) override;
 
     std::string getSsid();

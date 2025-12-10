@@ -93,7 +93,7 @@ void BaseItem::populateFromJson(std::string json)
  * @brief Convert the BaseItem to a JSON string (override the method in case of having more parameters).
  * @return The JSON string representation of the item.
  */ 
-std::string BaseItem::toJson()
+std::string BaseItem::toJson() const
 {
     JsonDocument doc;
     doc["id"] = this->id;

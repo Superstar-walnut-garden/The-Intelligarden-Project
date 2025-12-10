@@ -6,7 +6,7 @@
 #include "IReadOnlyResourceController.hpp"
 
 class CentralizedSignalHubService: 
-    public IReadOnlyResourceController<ISignalCompatibleService>, 
+    public IReadOnlyResourceController, 
     public Subject<CentralizedSignalHubService>, 
     public IObserver<ISignalCompatibleService>
 {

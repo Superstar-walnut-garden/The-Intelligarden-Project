@@ -33,8 +33,7 @@ private:
     template <typename ItemType>
     void createEndpoint(std::string uri, IResourceController<ItemType>* resourceController);
     
-    template <typename ItemType>
-    void createEndpoint(std::string uri, IReadOnlyResourceController<ItemType>* resourceController);
+    void createEndpoint(std::string uri, IReadOnlyResourceController* resourceController);
     
     AsyncWebServer server; // Server object
     std::string baseUrl;

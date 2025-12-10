@@ -41,7 +41,7 @@ void FirebaseServiceConfig::populateFromJson(std::string json)
  * 
  * @return std::string JSON string representation of the Firebase configuration.
  */
-std::string FirebaseServiceConfig::toJson()
+std::string FirebaseServiceConfig::toJson() const
 {
     JsonDocument doc;
     doc["apiKey"] = apiKey;

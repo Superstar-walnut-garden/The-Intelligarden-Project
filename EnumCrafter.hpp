@@ -12,9 +12,11 @@
 #pragma once
 
 #include "src/DisplayConfig.hpp"
+#include "src/LogDispatcherStatus.hpp"
 #include "src/SignalNameResolver.hpp"
 #include "src/SignalRouterItem.hpp"
 #include "src/StatusCode.hpp"
+#include "src/WebApiService.hpp"
 
 #include <array>
 #include <string_view>
@@ -32,6 +34,16 @@ constexpr std::string_view toString(SignalNameResolver::SignalType e) {
     switch (e) {
         case SignalNameResolver::SignalType::Broadcaster: return "Broadcaster";
         case SignalNameResolver::SignalType::Listener: return "Listener";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(WebApiService::Method e) {
+    switch (e) {
+        case WebApiService::Method::Get: return "Get";
+        case WebApiService::Method::Post: return "Post";
+        case WebApiService::Method::Put: return "Put";
+        case WebApiService::Method::Delete: return "Delete";
         default: return "???";
     }
 }
@@ -62,10 +74,29 @@ constexpr std::string_view toString(DisplayConfig::DisplayType e) {
     }
 }
 
+constexpr std::string_view toString(LogDispatcherStatus e) {
+    switch (e) {
+        case LogDispatcherStatus::Idle: return "Idle";
+        case LogDispatcherStatus::Running: return "Running";
+        case LogDispatcherStatus::StorageFullError: return "StorageFullError";
+        case LogDispatcherStatus::StorageNotReadyError: return "StorageNotReadyError";
+        default: return "???";
+    }
+}
+
 template<>
 constexpr std::optional<SignalNameResolver::SignalType> parse<SignalNameResolver::SignalType>(std::string_view s) {
     if (s == "Broadcaster") return SignalNameResolver::SignalType::Broadcaster;
     if (s == "Listener") return SignalNameResolver::SignalType::Listener;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<WebApiService::Method> parse<WebApiService::Method>(std::string_view s) {
+    if (s == "Get") return WebApiService::Method::Get;
+    if (s == "Post") return WebApiService::Method::Post;
+    if (s == "Put") return WebApiService::Method::Put;
+    if (s == "Delete") return WebApiService::Method::Delete;
     return std::nullopt;
 }
 
@@ -93,7 +124,19 @@ constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::Display
 }
 
 template<>
+constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::string_view s) {
+    if (s == "Idle") return LogDispatcherStatus::Idle;
+    if (s == "Running") return LogDispatcherStatus::Running;
+    if (s == "StorageFullError") return LogDispatcherStatus::StorageFullError;
+    if (s == "StorageNotReadyError") return LogDispatcherStatus::StorageNotReadyError;
+    return std::nullopt;
+}
+
+template<>
 constexpr std::array<SignalNameResolver::SignalType, 2> makeIterable<SignalNameResolver::SignalType> = { SignalNameResolver::SignalType::Broadcaster, SignalNameResolver::SignalType::Listener };
+
+template<>
+constexpr std::array<WebApiService::Method, 4> makeIterable<WebApiService::Method> = { WebApiService::Method::Get, WebApiService::Method::Post, WebApiService::Method::Put, WebApiService::Method::Delete };
 
 template<>
 constexpr std::array<SignalRouterItem::Mode, 3> makeIterable<SignalRouterItem::Mode> = { SignalRouterItem::Mode::SingleSource, SignalRouterItem::Mode::AndWithAuxiliary, SignalRouterItem::Mode::OrWithAuxiliary };
@@ -103,5 +146,8 @@ constexpr std::array<StatusCode, 3> makeIterable<StatusCode> = { StatusCode::SUC
 
 template<>
 constexpr std::array<DisplayConfig::DisplayType, 2> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
+
+template<>
+constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
 
 } // namespace EnumCrafter

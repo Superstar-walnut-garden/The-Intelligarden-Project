@@ -15,7 +15,7 @@ SignalRouterItem::SignalRouterItem()
  * 
  * @return std::vector<SignalEndpoint> A vector of SignalEndpoint objects representing the listeners.
  */
-std::vector<SignalRouterItem::SignalEndpoint> SignalRouterItem::getListeners()
+std::vector<SignalRouterItem::SignalEndpoint> SignalRouterItem::getListeners() const
 {
     return listeners;
 }
@@ -25,7 +25,7 @@ std::vector<SignalRouterItem::SignalEndpoint> SignalRouterItem::getListeners()
  * 
  * @return SignalEndpoint The broadcaster of the SignalRouterItem.
  */
-SignalRouterItem::SignalEndpoint SignalRouterItem::getBroadcaster()
+SignalRouterItem::SignalEndpoint SignalRouterItem::getBroadcaster() const
 {
     return broadcaster;
 }
@@ -35,7 +35,7 @@ SignalRouterItem::SignalEndpoint SignalRouterItem::getBroadcaster()
  * 
  * @return SignalEndpoint The auxiliary broadcaster of the SignalRouterItem.
  */
-SignalRouterItem::SignalEndpoint SignalRouterItem::getAuxiliaryBroadcaster()
+SignalRouterItem::SignalEndpoint SignalRouterItem::getAuxiliaryBroadcaster() const
 {
     return auxiliaryBroadcaster;
 }
@@ -114,7 +114,7 @@ std::vector<std::string> SignalRouterItem::getLocalSignalNames()
  * 
  * @return SignalRouterItem::Mode The mode of the SignalRouterItem.
  */
-SignalRouterItem::Mode SignalRouterItem::getMode()
+SignalRouterItem::Mode SignalRouterItem::getMode() const
 {
     return mode;
 }
@@ -185,11 +185,11 @@ void SignalRouterItem::populateDerivedClassFromJson(JsonDocument &doc)
  * 
  * @param doc The JSON document to populate with the SignalRouterItem data.
  */
-void SignalRouterItem::derivedClassToJson(JsonDocument &doc)
+void SignalRouterItem::derivedClassToJson(JsonDocument &doc) const
 {
     // Create a nested array for listeners
     auto listenersArray = doc.createNestedArray("listeners");
-    for(auto &listener : listeners) // add all listeners
+    for(const auto &listener : listeners) // add all listeners
     {
         JsonObject obj = listenersArray.createNestedObject();
         obj["signalPath"] = listener.getSignalPath();

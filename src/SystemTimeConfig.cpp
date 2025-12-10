@@ -51,7 +51,7 @@ void SystemTimeConfig::populateFromJson(std::string json)
  * 
  * @return std::string JSON string representation of the SystemTimeConfig object
  */
-std::string SystemTimeConfig::toJson()
+std::string SystemTimeConfig::toJson() const
 {
     JsonDocument doc;
     doc["timezone"] = timezone;

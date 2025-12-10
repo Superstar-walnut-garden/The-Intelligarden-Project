@@ -25,6 +25,12 @@
 #include "SchedulerService.hpp"
 #include "CentralizedSignalHubService.hpp"
 #include "SignalRouterService.hpp"
+#include "FS.h"
+#include "SD.h"
+#include "SPI.h"
+#include "IExternalStorage.hpp"
+#include "SpiMicroSd.hpp"
+#include "LogDispatcherService.hpp"
 
 
 int virtualMain()
@@ -48,6 +54,12 @@ int virtualMain()
     auto *ioManager = GpioService::getInstance();
     auto *thermostatManager = ThermostatService::getInstance();
     auto *centralizedSignalHub = CentralizedSignalHubService::getInstance();
+    auto *storage = SpiMicroSd::getInstance();
+    auto *logDispatcher = LogDispatcherService::getInstance();
+    if(storage->isReady())
+    {
+        Serial.println("SD Card is ready!");
+    }
 
     temperature->attach(display); // attach display as an observer
     temperature->attach(thermostatManager); // attach ThermostatService as an observer
@@ -59,6 +71,9 @@ int virtualMain()
     centralizedSignalHub->registerService(ioManager);
     centralizedSignalHub->registerService(thermostatManager);
     centralizedSignalHub->registerService(scheduler);
+
+    logDispatcher->attachLoggableService(temperature);
+    logDispatcher->attachLoggableService(ioManager);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
@@ -104,10 +119,13 @@ int virtualMain()
         else
             Serial.println("warning: time is not available due to connection error at the system startup!");
         
+        logDispatcher->loop();
         wifiSetup->loop();
         ioManager->syncHardware();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
         Serial.printf("Free Flash: %d bytes\n", SPIFFS.totalBytes() - SPIFFS.usedBytes());
+        if(storage->isReady())
+            Serial.printf("Free SD Card: %d bytes\n", storage->getRemainingCapacity());
 
         // Convert to time_t for formatting
         std::time_t currentTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());

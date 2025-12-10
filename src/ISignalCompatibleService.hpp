@@ -8,6 +8,6 @@
 class ISignalCompatibleService: public Subject<ISignalCompatibleService>
 {
 public:
-    virtual std::string getName() = 0;
+    virtual std::string getName() const = 0;
     virtual std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() = 0;
 };
