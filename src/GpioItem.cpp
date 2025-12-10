@@ -27,7 +27,7 @@ GpioItem::GpioItem(int pin, std::string name, bool status, short mode, std::stri
  * 
  * @return int Pin number
  */ 
-int GpioItem::getPin()
+int GpioItem::getPin() const
 {
     return this->getId();
 }
@@ -35,7 +35,7 @@ int GpioItem::getPin()
 /** * @brief Get the mode of the GPIO item
  * @return int Mode of the GPIO item
  */
-int GpioItem::getMode()
+int GpioItem::getMode() const
 {
     return this->mode;
 }
@@ -53,7 +53,7 @@ void GpioItem::setMode(short mode)
  * 
  * @return std::string Extra parameters as a string
  */
-std::string GpioItem::getExtraParameters()
+std::string GpioItem::getExtraParameters() const
 {
     return this->extraParameters;
 }
@@ -75,16 +75,22 @@ void GpioItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     this->extraParameters = doc["extraParameters"].as<std::string>();
     this->mode = doc["mode"].as<short>();
+    this->loggingEnabled = doc["loggingEnabled"] | false;
+    this->logOnlyOnDataChange = doc["logOnlyOnChange"] | false;
+    this->logInterval = doc["logInterval"] | 60;
 }
 
 /** * @brief Convert the derived class to JSON document
  * 
  * @param doc JSON document to convert to
  */
-void GpioItem::derivedClassToJson(JsonDocument &doc)
+void GpioItem::derivedClassToJson(JsonDocument &doc) const
 {
     doc["extraParameters"] = this->extraParameters;
     doc["mode"] = this->mode;
+    doc["loggingEnabled"] = this->loggingEnabled;
+    doc["logOnlyOnChange"] = this->logOnlyOnDataChange;
+    doc["logInterval"] = this->logInterval;
 }
 
 /** * @brief Get the local signal names for the GPIO item
@@ -101,4 +107,72 @@ std::vector<std::string> GpioItem::getLocalSignalNames()
         signalType = SignalNameResolver::SignalType::Listener;
 
     return {SignalNameResolver::generateLocalSignalName("default", signalType)};
+}
+
+/**
+ * @brief Get the name of the GPIO item (for ambiguity resolving).
+ * 
+ * @return std::string The name of the object.
+ */
+std::string GpioItem::getName() const
+{
+    return BaseItem::getName();
+}
+
+/**
+ * @brief Get the ID of the GPIO item (for ambiguity resolving).
+ * 
+ * @return uint64_t The ID of the object.
+ */
+uint64_t GpioItem::getId() const
+{
+    return BaseItem::getId();
+}
+
+/**
+ * @brief Get the logging interval for the GPIO item.
+ * 
+ * @return uint64_t The logging interval in seconds.
+ */
+uint64_t GpioItem::getInterval() const
+{
+    return logInterval;
+}
+
+/**
+ * @brief Check if the GpioItem object should log only on change.
+ * 
+ * @return true If the object should log only on change, false otherwise.
+ */
+bool GpioItem::logOnlyOnChange() const
+{
+    return logOnlyOnDataChange;
+}
+
+/**
+ * @brief Get the data of the GpioItem object as a JSON string.
+ * 
+ * @return std::string The JSON string of the object's data.
+ */
+std::string GpioItem::getData() const
+{
+    JsonDocument doc;
+    doc["pin"] = this->getPin();
+    doc["status"] = this->getStatus();
+    doc["mode"] = this->getMode();
+    doc["extraParameters"] = this->getExtraParameters();
+    
+    std::string output;
+    serializeJson(doc, output);
+    return output;
+}
+
+/**
+ * @brief Check if logging is enabled for the GpioItem object.
+ * 
+ * @return true If logging is enabled, false otherwise.
+ */
+bool GpioItem::isLoggingEnabled() const
+{
+    return loggingEnabled;
 }

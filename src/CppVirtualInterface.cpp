@@ -73,6 +73,7 @@ int virtualMain()
     centralizedSignalHub->registerService(scheduler);
 
     logDispatcher->attachLoggableService(temperature);
+    logDispatcher->attachLoggableService(ioManager);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog

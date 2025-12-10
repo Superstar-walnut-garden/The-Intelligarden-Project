@@ -5,10 +5,15 @@
 #include "IResourceController.hpp"
 #include "ISignalCompatibleService.hpp"
 #include "IResourcePersistenceService.hpp"
+#include "ILoggableService.hpp"
 #include <vector>
 #include <string>
 
-class GpioService: public IResourcePersistenceService, public IResourceController<GpioItem>, public ISignalCompatibleService
+class GpioService
+    : public IResourcePersistenceService, 
+    public IResourceController<GpioItem>, 
+    public ISignalCompatibleService,
+    public ILoggableService
 {
 public:
     static GpioService* getInstance();
@@ -23,8 +28,10 @@ public:
     void storeAll() override;
     void restoreAll() override;
 
-    std::string getName() override;
+    std::string getName() const override;
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
+
+    std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const override;
 
     void syncHardware();
 
