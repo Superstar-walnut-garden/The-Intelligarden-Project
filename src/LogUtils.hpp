@@ -5,11 +5,12 @@
 #include <ctime>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
 
-class LogPathBuilder
+class LogUtils
 {
 public:
-    static std::string build(std::string subsystem, std::string itemName, uint64_t itemId, int index = 0)
+    static std::string buildPath(std::string subsystem, std::string itemName, uint64_t itemId, int index = 0)
     {
         std::string id = std::to_string(itemId);
         std::string currentDate = getCurrentDate();
@@ -28,6 +29,19 @@ public:
         std::strftime(buffer, sizeof(buffer), "%H:%M:%S", localTime);
         return buffer;
     }
+
+    static std::chrono::seconds parseTimestamp(const std::string& timestamp) 
+    {
+        int h, m, s;
+        char sep1, sep2;
+        std::istringstream iss(timestamp);
+        if (!(iss >> h >> sep1 >> m >> sep2 >> s) || sep1 != ':' || sep2 != ':') 
+        {
+            throw std::invalid_argument("Invalid timestamp format: " + timestamp);
+        }
+        return std::chrono::hours(h) + std::chrono::minutes(m) + std::chrono::seconds(s);
+    }
+
 
 private:
     static std::string encode64BitNumberToBase62(uint64_t num) 
