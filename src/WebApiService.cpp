@@ -15,6 +15,7 @@
 #include "FirebaseService.hpp"
 #include "WifiHotspotConfig.hpp"
 #include "LogDispatcherService.hpp"
+#include "FileExplorerService.hpp"
 
 /**
  * @brief Construct a new WebApiService object
@@ -62,7 +63,7 @@ void WebApiService::init()
     }, Method::Post);
 
     // create custom endpoint for retriving a file using path
-    server.on((baseUrl + "/log-file").c_str(), HTTP_GET, [](AsyncWebServerRequest *request)
+    server.on((baseUrl + "/file").c_str(), HTTP_GET, [](AsyncWebServerRequest *request)
     {
         if (!request->hasParam("path")) 
         {
@@ -70,7 +71,7 @@ void WebApiService::init()
             return;
         }
         std::string path = request->getParam("path")->value().c_str();
-        std::string fileContent = LogDispatcherService::getInstance()->get(path);
+        std::string fileContent = FileExplorerService::getInstance()->get(path);
         request->send(200, "application/json", fileContent.c_str());
     });
 
@@ -87,7 +88,7 @@ void WebApiService::init()
     createEndpoint<ThermostatItem>("/thermostat", ThermostatService::getInstance());
     createEndpoint<SchedulerItem>("/scheduler", SchedulerService::getInstance());
     createEndpoint<SignalRouterItem>("/signal", SignalRouterService::getInstance());
-    createEndpoint("/log-files", LogDispatcherService::getInstance());
+    createEndpoint("/files", FileExplorerService::getInstance());
     server.begin();
 }
 
