@@ -268,7 +268,6 @@ void TempSensorService::mergeAndCopy(TempSensorList &primary, TempSensorList sec
             {
                 alreadyExist = true;
                 primary.getItem(pDev.getId()).setName(sDev.getName()); // copy name
-                primary.getItem(pDev.getId()).setLastLogTime(sDev.getLastLogTime()); // copy last log time
                 primary.getItem(pDev.getId()).setLoggingEnabled(sDev.isLoggingEnabled());
                 primary.getItem(pDev.getId()).setInterval(sDev.getInterval());
                 primary.getItem(pDev.getId()).setLogOnlyOnChange(sDev.logOnlyOnChange());
@@ -303,15 +302,4 @@ std::vector<std::unique_ptr<ILoggableItem>> TempSensorService::getLoggableItems(
             loggableItems.push_back(std::make_unique<TempSensorItem>(item)); // add to list
     }
     return loggableItems;
-}
-
-/**
- * @brief Set the last log time for a loggable item.
- * 
- * @param itemId The ID of the loggable item.
- * @param time The last log time to set.
- */
-void TempSensorService::setLastLogTime(uint64_t itemId, std::chrono::time_point<std::chrono::system_clock> time)
-{
-    registeredSensorList.getItem(itemId).setLastLogTime(time);
 }
