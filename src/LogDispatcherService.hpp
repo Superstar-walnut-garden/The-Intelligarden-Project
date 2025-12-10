@@ -3,15 +3,13 @@
 #include "IExternalStorage.hpp"
 #include "IConfigController.hpp"
 #include "IResourcePersistenceService.hpp"
-#include "IReadOnlyResourceController.hpp"
 #include "LogDispatcherConfig.hpp"
 #include <vector>
 
 
 class LogDispatcherService: 
     public IConfigController<LogDispatcherConfig>, 
-    public IResourcePersistenceService,
-    public IReadOnlyResourceController
+    public IResourcePersistenceService
 {
 public:
     static LogDispatcherService* getInstance();
@@ -27,9 +25,6 @@ private:
 
     std::string getConfig() override;
     void updateConfig(LogDispatcherConfig config) override;
-
-    std::string getAll() override;
-    std::string get(uint64_t id) override { return "{}"; }; // the default get is unsupported
 
     void storeAll() override;
     void restoreAll() override;
