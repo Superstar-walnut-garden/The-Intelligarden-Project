@@ -22,7 +22,7 @@ TempSensorService *TempSensorService::getInstance()
  * @brief Construct a new TempSensorService object.
  * 
  */
-TempSensorService::TempSensorService() : oneWireBus(15), sensors(&oneWireBus)
+TempSensorService::TempSensorService() : oneWireBus(config.getSensorPin()), sensors(&oneWireBus)
 {
     restoreAll();
     sensors.begin();
@@ -196,7 +196,7 @@ std::string TempSensorService::get(uint64_t id)
  */
 void TempSensorService::obtainSensors()
 {
-    oneWireBus.begin(15); // restart the bus
+    oneWireBus.begin(config.getSensorPin()); // restart the bus
     oneWireBus.reset(); // reset the bus
     auto newSensorList = TempSensorList();
     byte addr[8]; // address buffer
@@ -235,6 +235,7 @@ void TempSensorService::storeAll()
         registeredSensorList.getItem(item.getId()).setStatus(false);
     }
     cfg->setRegisteredTempSensorList(registeredSensorList.toJson());
+    cfg->setTempSensorConfig(config.toJson());
 }
 
 /**
@@ -244,10 +245,14 @@ void TempSensorService::storeAll()
 void TempSensorService::restoreAll()
 {
     auto *cfg = Configuration::getInstance();
+
     auto state = cfg->getRegisteredTempSensorList();
-    if (state.empty())
-        return;
-    registeredSensorList.repopulateWith(state);
+    if (!state.empty())
+        registeredSensorList.repopulateWith(state);
+
+    auto cfgJson = cfg->getTempSensorConfig();
+    if (!cfgJson.empty())
+        config.populateFromJson(cfgJson);
 }
 
 /**
@@ -302,4 +307,24 @@ std::vector<std::unique_ptr<ILoggableItem>> TempSensorService::getLoggableItems(
             loggableItems.push_back(std::make_unique<TempSensorItem>(item)); // add to list
     }
     return loggableItems;
+}
+
+/**
+ * @brief Get the temperature sensor configuration in JSON format.
+ * 
+ * @return std::string The temperature sensor configuration in JSON format.
+ */
+std::string TempSensorService::getConfig()
+{
+    return config.toJson();
+}
+
+/**
+ * @brief Update the temperature sensor configuration.
+ * 
+ * @param config The new temperature sensor configuration.
+ */
+void TempSensorService::updateConfig(TempSensorConfig config)
+{
+    this->config = config;
 }
