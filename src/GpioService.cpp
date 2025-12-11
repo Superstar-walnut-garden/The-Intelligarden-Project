@@ -159,13 +159,50 @@ void GpioService::syncHardware()
             auto signalValue = SignalRouterService::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
             if (signalValue.has_value()) // if registered signal found
                 itemRef.setStatus(signalValue.value());
-            pinMode(item.getPin(), OUTPUT);
-            digitalWrite(item.getPin(), itemRef.getStatus()); // update the pin from itemRef status
-        } else // if the item is an input pin
+            
+            auto rawStatus = itemRef.getStatus();               // true = ON, false = OFF
+            auto pwm = itemRef.getHighDutyCycle() * 255 / 100;
+            bool inverted = itemRef.isInverted();
+
+            auto myDigitalWrite = [](int pin, bool value)
+            {
+                pinMode(pin, OUTPUT);
+                digitalWrite(pin, value);
+            };
+
+            if(rawStatus) // real status ON (not affected by inversion)
+            { 
+                // Apply PWM or full HIGH/LOW, respecting inversion
+                if(pwm == 0) 
+                    myDigitalWrite(item.getPin(), inverted ? HIGH : LOW);
+                else if(pwm == 255)
+                    myDigitalWrite(item.getPin(), inverted ? LOW : HIGH);
+                else 
+                {
+                    // invert duty cycle if needed
+                    auto effectivePwm = inverted ? (255 - pwm) : pwm;
+                    if(effectivePwm != itemRef.getLastHighDutyCycle()) // prevent unnecessary writes
+                    {
+                        itemRef.setLastHighDutyCycle(effectivePwm);
+                        analogWrite(item.getPin(), effectivePwm);
+                    }
+                    
+                }
+            } 
+            else // real status OFF
+            { 
+                // Ignore PWM, force pin LOW or HIGH depending on inversion
+                myDigitalWrite(item.getPin(), inverted ? HIGH : LOW);
+            }
+
+        } 
+        else // if the item is an input pin
         {
             pinMode(item.getPin(), INPUT);
             itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
-            SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), itemRef.getStatus());
+            SignalRouterService::getInstance()->
+                setSignalValue(SignalNameResolver::toString(signalNameParameters),
+                     itemRef.isInverted() ? !itemRef.getStatus() : itemRef.getStatus());
         }
     }
 }

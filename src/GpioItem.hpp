@@ -14,6 +14,11 @@ public:
     int getPin() const;
     int getMode() const;
     std::string getExtraParameters() const;
+    bool isInverted() const;
+    int getHighDutyCycle() const;
+    int getLastHighDutyCycle() const;
+    void setLastHighDutyCycle(int lastHighDutyCycle);
+
 
     void setMode(short mode);
     void setExtraParameters(std::string extraParameters);
@@ -34,6 +39,8 @@ private:
     
     std::string extraParameters;
     short mode;
+    bool inverted;
+    int highDutyCycle, lastHighDutyCycle; // lastHighDutyCycle used to prevent unnecessary writes and flickers
 
     bool loggingEnabled;
     bool logOnlyOnDataChange;
