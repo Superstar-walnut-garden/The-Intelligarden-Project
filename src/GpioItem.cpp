@@ -67,6 +67,42 @@ void GpioItem::setExtraParameters(std::string extraParameters)
     this->extraParameters = extraParameters;
 }
 
+/** * @brief Get HighDutyCycle of the GPIO item
+ * 
+ * @return int HighDutyCycle value
+ */
+int GpioItem::getHighDutyCycle() const
+{
+    return this->highDutyCycle;
+}
+
+/** * @brief Check if the GPIO item is inverted
+ * 
+ * @return true If inverted, false otherwise
+ */
+bool GpioItem::isInverted() const
+{
+    return this->inverted;
+}
+
+/** * @brief get Last high dutycycle 
+ * 
+ * @return int last high dutycycle
+ */
+int GpioItem::getLastHighDutyCycle() const
+{
+    return this->lastHighDutyCycle;
+}
+
+/** * @brief set Last high dutycycle 
+ * 
+ * @param lastHighDutyCycle last high dutycycle to set
+ */
+void GpioItem::setLastHighDutyCycle(int lastHighDutyCycle)
+{
+    this->lastHighDutyCycle = lastHighDutyCycle;
+}
+
 /** * @brief Populate the derived class from JSON document
  * 
  * @param doc JSON document to populate from
@@ -75,6 +111,9 @@ void GpioItem::populateDerivedClassFromJson(JsonDocument &doc)
 {
     this->extraParameters = doc["extraParameters"].as<std::string>();
     this->mode = doc["mode"].as<short>();
+    this->inverted = doc["inverted"] | false;
+    this->highDutyCycle = doc["highDutyCycle"] | 100;
+
     this->loggingEnabled = doc["loggingEnabled"] | false;
     this->logOnlyOnDataChange = doc["logOnlyOnChange"] | false;
     this->logInterval = doc["logInterval"] | 60;
@@ -88,6 +127,9 @@ void GpioItem::derivedClassToJson(JsonDocument &doc) const
 {
     doc["extraParameters"] = this->extraParameters;
     doc["mode"] = this->mode;
+    doc["inverted"] = this->inverted;
+    doc["highDutyCycle"] = this->highDutyCycle;
+    
     doc["loggingEnabled"] = this->loggingEnabled;
     doc["logOnlyOnChange"] = this->logOnlyOnDataChange;
     doc["logInterval"] = this->logInterval;
