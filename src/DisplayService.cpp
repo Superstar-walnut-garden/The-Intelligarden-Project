@@ -97,11 +97,12 @@ std::string DisplayService::to_string_with_precision(double value, int precision
  */
 void DisplayService::drawUI()
 {
-    oled.clearBuffer();
-    oled.drawFrame(0, 0, 125, 63);
-    oled.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
+    
     if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::Oled)
     {
+        oled.clearBuffer();
+        oled.drawFrame(0, 0, 125, 63);
+        oled.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
         drawMultiLineText(2, 10, text.c_str());
         oled.sendBuffer();
     }

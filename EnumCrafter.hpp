@@ -66,20 +66,21 @@ constexpr std::string_view toString(StatusCode e) {
     }
 }
 
-constexpr std::string_view toString(DisplayConfig::DisplayType e) {
-    switch (e) {
-        case DisplayConfig::DisplayType::Oled: return "Oled";
-        case DisplayConfig::DisplayType::CharLcd: return "CharLcd";
-        default: return "???";
-    }
-}
-
 constexpr std::string_view toString(LogDispatcherStatus e) {
     switch (e) {
         case LogDispatcherStatus::Idle: return "Idle";
         case LogDispatcherStatus::Running: return "Running";
         case LogDispatcherStatus::StorageFullError: return "StorageFullError";
         case LogDispatcherStatus::StorageNotReadyError: return "StorageNotReadyError";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(DisplayConfig::DisplayType e) {
+    switch (e) {
+        case DisplayConfig::DisplayType::None: return "None";
+        case DisplayConfig::DisplayType::Oled: return "Oled";
+        case DisplayConfig::DisplayType::CharLcd: return "CharLcd";
         default: return "???";
     }
 }
@@ -117,18 +118,19 @@ constexpr std::optional<StatusCode> parse<StatusCode>(std::string_view s) {
 }
 
 template<>
-constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
-    if (s == "Oled") return DisplayConfig::DisplayType::Oled;
-    if (s == "CharLcd") return DisplayConfig::DisplayType::CharLcd;
-    return std::nullopt;
-}
-
-template<>
 constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::string_view s) {
     if (s == "Idle") return LogDispatcherStatus::Idle;
     if (s == "Running") return LogDispatcherStatus::Running;
     if (s == "StorageFullError") return LogDispatcherStatus::StorageFullError;
     if (s == "StorageNotReadyError") return LogDispatcherStatus::StorageNotReadyError;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
+    if (s == "None") return DisplayConfig::DisplayType::None;
+    if (s == "Oled") return DisplayConfig::DisplayType::Oled;
+    if (s == "CharLcd") return DisplayConfig::DisplayType::CharLcd;
     return std::nullopt;
 }
 
@@ -145,9 +147,9 @@ template<>
 constexpr std::array<StatusCode, 3> makeIterable<StatusCode> = { StatusCode::SUCCESS, StatusCode::NOT_FOUND, StatusCode::ERROR };
 
 template<>
-constexpr std::array<DisplayConfig::DisplayType, 2> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
+constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
 
 template<>
-constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
+constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
 
 } // namespace EnumCrafter

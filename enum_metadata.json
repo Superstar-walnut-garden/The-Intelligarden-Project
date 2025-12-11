@@ -80,22 +80,6 @@
     ]
   },
   {
-    "qualified_name": "DisplayConfig::DisplayType",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\DisplayConfig.hpp",
-    "line": 12,
-    "is_scoped": true,
-    "enumerators": [
-      {
-        "name": "Oled",
-        "value": 0
-      },
-      {
-        "name": "CharLcd",
-        "value": 1
-      }
-    ]
-  },
-  {
     "qualified_name": "LogDispatcherStatus",
     "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
     "line": 8,
@@ -116,6 +100,26 @@
       {
         "name": "StorageNotReadyError",
         "value": 3
+      }
+    ]
+  },
+  {
+    "qualified_name": "DisplayConfig::DisplayType",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\DisplayConfig.hpp",
+    "line": 12,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "None",
+        "value": 0
+      },
+      {
+        "name": "Oled",
+        "value": 1
+      },
+      {
+        "name": "CharLcd",
+        "value": 2
       }
     ]
   }
