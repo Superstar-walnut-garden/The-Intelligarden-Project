@@ -14,6 +14,7 @@ constexpr auto wifiFileAddress = "/wifi_credentials.txt";
 constexpr auto hotspotFileAddress = "/hotspot_credentials.txt";
 constexpr auto TimeFileAddress = "/backup_time.txt";
 constexpr auto sensorFileAddress = "/sensors.txt";
+constexpr auto tempSensorConfigFileAddress = "/tsensor_cfg.json";
 constexpr auto firebaseDataFileAddress = "/firebase_data.txt";
 constexpr auto gpioFileAddress = "/gpio.txt";
 constexpr auto displayFileAddress = "/display.json";
@@ -31,37 +32,40 @@ private:
 public:
     static Configuration *getInstance();
 
-    std::string getWifiCredentials();
+    std::string getWifiCredentials() const;
     void setWifiCredentials(std::string data);
 
-    std::string getHotspotCredentials();
+    std::string getHotspotCredentials() const;
     void setHotspotCredentials(std::string json);
 
-    std::string getFirebaseData();
+    std::string getFirebaseData() const;
     void setFirebaseData(std::string json);
 
-    std::string getSchedulerList();
+    std::string getSchedulerList() const;
     void setSchedulerList(std::string json);
 
-    std::string getGpioList();
+    std::string getGpioList() const;
     void setGpioList(std::string json);
 
-    std::string getEventList();
+    std::string getEventList() const;
     void setEventList(const std::string& state);
 
-    std::string getDisplayConfig();
+    std::string getDisplayConfig() const;
     void setDisplayConfig(const std::string& config);
 
-    std::string getThermostatList();
+    std::string getThermostatList() const;
     void setThermostatList(const std::string& json);
 
-    std::string getRegisteredTempSensorList();
+    std::string getRegisteredTempSensorList() const;
     void setRegisteredTempSensorList(const std::string& json);
 
-    std::string getTimeConfig();
+    std::string getTimeConfig() const;
     void setTimeConfig(const std::string& json);
 
-    std::string getLogDispatcherConfig();
+    std::string getLogDispatcherConfig() const;
     void setLogDispatcherConfig(const std::string& json);
+
+    std::string getTempSensorConfig() const;
+    void setTempSensorConfig(const std::string& json);
 
 };

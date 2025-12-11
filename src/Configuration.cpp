@@ -41,7 +41,7 @@ void Configuration::setHotspotCredentials(std::string json)
     }
 }
 
-std::string Configuration::getWifiCredentials()
+std::string Configuration::getWifiCredentials() const
 {
     auto file = SPIFFS.open(wifiFileAddress, FILE_READ);
     if(file)
@@ -52,7 +52,7 @@ std::string Configuration::getWifiCredentials()
     }
     return ""; // return empty
 }
-std::string Configuration::getHotspotCredentials()
+std::string Configuration::getHotspotCredentials() const
 {
     auto file = SPIFFS.open(hotspotFileAddress, FILE_READ);
     if(file)
@@ -79,7 +79,7 @@ void Configuration::setSchedulerList(std::string json)
         Serial.println("Failed to open file for writing.");
     }
 }
-std::string Configuration::getSchedulerList()
+std::string Configuration::getSchedulerList() const
 {
     auto file = SPIFFS.open(pumpFileAddress, FILE_READ);
     std::string json;
@@ -104,7 +104,7 @@ void Configuration::setFirebaseData(std::string json)
         Serial.println("Failed to open file for writing.");
     }
 }
-std::string Configuration::getFirebaseData()
+std::string Configuration::getFirebaseData() const
 {
     auto file = SPIFFS.open(firebaseDataFileAddress, FILE_READ);
     if(file)
@@ -116,7 +116,7 @@ std::string Configuration::getFirebaseData()
     return "";
 }
 
-std::string Configuration::getEventList() 
+std::string Configuration::getEventList() const
 {
     File file = SPIFFS.open("/eventList.txt", FILE_READ);
     if (!file) {
@@ -156,7 +156,7 @@ void Configuration::setGpioList(std::string json)
     }
 }
 
-std::string Configuration::getGpioList()
+std::string Configuration::getGpioList() const
 {
     auto file = SPIFFS.open(gpioFileAddress, FILE_READ);
     std::string jsonData;
@@ -184,7 +184,7 @@ void Configuration::setDisplayConfig(const std::string& config)
     }
 }
 
-std::string Configuration::getDisplayConfig()
+std::string Configuration::getDisplayConfig() const
 {
     auto file = SPIFFS.open(displayFileAddress, FILE_READ);
     std::string jsonData;
@@ -197,7 +197,7 @@ std::string Configuration::getDisplayConfig()
     return ""; // return empty
 }
 
-std::string Configuration::getThermostatList() 
+std::string Configuration::getThermostatList() const 
 {
     File file = SPIFFS.open(thermostatFileAddress, FILE_READ);
     if (!file) {
@@ -222,7 +222,7 @@ void Configuration::setThermostatList(const std::string& state)
     file.close();
 }
 
-std::string Configuration::getRegisteredTempSensorList()
+std::string Configuration::getRegisteredTempSensorList() const
 {
     auto file = SPIFFS.open(registeredSensorFileAddress, FILE_READ);
     std::string jsonData;
@@ -249,7 +249,7 @@ void Configuration::setRegisteredTempSensorList(const std::string& json)
         Serial.println("Failed to open file for writing.");
     }
 }
-std::string Configuration::getTimeConfig()
+std::string Configuration::getTimeConfig() const
 {
     auto file = SPIFFS.open(timeConfigFileAddress, FILE_READ);
     std::string jsonData;
@@ -275,7 +275,7 @@ void Configuration::setTimeConfig(const std::string& json)
         Serial.println("Failed to open file for writing.");
     }
 }
-std::string Configuration::getLogDispatcherConfig()
+std::string Configuration::getLogDispatcherConfig() const
 {
     auto file = SPIFFS.open(logDispatcherConfigFileAddress, FILE_READ);
     std::string jsonData;
@@ -295,6 +295,32 @@ void Configuration::setLogDispatcherConfig(const std::string& json)
         file.println(json.c_str());
         file.close();
         Serial.println("Log Dispatcher configuration data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+std::string Configuration::getTempSensorConfig() const
+{
+    auto file = SPIFFS.open(tempSensorConfigFileAddress, FILE_READ);
+    std::string jsonData;
+    if (file)
+    {
+        jsonData = file.readString().c_str(); // read raw data from file
+        file.close();
+        return jsonData;
+    }
+    return ""; // return empty
+}
+void Configuration::setTempSensorConfig(const std::string& json)
+{
+    File file = SPIFFS.open(tempSensorConfigFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json.c_str());
+        file.close();
+        Serial.println("Temperature Sensor configuration data saved successfully.");
     } 
     else 
     {
