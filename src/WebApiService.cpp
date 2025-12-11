@@ -81,6 +81,7 @@ void WebApiService::init()
     createEndpoint<DisplayConfig>("/display-config", DisplayService::getInstance());
     createEndpoint<SystemTimeConfig>("/time-config", SystemTimeService::getInstance());
     createEndpoint<LogDispatcherConfig>("/log-config", LogDispatcherService::getInstance());
+    createEndpoint<TempSensorConfig>("/temp-sensor-config", TempSensorService::getInstance());
     createEndpoint("/signal-hub", CentralizedSignalHubService::getInstance());
 
     createEndpoint<TempSensorItem>("/temp-sensor", TempSensorService::getInstance());
