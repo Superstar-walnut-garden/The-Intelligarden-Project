@@ -34,6 +34,7 @@ private:
     DisplayService();
     std::string text;
     OLedPanel oled;
+    bool displayAvailable;
     LiquidCrystal_I2C charLcd;
     static DisplayService *instance;
     DisplayConfig displayConfig;

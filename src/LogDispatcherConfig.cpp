@@ -1,4 +1,3 @@
-#pragma once
 
 #include "LogDispatcherConfig.hpp"
 #include <ArduinoJson.h>

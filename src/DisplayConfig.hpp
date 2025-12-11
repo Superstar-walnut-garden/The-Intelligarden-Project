@@ -9,14 +9,16 @@ public:
     DisplayConfig();
     DisplayConfig(std::string json);
 
-    enum class DisplayType { Oled, CharLcd };
+    enum class DisplayType { None, Oled, CharLcd };
 
     std::string toJson() const override;
     void populateFromJson(std::string json) override;
 
 
     DisplayType getDisplayType();
+    int getAddress() const;
 
 private:
     DisplayType displayType; // e.g., "OLED", "LCD"
+    int address;
 };

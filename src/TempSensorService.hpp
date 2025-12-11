@@ -14,10 +14,13 @@
 #include <mutex>
 #include "IResourceController.hpp"
 #include "IResourcePersistenceService.hpp"
+#include "IConfigController.hpp"
+#include "TempSensorConfig.hpp"
 #include "ILoggableService.hpp"
 
 class TempSensorService : 
     public IResourceController<TempSensorItem>, 
+    public IConfigController<TempSensorConfig>,
     public IResourcePersistenceService, 
     public Subject<TempSensorService>, 
     public ILoggableService
@@ -34,6 +37,10 @@ public:
     void create(TempSensorItem newItem) override;
     void update(uint64_t id, TempSensorItem newItem) override; // modify a sensor
     void remove(uint64_t id) override; // delete a sensor
+
+    std::string getConfig() override;
+    void updateConfig(TempSensorConfig config) override;
+
     void storeAll() override;
     void restoreAll() override;
 
@@ -52,7 +59,8 @@ private:
     DallasTemperature sensors;
     TempSensorList registeredSensorList; // sensors with a name associated to them
     TempSensorList liveSensorList; // currently connected sensors (address only)
+    TempSensorConfig config;
     std::mutex mtx;
-
+    
     static TempSensorService *instance;
 };

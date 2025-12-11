@@ -46,7 +46,6 @@ int virtualMain()
     auto *webApiManager = new WebApiService();
     delay(500); // waiting utill reaching system stability
     auto *systemTime = SystemTimeService::getInstance();
-    auto *temperature = TempSensorService::getInstance();
     auto *configuration = Configuration::getInstance();
     auto *display = DisplayService::getInstance();
     auto *fbm = FirebaseService::getInstance();;
@@ -56,6 +55,7 @@ int virtualMain()
     auto *centralizedSignalHub = CentralizedSignalHubService::getInstance();
     auto *storage = SpiMicroSd::getInstance();
     auto *logDispatcher = LogDispatcherService::getInstance();
+    auto *temperature = TempSensorService::getInstance();
     if(storage->isReady())
     {
         Serial.println("SD Card is ready!");
