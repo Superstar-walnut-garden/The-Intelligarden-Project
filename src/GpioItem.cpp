@@ -6,7 +6,7 @@
  * 
  */
 GpioItem::GpioItem()
-    : SignalCompatibleBaseItem(), mode(0), extraParameters("")
+    : SignalCompatibleBaseItem(), mode(0), extraParameters(""), highDutyCycle(100), lastHighDutyCycle(-1)
 {
 }
 
@@ -19,7 +19,7 @@ GpioItem::GpioItem()
  * @param extraParameters Extra parameters for the GPIO item
  */
 GpioItem::GpioItem(int pin, std::string name, bool status, short mode, std::string extraParameters)
-    : SignalCompatibleBaseItem(pin, name, status), mode(mode), extraParameters(extraParameters)
+    : SignalCompatibleBaseItem(pin, name, status), mode(mode), extraParameters(extraParameters), highDutyCycle(100), lastHighDutyCycle(-1)
 {
 }
 

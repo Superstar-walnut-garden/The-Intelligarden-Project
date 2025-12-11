@@ -4,11 +4,11 @@
 
 /** 
  * @brief Default constructor for DisplayConfig class. Initializes the display type to Oled. 
- * @details This constructor sets the default display type to Oled, which can be changed later by populating from a JSON string.
+ * @details This constructor sets the default display type to None, which can be changed later by populating from a JSON string.
  * 
  * @note The display type can be set to either Oled or CharLcd.
  */
-DisplayConfig::DisplayConfig() : displayType(DisplayType::Oled) {}
+DisplayConfig::DisplayConfig() : displayType(DisplayType::None), address(0x3C) {}
 
 /**
  * @brief Constructor for DisplayConfig class that populates the configuration from a JSON string.
