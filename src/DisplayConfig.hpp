@@ -16,7 +16,9 @@ public:
 
 
     DisplayType getDisplayType();
+    int getAddress() const;
 
 private:
     DisplayType displayType; // e.g., "OLED", "LCD"
+    int address;
 };

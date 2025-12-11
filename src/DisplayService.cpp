@@ -1,6 +1,8 @@
 #include "DisplayService.hpp"
 #include "DisplayConfig.hpp"
 #include "../EnumCrafter.hpp"
+#include <Wire.h>
+
 /**
  * @brief Singleton instance of the DisplayService class.
  * 
@@ -12,29 +14,40 @@ DisplayService* DisplayService::instance = nullptr;
  * 
  */
 DisplayService::DisplayService()
-    : oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(0x3F, 2, 16), displayConfig()
+    : displayConfig(), oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(displayConfig.getAddress(), 2, 16), displayAvailable(false)
 {
     restoreAll(); // Restore the display configuration from persistent storage
-    Serial.println(std::string(EnumCrafter::toString(displayConfig.getDisplayType())).c_str());
-    if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::Oled)
-    {
-        oled.begin();
-    }
-    else if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::CharLcd)
-    {
-        charLcd.init();
-        charLcd.clear();         
-        charLcd.backlight(); // Make sure backlight is on
+    Serial.println(("display type: " + std::string(EnumCrafter::toString(displayConfig.getDisplayType()))).c_str());
+    Serial.println(("display address: " + std::to_string(displayConfig.getAddress())).c_str());
 
-        charLcd.setCursor(4, 1);
-        charLcd.print("Loading!");
+    Wire.begin();
+    Wire.setTimeout(100);
+    Wire.beginTransmission(displayConfig.getAddress());
+    displayAvailable = (Wire.endTransmission() == 0); // auto detect if device is available at the specified address to prevent blocking and crashes
 
-        charLcd.setCursor(1, 0);
-        charLcd.print("Intelligarden");
-    }
-    else
+    if(displayAvailable)
     {
-        Serial.println("Error: Invalid display type. supported types are 'oled' and 'char'");
+        Serial.println("info: i2c device found!");
+        if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::Oled)
+        {
+            oled.begin();
+        }
+        else if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::CharLcd)
+        {
+            charLcd.init();
+            charLcd.clear();         
+            charLcd.backlight(); // Make sure backlight is on
+
+            charLcd.setCursor(4, 1);
+            charLcd.print("Loading!");
+
+            charLcd.setCursor(1, 0);
+            charLcd.print("Intelligarden");
+        }
+        else
+        {
+            Serial.println("Error: Invalid display type. supported types are 'oled' and 'char'");
+        }
     }
 }
 
@@ -97,21 +110,23 @@ std::string DisplayService::to_string_with_precision(double value, int precision
  */
 void DisplayService::drawUI()
 {
-    
-    if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::Oled)
+    if(displayAvailable)
     {
-        oled.clearBuffer();
-        oled.drawFrame(0, 0, 125, 63);
-        oled.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
-        drawMultiLineText(2, 10, text.c_str());
-        oled.sendBuffer();
+        if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::Oled)
+        {
+            oled.clearBuffer();
+            oled.drawFrame(0, 0, 125, 63);
+            oled.setFont(u8g2_font_ncenB08_tr);    // choose a suitable font
+            drawMultiLineText(2, 10, text.c_str());
+            oled.sendBuffer();
+        }
+        else if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::CharLcd)
+        {
+            
+            charLcd.clear();
+            drawMultiLineText(0, 0, text.c_str());
+        }
     }
-    else if(displayConfig.getDisplayType() == DisplayConfig::DisplayType::CharLcd)
-    {
-        charLcd.clear();
-        drawMultiLineText(0, 0, text.c_str());
-    }
-    
 }
 
 /**
