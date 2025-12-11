@@ -327,4 +327,5 @@ std::string TempSensorService::getConfig()
 void TempSensorService::updateConfig(TempSensorConfig config)
 {
     this->config = config;
+    storeAll();
 }
