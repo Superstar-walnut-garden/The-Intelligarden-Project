@@ -18,12 +18,12 @@ public:
     ~BaseList() {};
     BaseList(std::string json);
     virtual T *getItem(uint64_t id);
-    virtual std::vector<std::unique_ptr<T>> &getList(); // changed return type
+    virtual std::vector<std::unique_ptr<T>> &getList();
     virtual std::string toJson(std::function<bool(const T*)> filter = nullptr) const;
-    virtual void addItem(std::unique_ptr<T> Item); // changed parameter type
+    virtual void addItem(std::unique_ptr<T> Item);
     virtual void repopulateWith(std::string json);
     virtual void printList();
-    virtual void modifyItem(uint64_t id, std::unique_ptr<T> newItem); // changed parameter type
+    virtual void modifyItem(uint64_t id, std::unique_ptr<T> newItem);
     virtual void deleteItem(uint64_t id);
 
     virtual void forEach(std::function<void(T*)> func, std::function<bool(const T*)> filter = nullptr) const;
