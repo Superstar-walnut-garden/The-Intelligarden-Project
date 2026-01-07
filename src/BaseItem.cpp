@@ -9,7 +9,10 @@
  * @brief Default constructor for BaseItem.
  * Initializes id to -1, name to an empty string, and status to false.
  */
-BaseItem::BaseItem() : id(-1), name(""), status(false) {}
+BaseItem::BaseItem() : id(-1), name(""), status(false) 
+{
+    registerSerializationCallbacks();
+}
 
 /**
  * @brief Parameterized constructor for BaseItem.
@@ -18,12 +21,18 @@ BaseItem::BaseItem() : id(-1), name(""), status(false) {}
  * @param status The status of the item.
  */
 BaseItem::BaseItem(uint64_t id, std::string name, bool status) 
-    : id(id), name(name), status(status) {}
+    : id(id), name(name), status(status) 
+{
+    registerSerializationCallbacks();
+}
 
 /**
  * @brief Destructor for BaseItem.
  */
-BaseItem::~BaseItem() {}
+BaseItem::~BaseItem() 
+{
+    Serial.printf("BaseItem dtor this=%p\n", this);
+}
 
 /**
  * @brief Getter for the ID of the item.
@@ -75,32 +84,29 @@ void BaseItem::setStatus(bool status)
     this->status = status;
 }
 
-/**
- * @brief Populate the BaseItem from a JSON string (override the method in case of having more parameters).
- * @param json The JSON string to populate the item from.
- */
-void BaseItem::populateFromJson(std::string json)
-{
-    JsonDocument doc;
-    deserializeJson(doc, json);
-    this->id = doc["id"].as<uint64_t>();
-    this->name = doc["name"].as<std::string>();
-    this->status = doc["status"].as<bool>();
-    populateDerivedClassFromJson(doc); // in case of this method is overrided by the derrived class
-}
 
 /**
- * @brief Convert the BaseItem to a JSON string (override the method in case of having more parameters).
- * @return The JSON string representation of the item.
+ * @brief Register Serialization Callbacks
  */ 
-std::string BaseItem::toJson() const
+void BaseItem::registerSerializationCallbacks()
 {
-    JsonDocument doc;
-    doc["id"] = this->id;
-    doc["name"] = this->name;
-    doc["status"] = this->status;
-    derivedClassToJson(doc); // in case of this method is overrided by the derrived class
-    std::string output;
-    serializeJson(doc, output);
-    return output;
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        json["id"] = id;
+        json["name"] = name;
+        json["status"] = status;
+        Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 1");
+        Serial.printf("vtable=%p\n", *(void**)this);
+        derivedClassToJson(json); // for backward compatibility
+        Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 2");
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        id = json["id"].as<uint64_t>();
+        name = json["name"].as<std::string>();
+        status = json["status"].as<bool>();
+        Serial.printf("vtable=%p\n", *(void**)this);
+        populateDerivedClassFromJson(json); // for backward compatibility
+        Serial.println("BaseItem::registerFromJsonCallback() lambda called from JsonSerializable");
+    });
 }
