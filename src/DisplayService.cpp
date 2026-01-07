@@ -138,10 +138,10 @@ void DisplayService::update(TempSensorService *temp)
 {
     Serial.println("DisplayService got an update!");
     text.clear();
-    temp->forEachSensor([this](TempSensorItem sensor) 
+    temp->forEachSensor([this](const TempSensorItem *sensor) 
     {
-        auto name = sensor.getName();
-        text += name + ": " + to_string_with_precision(sensor.getTemp(), 2) + "\n";
+        auto name = sensor->getName();
+        text += name + ": " + to_string_with_precision(sensor->getTemp(), 2) + "\n";
     }, false);
 }
 

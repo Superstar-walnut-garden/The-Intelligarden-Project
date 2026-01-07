@@ -100,9 +100,9 @@ void FirebaseService::update(SystemTimeService *systemTime)
 
         temperature->read();
         JsonDocument doc; // Adding sensor data to JSON 
-        temperature->forEachSensor([&doc, temperature](TempSensorItem sensor)
+        temperature->forEachSensor([&doc, temperature](const TempSensorItem *sensor)
         { 
-            doc[sensor.getName()] = temperature->getData(sensor.getName()); 
+            doc[sensor->getName()] = temperature->getData(sensor->getName()); 
         }, true);
         // Serialize JSON to string and print 
         String mergedSensorData; 
