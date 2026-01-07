@@ -14,7 +14,7 @@ public:
 
     virtual std::string getAll() = 0;
     virtual std::string get(uint64_t id) = 0;
-    virtual void create(T item) = 0;
-    virtual void update(uint64_t id, T item) = 0;
+    virtual void create(std::unique_ptr<T> item) = 0;
+    virtual void update(uint64_t id, std::unique_ptr<T> item) = 0;
     virtual void remove(uint64_t id) = 0;
 };
