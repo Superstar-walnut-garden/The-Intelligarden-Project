@@ -176,17 +176,17 @@ void WebApiService::createEndpoint(std::string uri, IResourceController<ItemType
     }, Method::Get);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t>  id, std::string data) -> std::string
     {
-        ItemType item;
-        item.populateFromJson(data);
-        resourceController->create(item);
+        auto item = std::make_unique<ItemType>();
+        item->populateFromJson(data);
+        resourceController->create(std::move(item));
         return "";
     }, Method::Post);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t>  id, std::string data) -> std::string
     {
-        ItemType item;
-        item.populateFromJson(data);
+        auto item = std::make_unique<ItemType>();
+        item->populateFromJson(data);
         if(id)
-            resourceController->update(id.value(), item);
+            resourceController->update(id.value(), std::move(item));
         return "";
     }, Method::Put);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t> id, std::string data) -> std::string
