@@ -16,9 +16,9 @@ public:
     static ThermostatService* getInstance();
     ~ThermostatService();
 
-    void create(ThermostatItem newItem) override;
+    void create(std::unique_ptr<ThermostatItem> newItem) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, ThermostatItem newItem) override;
+    void update(uint64_t id, std::unique_ptr<ThermostatItem> newItem) override;
     std::string getAll() override;
     std::string get(uint64_t) override;
     void storeAll() override;
