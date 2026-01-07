@@ -5,23 +5,27 @@
  * 
  */
 SchedulerItem::SchedulerItem() 
-    : SignalCompatibleBaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) {}
-
-/**
- * @brief Construct a new SchedulerService Item:: SchedulerService Item object
- * 
- * @param id the ID of the SchedulerItem
- * @param name the name of the SchedulerItem
- * @param start the start time of the SchedulerItem
- * @param duration the duration of the SchedulerItem
- * @param weekday the weekday of the SchedulerItem (binary string)
- * @param enabled whether the SchedulerItem is enabled
- * @param on whether the SchedulerItem is on (status)
- * @param mode the mode of the SchedulerItem (weekly/hourly)
- * @param skipped whether the SchedulerItem is skipped
- */
-SchedulerItem::SchedulerItem(uint64_t id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode, bool skipped)
-    : SignalCompatibleBaseItem(id, name, on), start(start), duration(duration), weekday(weekday), enabled(enabled), mode(mode), skipped(skipped) {}
+    : SignalCompatibleBaseItem(), start(Time(0, 0)), duration(Time(0, 0)), weekday("0000000"), enabled(false), mode(""), skipped(false) 
+{
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        json["start"] = getStartTime().toString();
+        json["duration"] = getDuration().toString();
+        json["weekday"] = getWeekday();
+        json["enabled"] = isEnabled();
+        json["mode"] = getMode();
+        json["skipped"] = isSkipped();
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        this->start = Time::parse(json["start"].as<std::string>().c_str());
+        this->duration = Time::parse(json["duration"].as<std::string>().c_str());
+        this->weekday = json["weekday"].as<std::string>();
+        this->enabled = json["enabled"].as<bool>();
+        this->mode = json["mode"].as<std::string>();
+        this->skipped = json["skipped"].as<bool>();
+    });
+}
 
 /**
  * @brief Get the start time of the SchedulerItem.
@@ -176,34 +180,4 @@ std::vector<std::string> SchedulerItem::getLocalSignalNames()
         getSkipLocalSignalName(),
         getPauseLocalSignalName()
     };
-}
-
-/**
- * @brief Populate the SchedulerItem from a JSON document.
- * 
- * @param doc The JSON document containing the SchedulerItem data.
- */
-void SchedulerItem::populateDerivedClassFromJson(JsonDocument &doc)
-{
-    this->start = Time::parse(doc["start"].as<std::string>().c_str());
-    this->duration = Time::parse(doc["duration"].as<std::string>().c_str());
-    this->weekday = doc["weekday"].as<std::string>();
-    this->enabled = doc["enabled"].as<bool>();
-    this->mode = doc["mode"].as<std::string>();
-    this->skipped = doc["skipped"].as<bool>();
-}
-
-/**
- * @brief Convert the SchedulerItem to a JSON document.
- * 
- * @param doc The JSON document to populate with the SchedulerItem data.
- */
-void SchedulerItem::derivedClassToJson(JsonDocument &doc) const
-{
-    doc["start"] = getStartTime().toString();
-    doc["duration"] = getDuration().toString();
-    doc["weekday"] = getWeekday();
-    doc["enabled"] = isEnabled();
-    doc["mode"] = getMode();
-    doc["skipped"] = isSkipped();
 }

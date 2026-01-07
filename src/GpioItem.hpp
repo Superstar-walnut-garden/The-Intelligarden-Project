@@ -9,7 +9,6 @@ class GpioItem : public SignalCompatibleBaseItem, public ILoggableItem
 {
 public:
     GpioItem();
-    GpioItem(int pin, std::string name, bool status, short mode, std::string extraParameters = ""); // pin = id
 
     int getPin() const;
     int getMode() const;
@@ -34,8 +33,6 @@ public:
     bool isLoggingEnabled() const override;
 
 private:
-    void populateDerivedClassFromJson(JsonDocument &json) override;
-    void derivedClassToJson(JsonDocument &doc) const override;
     
     std::string extraParameters;
     short mode;

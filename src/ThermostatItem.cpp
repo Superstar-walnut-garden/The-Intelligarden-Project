@@ -8,23 +8,22 @@
 ThermostatItem::ThermostatItem()
     : SignalCompatibleBaseItem(), setpoint(0), altSetpoint(0), hysteresis(0), enabled(true)
 {
-}
-
-/**
- * @brief Construct a new ThermostatItem object
- * 
- * @param id The ID of the thermostat item.
- * @param name The name of the thermostat item.
- * @param setpoint The temperature setpoint for the thermostat.
- * @param altSetpoint The alternative temperature setpoint for the thermostat.
- * @param hysteresis The hysteresis value for the thermostat.
- * @param enabled Whether the thermostat is enabled or not.
- * @param sensor The ID of the temperature sensor associated with the thermostat.
- */
-ThermostatItem::ThermostatItem(int id, std::string name, double setpoint, double altSetpoint, double hysteresis, bool enabled, uint64_t sensor)
-    : SignalCompatibleBaseItem(id, name, true)
-    , setpoint(setpoint), altSetpoint(altSetpoint), hysteresis(hysteresis), enabled(enabled), sensor(sensor)
-{
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        json["setpoint"] = this->setpoint;
+        json["altSetpoint"] = this->altSetpoint;
+        json["hysteresis"] = this->hysteresis;
+        json["enabled"] = this->enabled;
+        json["sensor"] = std::to_string(this->sensor); // use string in json to handle 64bit integers
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        this->setpoint = json["setpoint"].as<double>();
+        this->altSetpoint = json["altSetpoint"].as<double>();
+        this->hysteresis = json["hysteresis"].as<double>();
+        this->enabled = json["enabled"].as<bool>();
+        this->sensor = std::stoull(json["sensor"].as<std::string>()); // use string in json to handle 64bit integers
+    });
 }
 
 /**
@@ -120,32 +119,4 @@ std::vector<std::string> ThermostatItem::getLocalSignalNames()
         getHeaterLocalSignalName(),
         getAltSetpointLocalSignalName()
     };
-}
-
-/**
- * @brief Populate the ThermostatItem from a JSON document.
- * 
- * @param doc The JSON document containing the ThermostatItem data.
- */
-void ThermostatItem::populateDerivedClassFromJson(JsonDocument &doc)
-{
-    this->setpoint = doc["setpoint"].as<double>();
-    this->altSetpoint = doc["altSetpoint"].as<double>();
-    this->hysteresis = doc["hysteresis"].as<double>();
-    this->enabled = doc["enabled"].as<bool>();
-    this->sensor = std::stoull(doc["sensor"].as<std::string>()); // use string in json to handle 64bit integers
-}
-
-/**
- * @brief Convert the ThermostatItem to a JSON document.
- * 
- * @param doc The JSON document to populate with the ThermostatItem data.
- */
-void ThermostatItem::derivedClassToJson(JsonDocument &doc) const
-{
-    doc["setpoint"] = this->setpoint;
-    doc["altSetpoint"] = this->altSetpoint;
-    doc["hysteresis"] = this->hysteresis;
-    doc["enabled"] = this->enabled;
-    doc["sensor"] = std::to_string(this->sensor); // use string in json to handle 64bit integers
 }

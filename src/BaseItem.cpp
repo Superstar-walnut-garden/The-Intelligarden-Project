@@ -31,7 +31,7 @@ BaseItem::BaseItem(uint64_t id, std::string name, bool status)
  */
 BaseItem::~BaseItem() 
 {
-    Serial.printf("BaseItem dtor this=%p\n", this);
+    Serial.printf("BaseItem dtor this=%p\n", this); // just for debugging
 }
 
 /**
@@ -96,8 +96,7 @@ void BaseItem::registerSerializationCallbacks()
         json["name"] = name;
         json["status"] = status;
         Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 1");
-        Serial.printf("vtable=%p\n", *(void**)this);
-        derivedClassToJson(json); // for backward compatibility
+        Serial.printf("vtable=%p\n", *(void**)this); // just for debugging
         Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 2");
     });
     registerFromJsonCallback([this](JsonDocument &json) -> void
@@ -105,8 +104,7 @@ void BaseItem::registerSerializationCallbacks()
         id = json["id"].as<uint64_t>();
         name = json["name"].as<std::string>();
         status = json["status"].as<bool>();
-        Serial.printf("vtable=%p\n", *(void**)this);
-        populateDerivedClassFromJson(json); // for backward compatibility
+        Serial.printf("vtable=%p\n", *(void**)this); // just for debugging
         Serial.println("BaseItem::registerFromJsonCallback() lambda called from JsonSerializable");
     });
 }

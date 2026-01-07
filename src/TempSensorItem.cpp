@@ -5,21 +5,28 @@
  * @brief Construct a new Temp Sensor Item:: Temp Sensor Item object
  * 
  */
-TempSensorItem::TempSensorItem()
-    : BaseItem(-1, "", false), loggingEnabled(false), logInterval(60), logOnlyOnDataChange(false) {}
+TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected)
+    : BaseItem(id, name, isConnected), loggingEnabled(false), logInterval(60), logOnlyOnDataChange(false) 
+{
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        json["temp"] = this->temp;
+        json["id"] = std::to_string(this->getId()); // passing 64bit id as string to prevent json and web api js issues with large numbers
 
-/**
- * @brief Construct a new Temp Sensor Item:: Temp Sensor Item object
- * 
- * @param id 
- * @param name 
- * @param isConnected 
- * @param loggingEnabled
- * @param logInterval
- * @param logOnlyOnDataChange
- */
-TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected, bool loggingEnabled, uint64_t logInterval, bool logOnlyOnDataChange)
-    : BaseItem(id, name, isConnected), loggingEnabled(loggingEnabled), logInterval(logInterval), logOnlyOnDataChange(logOnlyOnDataChange) {}
+        json["logInterval"] = this->logInterval;
+        json["logOnlyOnChange"] = this->logOnlyOnDataChange;
+        json["loggingEnabled"] = this->loggingEnabled;
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        this->temp = json["temp"].as<double>();
+        this->setId(std::stoull(json["id"].as<std::string>())); // passing 64bit id as string to prevent json and web api js issues with large numbers
+        
+        this->logInterval = json["logInterval"].as<uint64_t>();
+        this->logOnlyOnDataChange = json["logOnlyOnChange"].as<bool>();
+        this->loggingEnabled = json["loggingEnabled"].as<bool>();
+    });
+}
 
 /**
  * @brief Overloaded operator to compare two TempSensorItem objects based on their address (id).
@@ -42,34 +49,6 @@ bool TempSensorItem::operator == (TempSensorItem &obj)
 bool TempSensorItem::isConnected() const
 {
     return this->getStatus();
-}
-
-/**
- * @brief populate parameters from JSON
- * 
- */
-void TempSensorItem::populateDerivedClassFromJson(JsonDocument &json)
-{
-    this->temp = json["temp"].as<double>();
-    this->setId(std::stoull(json["id"].as<std::string>())); // passing 64bit id as string to prevent json and web api js issues with large numbers
-    
-    this->logInterval = json["logInterval"].as<uint64_t>();
-    this->logOnlyOnDataChange = json["logOnlyOnChange"].as<bool>();
-    this->loggingEnabled = json["loggingEnabled"].as<bool>();
-}
-
-/**
- * @brief convert the parameters to JSON
- * 
- */
-void TempSensorItem::derivedClassToJson(JsonDocument &doc) const
-{
-    doc["temp"] = this->temp;
-    doc["id"] = std::to_string(this->getId()); // passing 64bit id as string to prevent json and web api js issues with large numbers
-
-    doc["logInterval"] = this->logInterval;
-    doc["logOnlyOnChange"] = this->logOnlyOnDataChange;
-    doc["loggingEnabled"] = this->loggingEnabled;
 }
 
 /**

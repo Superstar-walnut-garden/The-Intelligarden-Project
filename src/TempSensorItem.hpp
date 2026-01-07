@@ -8,9 +8,8 @@
 class TempSensorItem: public BaseItem, public ILoggableItem
 {
 public:
-    TempSensorItem();
-    TempSensorItem(uint64_t id, std::string name, bool isConnected, bool loggingEnabled = false, uint64_t logInterval = 60, bool logOnlyOnDataChange = false);
-
+    TempSensorItem(uint64_t id = -1, std::string name = "", bool isConnected = false);
+    
     bool operator == (TempSensorItem &obj);
     bool isConnected() const;
     double getTemp() const;
@@ -27,10 +26,6 @@ public:
     void setInterval(uint64_t interval);
     void setLogOnlyOnChange(bool status);
     void setLoggingEnabled(bool status);
-    
-
-    void populateDerivedClassFromJson(JsonDocument &json) override;
-    void derivedClassToJson(JsonDocument &doc) const override;
 
 private:
     double temp;

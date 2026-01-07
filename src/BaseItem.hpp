@@ -19,10 +19,6 @@ public:
     virtual bool getStatus() const;
     virtual void setStatus(bool status);
 
-protected:
-    virtual void populateDerivedClassFromJson(JsonDocument &doc) {};
-    virtual void derivedClassToJson(JsonDocument &doc) const {};
-
 private:
     uint64_t id;
     std::string name;
