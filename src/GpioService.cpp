@@ -46,9 +46,9 @@ GpioService* GpioService::getInstance()
  * 
  * @param newItem The new GPIO item to add.
  */
-void GpioService::create(GpioItem newItem)
+void GpioService::create(std::unique_ptr<GpioItem> newItem)
 {
-    list.addItem(newItem);
+    list.addItem(std::move(newItem));
     storeAll();
 }
 
@@ -70,9 +70,9 @@ void GpioService::remove(uint64_t id)
  * @param id The ID of the GPIO item to update.
  * @param newItem The new GPIO item to replace the old one.
  */
-void GpioService::update(uint64_t id, GpioItem newItem)
+void GpioService::update(uint64_t id, std::unique_ptr<GpioItem> newItem)
 {
-    list.modifyItem(id, newItem);
+    list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
 }
@@ -94,7 +94,8 @@ std::string GpioService::getAll()
  */
 std::string GpioService::get(uint64_t id)
 {
-    return list.getItem(id).toJson();
+    auto item = list.getItem(id);
+    return item ? item->toJson() : "{}";
 }
 
 /**
@@ -129,18 +130,6 @@ std::string GpioService::getName() const
 }
 
 /**
- * @brief get a list of signal compatible items
- * @return list of all signal compatible items
- */
-std::vector<ISignalCompatibleItem *> GpioService::getSignalCompatibleItems()
-{
-    std::vector<ISignalCompatibleItem *> signalCompatibleList;
-    for(auto &item : list.getList()) // copy list
-        signalCompatibleList.push_back(&list.getItem(item.getId()));
-    return signalCompatibleList;
-}
-
-/**
  * @brief sync the actual GPIO pins to the status of the items and vice versa.
  * 
  */
@@ -149,20 +138,19 @@ void GpioService::syncHardware()
     SignalNameResolver::SignalNameParameters signalNameParameters;
     signalNameParameters.subsystemName = this->getName();
     
-    for (auto& item : list.getList())
+    list.forEach([&](GpioItem *item)
     {
-        signalNameParameters.id = item.getId();
-        signalNameParameters.localSignalName = item.getLocalSignalNames()[0];
-        auto& itemRef = list.getItem(item.getPin());
-        if (item.getMode() == 1) // if the item is an output pin
+        signalNameParameters.id = item->getId();
+        signalNameParameters.localSignalName = item->getLocalSignalNames()[0];
+        if (item->getMode() == 1) // if the item is an output pin
         {
             auto signalValue = SignalRouterService::getInstance()->getSignalValue(SignalNameResolver::toString(signalNameParameters));
             if (signalValue.has_value()) // if registered signal found
-                itemRef.setStatus(signalValue.value());
+                item->setStatus(signalValue.value());
             
-            auto rawStatus = itemRef.getStatus();               // true = ON, false = OFF
-            auto pwm = itemRef.getHighDutyCycle() * 255 / 100;
-            bool inverted = itemRef.isInverted();
+            auto rawStatus = item->getStatus();               // true = ON, false = OFF
+            auto pwm = item->getHighDutyCycle() * 255 / 100;
+            bool inverted = item->isInverted();
 
             auto myDigitalWrite = [](int pin, bool value)
             {
@@ -174,17 +162,17 @@ void GpioService::syncHardware()
             { 
                 // Apply PWM or full HIGH/LOW, respecting inversion
                 if(pwm == 0) 
-                    myDigitalWrite(item.getPin(), inverted ? HIGH : LOW);
+                    myDigitalWrite(item->getPin(), inverted ? HIGH : LOW);
                 else if(pwm == 255)
-                    myDigitalWrite(item.getPin(), inverted ? LOW : HIGH);
+                    myDigitalWrite(item->getPin(), inverted ? LOW : HIGH);
                 else 
                 {
                     // invert duty cycle if needed
                     auto effectivePwm = inverted ? (255 - pwm) : pwm;
-                    if(effectivePwm != itemRef.getLastHighDutyCycle()) // prevent unnecessary writes
+                    if(effectivePwm != item->getLastHighDutyCycle()) // prevent unnecessary writes
                     {
-                        itemRef.setLastHighDutyCycle(effectivePwm);
-                        analogWrite(item.getPin(), effectivePwm);
+                        item->setLastHighDutyCycle(effectivePwm);
+                        analogWrite(item->getPin(), effectivePwm);
                     }
                     
                 }
@@ -192,33 +180,36 @@ void GpioService::syncHardware()
             else // real status OFF
             { 
                 // Ignore PWM, force pin LOW or HIGH depending on inversion
-                myDigitalWrite(item.getPin(), inverted ? HIGH : LOW);
+                myDigitalWrite(item->getPin(), inverted ? HIGH : LOW);
             }
 
         } 
         else // if the item is an input pin
         {
-            pinMode(item.getPin(), INPUT);
-            itemRef.setStatus(digitalRead(item.getPin())); // update the status of the item from pin
+            pinMode(item->getPin(), INPUT);
+            item->setStatus(digitalRead(item->getPin())); // update the status of the item from pin
             SignalRouterService::getInstance()->
                 setSignalValue(SignalNameResolver::toString(signalNameParameters),
-                     itemRef.isInverted() ? !itemRef.getStatus() : itemRef.getStatus());
+                     item->isInverted() ? !item->getStatus() : item->getStatus());
         }
-    }
+    });
 }
 
 /**
- * @brief Get the list of loggable items.
+ * @brief Get a temporary view of loggable items.
  * 
  * @return std::vector<std::unique_ptr<ILoggableItem>> The list of loggable items.
  */
-std::vector<std::unique_ptr<ILoggableItem>> GpioService::getLoggableItems() const
+std::vector<ILoggableItem *> GpioService::getLoggableItems() const
 {
-    std::vector<std::unique_ptr<ILoggableItem>> loggableItems;
-    for(const auto item : list.getList())
-    {
-        if(!item.getName().empty() and item.isLoggingEnabled()) // only add if it has a name and logging is enabled
-            loggableItems.push_back(std::make_unique<GpioItem>(item)); // add to list
-    }
-    return loggableItems;
+    return list.getAllAs<ILoggableItem>();
+}
+
+/**
+ * @brief Get a temporary view of signal compatible items
+ * @return list of all signal compatible items
+ */
+std::vector<ISignalCompatibleItem *> GpioService::getSignalCompatibleItems()
+{
+    return list.getAllAs<ISignalCompatibleItem>();
 }
