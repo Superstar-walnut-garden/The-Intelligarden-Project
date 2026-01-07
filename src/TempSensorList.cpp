@@ -25,36 +25,22 @@ TempSensorList::TempSensorList(std::string json): BaseList()
  */
 void TempSensorList::clearList()
 {
-    getListRef().clear();
-}
-
-/**
- * @brief Check if a TempSensorItem object exists in the list.
- * 
- * @param list The list to search in.
- * @param node The object to search for.
- * @return true If the object exists in the list.
- * @return false If the object does not exist in the list.
- */
-bool TempSensorList::doesExist(TempSensorItem &desiredItem)
-{
-    for (auto &item : getList())
-        if (item == desiredItem) // compare the addresses
-            return true;
-    return false;
+    getList().clear();
 }
 
 /**
  * @brief Get a TempSensorItem object by its name.
  * 
  * @param name The name of the object to get.
- * @return TempSensorItem& The object with the specified name.
+ * @return TempSensorItem* The object with the specified name.
  */
-TempSensorItem &TempSensorList::getItem(std::string name)
+TempSensorItem *TempSensorList::getItem(std::string name)
 {
-    static auto nullItem = TempSensorItem();
-    for (auto &item : getList())
-        if (item.getName() == name)
+    forEach([name](TempSensorItem *item)
+    {
+        if (item->getName() == name)
             return item;
-    return nullItem; // return an empty object if not found
+    });
+        
+    return nullptr; // return an empty object if not found
 }

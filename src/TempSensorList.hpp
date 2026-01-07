@@ -9,7 +9,6 @@ public:
     TempSensorList();
     TempSensorList(std::string json);
     void clearList();
-    bool doesExist(TempSensorItem &desiredItem);
-    TempSensorItem &getItem(std::string name);
+    TempSensorItem *getItem(std::string name);
     using BaseList::getItem;
 };
