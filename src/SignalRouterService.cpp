@@ -43,9 +43,9 @@ SignalRouterService* SignalRouterService::getInstance()
  * 
  * @param item The new item to be added to the list
  */
-void SignalRouterService::create(SignalRouterItem item) 
+void SignalRouterService::create(std::unique_ptr<SignalRouterItem> item) 
 {
-    signalList.addItem(item);
+    signalList.addItem(std::move(item));
     storeAll();
 }
 
@@ -67,9 +67,9 @@ void SignalRouterService::remove(uint64_t id)
  * @param id The ID of the signal to update.
  * @param newItem The new item to replace the old one.
  */
-void SignalRouterService::update(uint64_t id, SignalRouterItem newItem) 
+void SignalRouterService::update(uint64_t id, std::unique_ptr<SignalRouterItem> newItem) 
 {
-    signalList.modifyItem(id, newItem);
+    signalList.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
 }
@@ -105,16 +105,16 @@ StatusCode SignalRouterService::setSignalValue(std::string fullSignalPath, bool 
 
         return false; // no cycle detected
     };
-    signalList.forEach([&](SignalRouterItem &signalItem) -> void
+    signalList.forEach([&](SignalRouterItem *signalItem) -> void
     {
-        auto primaryBroadcasterMatched = signalItem.getBroadcaster().getSignalPath() == fullSignalPath;
-        auto auxiliaryBroadcasterMatched = signalItem.getAuxiliaryBroadcaster().getSignalPath() == fullSignalPath;
+        auto primaryBroadcasterMatched = signalItem->getBroadcaster().getSignalPath() == fullSignalPath;
+        auto auxiliaryBroadcasterMatched = signalItem->getAuxiliaryBroadcaster().getSignalPath() == fullSignalPath;
         if(primaryBroadcasterMatched or auxiliaryBroadcasterMatched)
         {
             if(primaryBroadcasterMatched)
-                signalItem.setBroadcasterStatus(value);
-            else if(auxiliaryBroadcasterMatched and (signalItem.getMode() != SignalRouterItem::Mode::SingleSource))
-                signalItem.setAuxiliaryBroadcasterStatus(value);
+                signalItem->setBroadcasterStatus(value);
+            else if(auxiliaryBroadcasterMatched and (signalItem->getMode() != SignalRouterItem::Mode::SingleSource))
+                signalItem->setAuxiliaryBroadcasterStatus(value);
             else
                 return; // skip a forEach cycle (like "continue" keyword)
 
@@ -124,9 +124,9 @@ StatusCode SignalRouterService::setSignalValue(std::string fullSignalPath, bool 
             this->setSignalValue(SignalNameResolver::toString(
                 SignalNameResolver::SignalNameParameters(
                     this->getName(), 
-                    signalItem.getId(), 
-                    signalItem.getEmittedSignalLocalSignalName()
-                )), signalItem.getStatus());
+                    signalItem->getId(), 
+                    signalItem->getEmittedSignalLocalSignalName()
+                )), signalItem->getStatus());
             found = true;
             // do not break or return here because broadcasting to multiple SignalItems is allowed.
         }
@@ -148,9 +148,9 @@ std::optional<bool> SignalRouterService::getSignalValue(std::string fullSignalPa
 {
     // search and find the signal path in signal list (listeners parameter)
     std::optional<bool> result = std::nullopt;
-    signalList.forEach([&](SignalRouterItem &signalItem) -> void
+    signalList.forEach([&](SignalRouterItem *signalItem) -> void
     {
-        for(auto &listener : signalItem.getListeners()) // loop through listeners
+        for(auto &listener : signalItem->getListeners()) // loop through listeners
             if(listener.getSignalPath() == fullSignalPath)
                 result = listener.getStatus();
     });
@@ -174,7 +174,8 @@ std::string SignalRouterService::getAll()
  */
 std::string SignalRouterService::get(uint64_t id) 
 {
-    return signalList.getItem(id).toJson();
+    auto item = signalList.getItem(id);
+    return item ? item->toJson() : "{}";
 }
 
 /**
@@ -209,20 +210,20 @@ void SignalRouterService::update(CentralizedSignalHubService *signalHub)
     Serial.println("checking signal paths...");
     // scan the signal list and check all the broadcaster names and listeners names
     // if there wasn't a match, remove that signalpath.
-    signalList.forEach([&](SignalRouterItem &item) -> void
+    signalList.forEach([&](SignalRouterItem *item) -> void
     {
         // check if the broadcaster signal path is valid
-        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item.getBroadcaster().getSignalPath()))
-            item.removeBroadcaster();
+        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item->getBroadcaster().getSignalPath()))
+            item->removeBroadcaster();
 
         // check if the auxiliary broadcaster signal path is valid
-        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item.getAuxiliaryBroadcaster().getSignalPath()))
-            item.removeBroadcaster(true); // remove auxiliary broadcaster
+        if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(item->getAuxiliaryBroadcaster().getSignalPath()))
+            item->removeBroadcaster(true); // remove auxiliary broadcaster
 
         // check if the listeners signal paths are valid
-        for(auto &listener : item.getListeners())
+        for(auto &listener : item->getListeners())
             if(!CentralizedSignalHubService::getInstance()->isSignalPathValid(listener.getSignalPath()))
-                item.removeListener(listener.getSignalPath());
+                item->removeListener(listener.getSignalPath());
     });
     storeAll(); // save the state after removing invalid signal paths
 }
@@ -235,10 +236,5 @@ void SignalRouterService::update(CentralizedSignalHubService *signalHub)
  */
 std::vector<ISignalCompatibleItem *> SignalRouterService::getSignalCompatibleItems()
 {
-    std::vector<ISignalCompatibleItem *> items;
-    signalList.forEach([&](SignalRouterItem &item) -> void
-    {
-        items.push_back(&signalList.getItem(item.getId())); // pushback real reference of the item, not a copy
-    });
-    return items;
+    return signalList.getAllAs<ISignalCompatibleItem>();
 }

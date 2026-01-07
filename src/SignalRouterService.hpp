@@ -27,9 +27,9 @@ public:
     std::optional<bool> getSignalValue(std::string fullSignalPath);
     void update(CentralizedSignalHubService *signalHub) override;
 
-    void create(SignalRouterItem item) override;
+    void create(std::unique_ptr<SignalRouterItem> item) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, SignalRouterItem newItem) override;
+    void update(uint64_t id, std::unique_ptr<SignalRouterItem> newItem) override;
     std::string getAll() override;
     std::string get(uint64_t id) override;
 
