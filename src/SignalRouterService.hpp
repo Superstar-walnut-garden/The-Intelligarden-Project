@@ -27,11 +27,11 @@ public:
     std::optional<bool> getSignalValue(std::string fullSignalPath);
     void update(CentralizedSignalHubService *signalHub) override;
 
-    void create(std::unique_ptr<SignalRouterItem> item) override;
+    void create(std::string json) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, std::unique_ptr<SignalRouterItem> newItem) override;
-    std::string getAll() override;
-    std::string get(uint64_t id) override;
+    void update(uint64_t id, std::string json) override;
+    std::string getAll() const override;
+    std::string get(uint64_t id) const override;
 
     void storeAll() override;
     void restoreAll() override;
@@ -46,5 +46,5 @@ private:
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
     static SignalRouterService* instance;
-    SignalRouterList signalList;
+    mutable SignalRouterList signalList;
 };

@@ -32,10 +32,10 @@ public:
     double getData(uint64_t id); // returns sensor data from a registered sensor
     void forEachSensor(std::function<void(const TempSensorItem *)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
 
-    std::string getAll() override;
-    std::string get(uint64_t id) override;
-    void create(std::unique_ptr<TempSensorItem> newItem) override;
-    void update(uint64_t id, std::unique_ptr<TempSensorItem> newItem) override; // modify a sensor
+    std::string getAll() const override;
+    std::string get(uint64_t id) const override;
+    void create(std::string newItem) override;
+    void update(uint64_t id, std::string newItem) override; // modify a sensor
     void remove(uint64_t id) override; // delete a sensor
 
     std::string getConfig() override;
@@ -54,10 +54,10 @@ private:
 
     OneWire oneWireBus;
     DallasTemperature sensors;
-    TempSensorList sensorList; // sensors with a name associated to them
-    BaseList<BaseItem> liveUartList;
+    mutable TempSensorList sensorList; // sensors with a name associated to them
+    mutable BaseList<BaseItem> liveUartList;
     TempSensorConfig config;
-    std::mutex mtx;
+    mutable std::mutex mtx;
 
     HardwareSerial fSerial;
     

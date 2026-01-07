@@ -97,10 +97,12 @@ void SchedulerService::determineStatusofItems()
  * 
  * @param schedulerItem The SchedulerItem to be created.
  */
-void SchedulerService::create(std::unique_ptr<SchedulerItem> schedulerItem) 
+void SchedulerService::create(std::string json) 
 {
-    Serial.printf("Schedule %d created\n", schedulerItem->getId());
-    list.addItem(std::move(schedulerItem));
+    auto newItem = std::make_unique<SchedulerItem>();
+    newItem->populateFromJson(json);
+    Serial.printf("Schedule %d created\n", newItem->getId());
+    list.addItem(std::move(newItem));
     storeAll();
 }
 
@@ -122,8 +124,10 @@ void SchedulerService::remove(uint64_t id)
  * @param id The ID of the SchedulerItem to be modified.
  * @param newItem The new SchedulerItem with updated values.
  */
-void SchedulerService::update(uint64_t id, std::unique_ptr<SchedulerItem> newItem) 
+void SchedulerService::update(uint64_t id, std::string json) 
 {
+    auto newItem = std::make_unique<SchedulerItem>();
+    newItem->populateFromJson(json);
     list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
@@ -154,7 +158,7 @@ void SchedulerService::restoreAll()
  * 
  * @return std::string The SchedulerService list in JSON format.
  */
-std::string SchedulerService::getAll()
+std::string SchedulerService::getAll() const
 {
     return list.toJson();
 }
@@ -164,7 +168,7 @@ std::string SchedulerService::getAll()
  * 
  * @return std::string an item in JSON format.
  */
-std::string SchedulerService::get(uint64_t id)
+std::string SchedulerService::get(uint64_t id) const
 {
     auto item = list.getItem(id);
     return item ? item->toJson() : "{}";   // return empty JSON object

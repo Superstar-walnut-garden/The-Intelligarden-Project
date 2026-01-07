@@ -46,8 +46,10 @@ GpioService* GpioService::getInstance()
  * 
  * @param newItem The new GPIO item to add.
  */
-void GpioService::create(std::unique_ptr<GpioItem> newItem)
+void GpioService::create(std::string json)
 {
+    auto newItem = std::make_unique<GpioItem>();
+    newItem->populateFromJson(json);
     list.addItem(std::move(newItem));
     storeAll();
 }
@@ -70,8 +72,10 @@ void GpioService::remove(uint64_t id)
  * @param id The ID of the GPIO item to update.
  * @param newItem The new GPIO item to replace the old one.
  */
-void GpioService::update(uint64_t id, std::unique_ptr<GpioItem> newItem)
+void GpioService::update(uint64_t id, std::string json)
 {
+    auto newItem = std::make_unique<GpioItem>();
+    newItem->populateFromJson(json);
     list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
@@ -82,7 +86,7 @@ void GpioService::update(uint64_t id, std::unique_ptr<GpioItem> newItem)
  * 
  * @return std::string The GPIO list in JSON format.
  */
-std::string GpioService::getAll()
+std::string GpioService::getAll() const
 {
     return list.toJson();
 }
@@ -92,7 +96,7 @@ std::string GpioService::getAll()
  * 
  * @return std::string The Desired GPIO item in JSON format.
  */
-std::string GpioService::get(uint64_t id)
+std::string GpioService::get(uint64_t id) const
 {
     auto item = list.getItem(id);
     return item ? item->toJson() : "{}";

@@ -45,8 +45,10 @@ ThermostatService* ThermostatService::getInstance()
  * 
  * @param newItem The new Thermostat item to add.
  */
-void ThermostatService::create(std::unique_ptr<ThermostatItem> newItem)
+void ThermostatService::create(std::string json)
 {
+    auto newItem = std::make_unique<ThermostatItem>();
+    newItem->populateFromJson(json);
     list.addItem(std::move(newItem));
     storeAll();
 }
@@ -69,8 +71,10 @@ void ThermostatService::remove(uint64_t id)
  * @param id The ID of the Thermostat item to update.
  * @param newItem The new Thermostat item to replace the old one.
  */
-void ThermostatService::update(uint64_t id, std::unique_ptr<ThermostatItem> newItem)
+void ThermostatService::update(uint64_t id, std::string json)
 {
+    auto newItem = std::make_unique<ThermostatItem>();
+    newItem->populateFromJson(json);
     list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
@@ -81,7 +85,7 @@ void ThermostatService::update(uint64_t id, std::unique_ptr<ThermostatItem> newI
  * 
  * @return std::string The Thermostat list in JSON format.
  */
-std::string ThermostatService::getAll()
+std::string ThermostatService::getAll() const
 {
     return list.toJson();
 }
@@ -91,7 +95,7 @@ std::string ThermostatService::getAll()
  * @param id id of the desired item
  * @return std::string The Thermostat item in JSON format.
  */
-std::string ThermostatService::get(uint64_t id)
+std::string ThermostatService::get(uint64_t id) const
 {
     auto item = list.getItem(id);
     return item ? item->toJson() : "{}";

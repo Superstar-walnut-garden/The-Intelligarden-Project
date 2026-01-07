@@ -43,9 +43,11 @@ SignalRouterService* SignalRouterService::getInstance()
  * 
  * @param item The new item to be added to the list
  */
-void SignalRouterService::create(std::unique_ptr<SignalRouterItem> item) 
+void SignalRouterService::create(std::string json) 
 {
-    signalList.addItem(std::move(item));
+    auto newItem = std::make_unique<SignalRouterItem>();
+    newItem->populateFromJson(json);
+    signalList.addItem(std::move(newItem));
     storeAll();
 }
 
@@ -67,8 +69,10 @@ void SignalRouterService::remove(uint64_t id)
  * @param id The ID of the signal to update.
  * @param newItem The new item to replace the old one.
  */
-void SignalRouterService::update(uint64_t id, std::unique_ptr<SignalRouterItem> newItem) 
+void SignalRouterService::update(uint64_t id, std::string json) 
 {
+    auto newItem = std::make_unique<SignalRouterItem>();
+    newItem->populateFromJson(json);
     signalList.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
@@ -162,7 +166,7 @@ std::optional<bool> SignalRouterService::getSignalValue(std::string fullSignalPa
  * 
  * @return std::string The signal list in JSON format.
  */
-std::string SignalRouterService::getAll() 
+std::string SignalRouterService::getAll() const
 {
     return signalList.toJson();
 }
@@ -172,7 +176,7 @@ std::string SignalRouterService::getAll()
  * 
  * @return std::string The signal item in JSON format.
  */
-std::string SignalRouterService::get(uint64_t id) 
+std::string SignalRouterService::get(uint64_t id) const
 {
     auto item = signalList.getItem(id);
     return item ? item->toJson() : "{}";

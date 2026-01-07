@@ -34,7 +34,7 @@ TempSensorService::TempSensorService() : oneWireBus(config.getSensorPin()), sens
  * 
  * @param newItem The new sensor to create.
  */
-void TempSensorService::create(std::unique_ptr<TempSensorItem> newItem)
+void TempSensorService::create(std::string json)
 {
     Serial.println("Error: Cannot create a sensor!");
 }
@@ -45,9 +45,12 @@ void TempSensorService::create(std::unique_ptr<TempSensorItem> newItem)
  * @param id id of the desired sensor.
  * @param newItem new sensor data.
  */
-void TempSensorService::update(uint64_t id, std::unique_ptr<TempSensorItem> newItem)
+void TempSensorService::update(uint64_t id, std::string json)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
+    auto newItem = std::make_unique<TempSensorItem>();
+    newItem->populateFromJson(json);
+    
     if(sensorList.getItem(id)) // if item exists
         sensorList.modifyItem(id, std::move(newItem));
     else
@@ -225,7 +228,7 @@ double TempSensorService::getData(uint64_t id)
  * 
  * @return std::string The list of sensors in JSON format.
  */
-std::string TempSensorService::getAll()
+std::string TempSensorService::getAll() const
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     return sensorList.toJson();
@@ -236,7 +239,7 @@ std::string TempSensorService::getAll()
  * 
  * @return std::string The list of sensors in JSON format.
  */
-std::string TempSensorService::get(uint64_t id)
+std::string TempSensorService::get(uint64_t id) const
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     return sensorList.toJson();

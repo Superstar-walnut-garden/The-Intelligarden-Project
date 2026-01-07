@@ -19,11 +19,11 @@ public:
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
     void loop();
 
-    std::string getAll() override;
-    std::string get(uint64_t id) override;
-    void create(std::unique_ptr<SchedulerItem> newItem) override;
+    std::string getAll() const override;
+    std::string get(uint64_t id) const override;
+    void create(std::string json) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, std::unique_ptr<SchedulerItem> newItem) override;
+    void update(uint64_t id, std::string json) override;
 
     void storeAll() override;
     void restoreAll() override;
@@ -37,5 +37,5 @@ private:
     void broadcastItem(SchedulerItem *item);
 
     static SchedulerService* instance;
-    SchedulerList list;
+    mutable SchedulerList list;
 };
