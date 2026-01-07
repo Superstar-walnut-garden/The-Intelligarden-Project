@@ -9,6 +9,7 @@
 class IJsonSerializable 
 {
 public:
+    virtual ~IJsonSerializable() = default;
     virtual void populateFromJson(std::string json) = 0;
     virtual std::string toJson() const = 0;
 };
