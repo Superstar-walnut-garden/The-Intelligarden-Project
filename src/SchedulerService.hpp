@@ -21,9 +21,9 @@ public:
 
     std::string getAll() override;
     std::string get(uint64_t id) override;
-    void create(SchedulerItem newItem) override;
+    void create(std::unique_ptr<SchedulerItem> newItem) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, SchedulerItem newItem) override;
+    void update(uint64_t id, std::unique_ptr<SchedulerItem> newItem) override;
 
     void storeAll() override;
     void restoreAll() override;
@@ -34,7 +34,7 @@ private:
     SchedulerService(const SchedulerService&) = delete;
     SchedulerService& operator=(const SchedulerService&) = delete;
     void determineStatusofItems();
-    void broadcastItem(SchedulerItem &item);
+    void broadcastItem(SchedulerItem *item);
 
     static SchedulerService* instance;
     SchedulerList list;
