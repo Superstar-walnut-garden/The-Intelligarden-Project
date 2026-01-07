@@ -37,7 +37,7 @@ void TempSensorList::clearList()
 TempSensorItem *TempSensorList::getItem(std::string name)
 {
     TempSensorItem *foundItem = nullptr;
-    forEach([name, &foundItem](TempSensorItem *item)
+    forEach([name, &foundItem](TempSensorItem *item) -> void 
     {
         if (item->getName() == name)
             foundItem = item;
