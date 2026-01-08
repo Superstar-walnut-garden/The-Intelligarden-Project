@@ -198,7 +198,7 @@ I* BaseList<T>::getAs(uint64_t id) const
     for (auto &item : list)
     {
         if (item->getId() == id)
-            return dynamic_cast<I*>(item.get());
+            return static_cast<I*>(item.get());
     }
     return nullptr;
 }
@@ -219,7 +219,7 @@ std::vector<I*> BaseList<T>::getAllAs(std::function<bool(const F*)> filter) cons
     for (auto &item : list)
     {
         T* ptr = item.get();
-        if (auto* casted = dynamic_cast<I*>(ptr))
+        if (auto* casted = static_cast<I*>(ptr))
         {
             if (!filter) {
                 result.push_back(casted);
