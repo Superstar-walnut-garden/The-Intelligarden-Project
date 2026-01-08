@@ -8,9 +8,17 @@
 class FusionBusItem : public SignalCompatibleBaseItem, public ILoggableItem
 {
 public:
-    FusionBusItem();
-
-    virtual std::vector<std::string> getLocalSignalNames() override {};
+    enum class DeviceType
+    {
+        VentDrive,
+        TempSensor,
+        SoilSensor,
+        Unknown
+    };
+    FusionBusItem(DeviceType type = DeviceType::Unknown);
+    DeviceType getType() { return type; }
+    
+    virtual std::vector<std::string> getLocalSignalNames() override { return {}; };
 
     // ILoggableItem interface
     std::string getName() const override {return SignalCompatibleBaseItem::getName(); }
@@ -21,5 +29,5 @@ public:
     bool isLoggingEnabled() const override { return false; }
 
 private:
-    std::string type;
+    DeviceType type;
 };
