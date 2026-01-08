@@ -4,8 +4,9 @@
 #include <string>
 #include "BaseItem.hpp"
 #include "ILoggableItem.hpp"
+#include "FusionBusItem.hpp"
 
-class TempSensorItem: public BaseItem, public ILoggableItem
+class TempSensorItem: public FusionBusItem
 {
 public:
     TempSensorItem(uint64_t id = -1, std::string name = "", bool isConnected = false);

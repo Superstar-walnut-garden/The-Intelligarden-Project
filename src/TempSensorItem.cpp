@@ -6,12 +6,16 @@
  * 
  */
 TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected)
-    : BaseItem(id, name, isConnected), loggingEnabled(false), logInterval(60), logOnlyOnDataChange(false) 
+    : FusionBusItem(FusionBusItem::DeviceType::TempSensor), loggingEnabled(false), logInterval(60), logOnlyOnDataChange(false)
 {
+    this->setId(id);
+    this->setName(name);
+    this->setStatus(isConnected);
+    Serial.println("TempSensorItem Constructor Called!!!");
     registerToJsonCallback([this](JsonDocument &json) -> void
     {
+        Serial.println("TempSensorItem ToJson Callback Called!!!");
         json["temp"] = this->temp;
-        json["id"] = std::to_string(this->getId()); // passing 64bit id as string to prevent json and web api js issues with large numbers
 
         json["logInterval"] = this->logInterval;
         json["logOnlyOnChange"] = this->logOnlyOnDataChange;
@@ -19,8 +23,8 @@ TempSensorItem::TempSensorItem(uint64_t id, std::string name, bool isConnected)
     });
     registerFromJsonCallback([this](JsonDocument &json) -> void
     {
+        Serial.println("TempSensorItem FromJson Callback Called!!!");
         this->temp = json["temp"].as<double>();
-        this->setId(std::stoull(json["id"].as<std::string>())); // passing 64bit id as string to prevent json and web api js issues with large numbers
         
         this->logInterval = json["logInterval"].as<uint64_t>();
         this->logOnlyOnDataChange = json["logOnlyOnChange"].as<bool>();
