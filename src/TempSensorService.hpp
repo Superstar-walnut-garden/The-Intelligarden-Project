@@ -17,6 +17,7 @@
 #include "IConfigController.hpp"
 #include "TempSensorConfig.hpp"
 #include "ILoggableService.hpp"
+#include "TempSensorItem.hpp"
 
 class TempSensorService : 
     public IResourceController<TempSensorItem>, 
@@ -28,7 +29,6 @@ class TempSensorService :
 public:
     static TempSensorService *getInstance(); // get singleton instance
     void read(bool doNotify = false); // request a temp conversion from sensors
-    double getData(std::string name); // returns sensor data from a registered sensor
     double getData(uint64_t id); // returns sensor data from a registered sensor
     void forEachSensor(std::function<void(const TempSensorItem *)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
 
@@ -55,7 +55,6 @@ private:
     OneWire oneWireBus;
     DallasTemperature sensors;
     mutable TempSensorList sensorList; // sensors with a name associated to them
-    mutable BaseList<BaseItem> liveUartList;
     TempSensorConfig config;
     mutable std::mutex mtx;
 

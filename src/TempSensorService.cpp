@@ -1,5 +1,7 @@
 #include "TempSensorService.hpp"
 #include <driver/uart.h>
+#include "../EnumCrafter.hpp"
+#include "VentDriveItem.hpp"
 
 /**
  * @brief Initialize the instance of the TempSensorService to null.
@@ -48,13 +50,26 @@ void TempSensorService::create(std::string json)
 void TempSensorService::update(uint64_t id, std::string json)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
-    auto newItem = std::make_unique<TempSensorItem>();
-    newItem->populateFromJson(json);
+    JsonDocument doc;
+    deserializeJson(doc, json);
+    auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
+    std::unique_ptr<FusionBusItem> fusionItem = nullptr;
+    if(devType == FusionBusItem::DeviceType::TempSensor)
+        fusionItem = std::make_unique<TempSensorItem>();
+    else if(devType == FusionBusItem::DeviceType::VentDrive)
+        fusionItem = std::make_unique<VentDriveItem>();
+    else if(devType == FusionBusItem::DeviceType::SoilSensor)
+        fusionItem = std::make_unique<FusionBusItem>();
+    else if(devType == FusionBusItem::DeviceType::Unknown)
+        fusionItem = std::make_unique<FusionBusItem>();
+    else
+        fusionItem = std::make_unique<FusionBusItem>();
+    fusionItem->populateFromJson(json);
     
     if(sensorList.getItem(id)) // if item exists
-        sensorList.modifyItem(id, std::move(newItem));
+        sensorList.modifyItem(id, std::move(fusionItem));
     else
-        sensorList.addItem(std::move(newItem));
+        sensorList.addItem(std::move(fusionItem));
     storeAll();
 }
 
@@ -78,10 +93,11 @@ void TempSensorService::remove(uint64_t id)
  */
 void TempSensorService::forEachSensor(std::function<void(const TempSensorItem *)> callback, bool onlyRegisteredSensors)
 {
-    sensorList.forEach([&callback](TempSensorItem * item)
+    sensorList.forEach([&callback](FusionBusItem * item)
     {
-        callback(item);
-    }, [onlyRegisteredSensors](const TempSensorItem * item) -> bool
+        if(item->getType() == FusionBusItem::DeviceType::TempSensor)
+            callback(static_cast<TempSensorItem*>(item));
+    }, [onlyRegisteredSensors](const FusionBusItem * item) -> bool
     {
         return (!item->getName().empty() or !onlyRegisteredSensors);
     });
@@ -97,10 +113,14 @@ void TempSensorService::read(bool doNotify)
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     obtainSensors(); // update the list of connected sensors (liveSensorList)
     sensors.requestTemperatures();
-    sensorList.forEach([this](TempSensorItem *item) -> void 
+    sensorList.forEach([this](FusionBusItem *item) -> void 
     {
-        auto temp = getTempFromSensor(item->getId());
-        item->setTemp(temp);
+        if(item->getType() == FusionBusItem::DeviceType::TempSensor)
+        {
+            auto castedItem = static_cast<TempSensorItem*>(item);
+            auto temp = getTempFromSensor(castedItem->getId());
+            castedItem->setTemp(temp);
+        }
     });
     if (doNotify)
         notify(); // notify the observers when data is ready
@@ -131,12 +151,24 @@ void TempSensorService::read(bool doNotify)
     if(deserializeJson(doc, rawResponse.c_str()) == DeserializationError::Ok) // if response is a valid json
     {
         std::cout << "json valid!" << std::endl;
-        if(doc.containsKey("UUID"))
+        if(doc.containsKey("UUID") and doc.containsKey("type"))
         {
             auto uuid = doc["UUID"].as<uint32_t>(); // Extract uuid parameter
-            std::cout << "FusionBus Device Found:" << std::to_string(uuid) << std::endl;
-            if(liveUartList.getItem(uuid)) // if item ain't already present
-                this->liveUartList.addItem(std::make_unique<BaseItem>(uuid, "", true)); // add device to live list
+            auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
+            std::cout << "FusionBus Device Found:" << std::to_string(uuid) << ", type: " << EnumCrafter::toString(devType) << std::endl;
+            if(!sensorList.getItem(uuid)) // if item ain't already present
+            {
+                std::unique_ptr<FusionBusItem> item = nullptr;
+                if(devType == FusionBusItem::DeviceType::VentDrive)
+                    item = std::make_unique<VentDriveItem>();
+                if(devType == FusionBusItem::DeviceType::SoilSensor)
+                    item = std::make_unique<FusionBusItem>();
+                if(devType == FusionBusItem::DeviceType::Unknown)
+                    item = std::make_unique<FusionBusItem>();
+                item->setId(uuid);
+                item->setStatus(true);
+                this->sensorList.addItem(std::move(item)); // add device to live list
+            }
         }
     }
     else 
@@ -145,34 +177,43 @@ void TempSensorService::read(bool doNotify)
 
     auto checkPresences = [&]() -> void
     {
-        for(const auto& device : liveUartList.getList())
+        sensorList.forEach([&](FusionBusItem *device) 
         {
-            fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
-            delay(100); // wait for Tx stablization
-            JsonDocument doc;
-            std::string txStr;
-            doc["UUID"] = device->getId();
-            serializeJson(doc, txStr);
-            fSerial.println(("FusionBusCommunicate" + txStr).c_str());
-            fSerial.flush(); // wait for full transmition
-            fSerial.end(); // end Tx
-
-            fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin Rx
-            fSerial.read(); // flush out the initial null terminator byte (0x00)
-            delay(500); // wait for response
-            std::string rawResponse;
-            while(fSerial.available())
-                rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
-            fSerial.end(); // end Rx
-            std::cout << "raw presense check response:" << rawResponse << std::endl;
-            JsonDocument docRx;
-            if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
+            Serial.println(("------- item type ======>> " + std::string(EnumCrafter::toString(device->getType()))).c_str());
+            if(device->getType() != FusionBusItem::DeviceType::TempSensor) // if it wasn't temp sensor (wasn't on onewire bus)
             {
-                std::cout << "FusionBus Device" << std::to_string(device->getId()) << " is present!!!" << std::endl;
+                fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
+                delay(100); // wait for Tx stablization
+                JsonDocument doc;
+                std::string txStr;
+                doc["UUID"] = device->getId();
+                serializeJson(doc, txStr);
+                fSerial.println(("FusionBusCommunicate" + txStr).c_str());
+                fSerial.flush(); // wait for full transmition
+                fSerial.end(); // end Tx
+
+                fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin Rx
+                fSerial.read(); // flush out the initial null terminator byte (0x00)
+                delay(1000); // wait for response
+                std::string rawResponse;
+                while(fSerial.available())
+                    rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
+                fSerial.end(); // end Rx
+                std::cout << "raw presense check response:" << rawResponse << std::endl;
+                JsonDocument docRx;
+                if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
+                {
+                    std::cout << "FusionBus Device" << std::to_string(device->getId()) << " is present!!!" << std::endl;
+                    device->setStatus(true); // set connection status to true
+                }
+                else
+                {
+                    device->setStatus(false); // set connection status to false
+                    if(device->getName().empty()) // if not registered (don't have a name)
+                        sensorList.deleteItem(device->getId()); // delete item from the list
+                }
             }
-            else
-                liveUartList.deleteItem(device->getId());
-        }
+        });
     };
     checkPresences();
     pinMode(15, OUTPUT_OPEN_DRAIN);
@@ -198,19 +239,6 @@ double TempSensorService::getTempFromSensor(uint64_t address)
 }
 
 /**
- * @brief Get temperature data by sensor name.
- * 
- * @param name The name of the sensor.
- * @return double The temperature of the sensor.
- */
-double TempSensorService::getData(std::string name)
-{
-    if(auto item = sensorList.getItem(name))
-        return item->getTemp();
-    return -127;
-}
-
-/**
  * @brief Get temperature data by sensor id.
  * 
  * @param id The id of the sensor.
@@ -218,8 +246,10 @@ double TempSensorService::getData(std::string name)
  */
 double TempSensorService::getData(uint64_t id)
 {
-    if(auto item = sensorList.getItem(id))
+    if(auto item = sensorList.getAs<TempSensorItem>(id))
+    {
         return item->getTemp();
+    }
     return -127;
 }
 
@@ -253,7 +283,7 @@ void TempSensorService::obtainSensors()
 {
     oneWireBus.begin(config.getSensorPin()); // restart the bus
     oneWireBus.reset(); // reset the bus
-    sensorList.forEach([this](TempSensorItem *item) -> void 
+    sensorList.forEach([this](FusionBusItem *item) -> void 
     {
         item->setStatus(false); // reset the connection status of all items to false 
         
@@ -268,7 +298,7 @@ void TempSensorService::obtainSensors()
         if(auto item = sensorList.getItem(addr64)) // if sensor already exist
             item->setStatus(true); // update connection status
         else
-            sensorList.addItem(std::make_unique<TempSensorItem>(addr64, "", true)); // add the sensor to the list
+            sensorList.addItem(std::move(std::make_unique<TempSensorItem>(addr64, "", true))); // add the sensor to the list
         // Serial.println(devList.at(0).getAddress(), HEX);
     }
 
@@ -283,7 +313,7 @@ void TempSensorService::obtainSensors()
 void TempSensorService::storeAll()
 {
     auto *cfg = Configuration::getInstance();
-    cfg->setRegisteredTempSensorList(sensorList.toJson([](const TempSensorItem *item) -> bool
+    cfg->setRegisteredTempSensorList(sensorList.toJson([](const FusionBusItem *item) -> bool
     {
         return !(item->getName().empty()); // filter out non-registered items (items without a name)
     }));
