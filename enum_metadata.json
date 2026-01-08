@@ -16,25 +16,25 @@
     ]
   },
   {
-    "qualified_name": "WebApiService::Method",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
-    "line": 25,
+    "qualified_name": "LogDispatcherStatus",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
+    "line": 8,
     "is_scoped": true,
     "enumerators": [
       {
-        "name": "Get",
+        "name": "Idle",
         "value": 0
       },
       {
-        "name": "Post",
+        "name": "Running",
         "value": 1
       },
       {
-        "name": "Put",
+        "name": "StorageFullError",
         "value": 2
       },
       {
-        "name": "Delete",
+        "name": "StorageNotReadyError",
         "value": 3
       }
     ]
@@ -80,25 +80,25 @@
     ]
   },
   {
-    "qualified_name": "LogDispatcherStatus",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
-    "line": 8,
+    "qualified_name": "WebApiService::Method",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
+    "line": 25,
     "is_scoped": true,
     "enumerators": [
       {
-        "name": "Idle",
+        "name": "Get",
         "value": 0
       },
       {
-        "name": "Running",
+        "name": "Post",
         "value": 1
       },
       {
-        "name": "StorageFullError",
+        "name": "Put",
         "value": 2
       },
       {
-        "name": "StorageNotReadyError",
+        "name": "Delete",
         "value": 3
       }
     ]
@@ -120,6 +120,30 @@
       {
         "name": "CharLcd",
         "value": 2
+      }
+    ]
+  },
+  {
+    "qualified_name": "FusionBusItem::DeviceType",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\FusionBusItem.hpp",
+    "line": 11,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "VentDrive",
+        "value": 0
+      },
+      {
+        "name": "TempSensor",
+        "value": 1
+      },
+      {
+        "name": "SoilSensor",
+        "value": 2
+      },
+      {
+        "name": "Unknown",
+        "value": 3
       }
     ]
   }
