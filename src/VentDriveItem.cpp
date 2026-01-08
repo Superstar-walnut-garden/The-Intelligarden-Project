@@ -4,8 +4,9 @@
  * @brief Construct a new VentDriveItem object
  * 
  */
-VentDriveItem::VentDriveItem(): FusionBusItem()
+VentDriveItem::VentDriveItem(): FusionBusItem(FusionBusItem::DeviceType::VentDrive)
 {
+    Serial.println("VentDriveItem created!!!!!!!!!!!");
     registerToJsonCallback([this](JsonDocument &json) -> void
     {
         json["ventingPercent"] = ventingPercent;
