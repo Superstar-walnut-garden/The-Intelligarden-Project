@@ -16,6 +16,7 @@
 #include "WifiHotspotConfig.hpp"
 #include "LogDispatcherService.hpp"
 #include "FileExplorerService.hpp"
+#include "TempSensorItem.hpp"
 
 /**
  * @brief Construct a new WebApiService object
