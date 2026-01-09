@@ -16,7 +16,7 @@ public:
         Unknown
     };
     FusionBusItem(DeviceType type = DeviceType::Unknown);
-    DeviceType getType() { return type; }
+    DeviceType getType() const { return type; }
     
     virtual std::vector<std::string> getLocalSignalNames() override { return {}; };
 
