@@ -1,4 +1,5 @@
 #include "VentDriveItem.hpp"
+#include "SignalNameResolver.hpp"
 
 /**
  * @brief Construct a new VentDriveItem object
@@ -28,5 +29,5 @@ VentDriveItem::VentDriveItem(): FusionBusItem(FusionBusItem::DeviceType::VentDri
  */
 std::vector<std::string> VentDriveItem::getLocalSignalNames()
 {
-    return {}; // no signal
+    return {SignalNameResolver::generateLocalSignalName("VentState", SignalNameResolver::SignalType::Listener)};
 }
