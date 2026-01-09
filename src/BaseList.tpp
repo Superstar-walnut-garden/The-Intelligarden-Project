@@ -71,8 +71,8 @@ std::string BaseList<T>::toJson(std::function<bool(const T*)> filter) const
     // Reuse forEach with optional filter
     this->forEach([&](T* item) 
     {
-            JsonObject obj = array.add<JsonObject>();
-            deserializeJson(obj, item->toJson());
+        JsonObject obj = array.add<JsonObject>();
+        deserializeJson(obj, item->toJson());
     }, filter);
 
     std::string output;
