@@ -200,6 +200,7 @@ void TempSensorService::handleUartDevices()
             JsonDocument doc;
             std::string txStr;
             doc["id"] = device->getId();
+            device->appendResponse(doc);
             serializeJson(doc, txStr);
             fSerial.println(("FusionBusCommunicate" + txStr).c_str());
             fSerial.flush(); // wait for full transmition
@@ -218,6 +219,28 @@ void TempSensorService::handleUartDevices()
             {
                 std::cout << "FusionBus Device" << std::to_string(device->getId()) << " is present!!!" << std::endl;
                 device->setStatus(true); // set connection status to true
+                if(device->getType() == FusionBusItem::DeviceType::VentDrive)
+                {
+                    auto castedDevice = sensorList.getAs<VentDriveItem>(device->getId());
+                    if(auto state = EnumCrafter::parse<VentDriveItem::State>(docRx["state"]))
+                    {
+                        castedDevice->setCurrentState(state.value());
+                        auto isUninitialized = (state.value() == VentDriveItem::State::Uninitialized);
+                        castedDevice->addResponseApender([isUninitialized, castedDevice](JsonDocument &json) -> void
+                        {
+                            json["length"] = castedDevice->getLength();
+                            json["acceleration"] = castedDevice->getAcceleration();
+                            json["speed"] = castedDevice->getSpeed();
+                            json["stepPermm"] = castedDevice->getStepPermm();
+                            json["endstopMinDistance"] = castedDevice->getEndstopMinDistance();
+                            json["maxCompensation"] = castedDevice->getMaxCompensation();
+                            json["ventingPercent"] = castedDevice->getVentingPercent();
+
+                            if(isUninitialized)
+                                json["autoHomeFlag"] = true;
+                        });
+                    }
+                }
             }
             else
             {

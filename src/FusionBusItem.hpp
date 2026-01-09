@@ -28,6 +28,21 @@ public:
     std::string getData() const override { return ""; }
     bool isLoggingEnabled() const override { return false; }
 
+    void addResponseApender(std::function<void(JsonDocument &)> responseApender)
+    {
+        this->responseApender = responseApender;
+    }
+
+    void appendResponse(JsonDocument &json)
+    {
+        if(responseApender)
+        {
+            responseApender(json);
+            responseApender = nullptr; // delete it.
+        }
+    }
+
 private:
     DeviceType type;
+    std::function<void(JsonDocument &)> responseApender = nullptr;
 };
