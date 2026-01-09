@@ -50,20 +50,7 @@ void TempSensorService::create(std::string json)
 void TempSensorService::update(uint64_t id, std::string json)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
-    JsonDocument doc;
-    deserializeJson(doc, json);
-    auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
-    std::unique_ptr<FusionBusItem> fusionItem = nullptr;
-    if(devType == FusionBusItem::DeviceType::TempSensor)
-        fusionItem = std::make_unique<TempSensorItem>();
-    else if(devType == FusionBusItem::DeviceType::VentDrive)
-        fusionItem = std::make_unique<VentDriveItem>();
-    else if(devType == FusionBusItem::DeviceType::SoilSensor)
-        fusionItem = std::make_unique<FusionBusItem>();
-    else if(devType == FusionBusItem::DeviceType::Unknown)
-        fusionItem = std::make_unique<FusionBusItem>();
-    else
-        fusionItem = std::make_unique<FusionBusItem>();
+    auto fusionItem = TempSensorList::createObjectFromType(json);
     fusionItem->populateFromJson(json);
     
     if(sensorList.getItem(id)) // if item exists
@@ -158,13 +145,7 @@ void TempSensorService::read(bool doNotify)
             std::cout << "FusionBus Device Found:" << std::to_string(id) << ", type: " << EnumCrafter::toString(devType) << std::endl;
             if(!sensorList.getItem(id)) // if item ain't already present
             {
-                std::unique_ptr<FusionBusItem> item = nullptr;
-                if(devType == FusionBusItem::DeviceType::VentDrive)
-                    item = std::make_unique<VentDriveItem>();
-                if(devType == FusionBusItem::DeviceType::SoilSensor)
-                    item = std::make_unique<FusionBusItem>();
-                if(devType == FusionBusItem::DeviceType::Unknown)
-                    item = std::make_unique<FusionBusItem>();
+                std::unique_ptr<FusionBusItem> item = TempSensorList::createObjectFromType(rawResponse);
                 item->setId(id);
                 item->setStatus(true);
                 this->sensorList.addItem(std::move(item)); // add device to live list
