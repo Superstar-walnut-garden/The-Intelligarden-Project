@@ -28,7 +28,7 @@ class TempSensorService :
 {
 public:
     static TempSensorService *getInstance(); // get singleton instance
-    void read(bool doNotify = false); // request a temp conversion from sensors
+    void loop(bool doNotify = false); // request a temp conversion from sensors
     double getData(uint64_t id); // returns sensor data from a registered sensor
     void forEachSensor(std::function<void(const TempSensorItem *)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
 
@@ -49,7 +49,10 @@ public:
 
 private:
     TempSensorService(); // private constructor for singleton pattern
-    void obtainSensors(); // helper function to obtain sensors
+    void obtainOneWireDevices();
+    void handleOneWireDevices();
+    void obtainUartDevices();
+    void handleUartDevices();
     double getTempFromSensor(uint64_t address);
 
     OneWire oneWireBus;

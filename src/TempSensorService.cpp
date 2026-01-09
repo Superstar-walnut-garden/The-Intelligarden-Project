@@ -91,113 +91,21 @@ void TempSensorService::forEachSensor(std::function<void(const TempSensorItem *)
 }
 
 /**
- * @brief Request a temperature conversion from sensors.
+ * @brief handle alll devices and requests
  * 
- * @param doNotify If true, notify the observers when data is ready (through observer pattern).
+ * @param doNotify If true, notify the temp sensor observers when data is ready (through observer pattern).
  */
-void TempSensorService::read(bool doNotify)
+void TempSensorService::loop(bool doNotify)
 {
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
-    obtainSensors(); // update the list of connected sensors (liveSensorList)
-    sensors.requestTemperatures();
-    sensorList.forEach([this](FusionBusItem *item) -> void 
-    {
-        if(item->getType() == FusionBusItem::DeviceType::TempSensor)
-        {
-            auto castedItem = static_cast<TempSensorItem*>(item);
-            auto temp = getTempFromSensor(castedItem->getId());
-            castedItem->setTemp(temp);
-        }
-    });
+    obtainOneWireDevices(); // update the list of connected onewire devices (ds18b20 sensors)
+    handleOneWireDevices(); // retrive temperature data from sensors
     if (doNotify)
         notify(); // notify the observers when data is ready
-    delay(500);
-    fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
-    uart_set_mode(UART_NUM_1, UART_MODE_RS485_HALF_DUPLEX); // tweak serial to become halfduplex opendrain
-    delay(100);
-    fSerial.println("FusionBusPair");
-    fSerial.flush(); // wait for full transmition
-    fSerial.end(); // end Tx
-    fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin rx
-    fSerial.read(); // flush out the initial null terminator byte (0x00)
-    delay(100); // wait for response
-    std::string rawResponse;
-    while(fSerial.available())
-        rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
-    fSerial.end(); // end rx
-    for (unsigned char c : rawResponse) 
-    {
-        std::cout << std::hex << (int)c << ' ';
-    }
-    std::cout << std::endl;
-
-    std::cout << "raw response:" << rawResponse << std::endl;
-    std::cout << "raw response.c_str():" << rawResponse.c_str() << std::endl;
-    // rawResponse = "{\"id\": 123456789}"; 
-    JsonDocument doc;
-    if(deserializeJson(doc, rawResponse.c_str()) == DeserializationError::Ok) // if response is a valid json
-    {
-        std::cout << "json valid!" << std::endl;
-        if(doc.containsKey("id") and doc.containsKey("type"))
-        {
-            auto id = doc["id"].as<uint32_t>(); // Extract id parameter
-            auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
-            std::cout << "FusionBus Device Found:" << std::to_string(id) << ", type: " << EnumCrafter::toString(devType) << std::endl;
-            if(!sensorList.getItem(id)) // if item ain't already present
-            {
-                std::unique_ptr<FusionBusItem> item = TempSensorList::createObjectFromType(rawResponse);
-                item->setId(id);
-                item->setStatus(true);
-                this->sensorList.addItem(std::move(item)); // add device to live list
-            }
-        }
-    }
-    else 
-        std::cout << "Deserialization failed of this rawResponse.c_str(): " << rawResponse.c_str() << std::endl;
-    delay(200); // wait for slave stablization
-
-    auto checkPresences = [&]() -> void
-    {
-        sensorList.forEach([&](FusionBusItem *device) 
-        {
-            Serial.println(("------- item type ======>> " + std::string(EnumCrafter::toString(device->getType()))).c_str());
-            if(device->getType() != FusionBusItem::DeviceType::TempSensor) // if it wasn't temp sensor (wasn't on onewire bus)
-            {
-                fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
-                delay(100); // wait for Tx stablization
-                JsonDocument doc;
-                std::string txStr;
-                doc["id"] = device->getId();
-                serializeJson(doc, txStr);
-                fSerial.println(("FusionBusCommunicate" + txStr).c_str());
-                fSerial.flush(); // wait for full transmition
-                fSerial.end(); // end Tx
-
-                fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin Rx
-                fSerial.read(); // flush out the initial null terminator byte (0x00)
-                delay(1000); // wait for response
-                std::string rawResponse;
-                while(fSerial.available())
-                    rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
-                fSerial.end(); // end Rx
-                std::cout << "raw presense check response:" << rawResponse << std::endl;
-                JsonDocument docRx;
-                if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
-                {
-                    std::cout << "FusionBus Device" << std::to_string(device->getId()) << " is present!!!" << std::endl;
-                    device->setStatus(true); // set connection status to true
-                }
-                else
-                {
-                    device->setStatus(false); // set connection status to false
-                    if(device->getName().empty()) // if not registered (don't have a name)
-                        sensorList.deleteItem(device->getId()); // delete item from the list
-                }
-            }
-        });
-    };
-    checkPresences();
-    pinMode(15, OUTPUT_OPEN_DRAIN);
+    delay(10); // wait for bus stablization
+    obtainUartDevices();
+    delay(10); // wait for slave stablization
+    handleUartDevices();
 }
 
 /**
@@ -257,10 +165,125 @@ std::string TempSensorService::get(uint64_t id) const
 }
 
 /**
+ * @brief get temperature data from ds18b20 temp sensors on onewire bus
+ * 
+ */
+void TempSensorService::handleOneWireDevices()
+{
+    sensors.requestTemperatures();
+    sensorList.forEach([this](FusionBusItem *item) -> void 
+    {
+        if(item->getType() == FusionBusItem::DeviceType::TempSensor)
+        {
+            auto castedItem = static_cast<TempSensorItem*>(item);
+            auto temp = getTempFromSensor(castedItem->getId());
+            castedItem->setTemp(temp);
+        }
+    });
+}
+
+/**
+ * @brief Handle uart devices and update their connection status
+ * 
+ */
+void TempSensorService::handleUartDevices()
+{
+    sensorList.forEach([&](FusionBusItem *device) 
+    {
+        Serial.println(("------- item type ======>> " + std::string(EnumCrafter::toString(device->getType()))).c_str());
+        if(device->getType() != FusionBusItem::DeviceType::TempSensor) // if it wasn't temp sensor (wasn't on onewire bus)
+        {
+            fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
+            delay(100); // wait for Tx stablization
+            JsonDocument doc;
+            std::string txStr;
+            doc["id"] = device->getId();
+            serializeJson(doc, txStr);
+            fSerial.println(("FusionBusCommunicate" + txStr).c_str());
+            fSerial.flush(); // wait for full transmition
+            fSerial.end(); // end Tx
+
+            fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin Rx
+            fSerial.read(); // flush out the initial null terminator byte (0x00)
+            delay(1000); // wait for response
+            std::string rawResponse;
+            while(fSerial.available())
+                rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
+            fSerial.end(); // end Rx
+            std::cout << "raw presense check response:" << rawResponse << std::endl;
+            JsonDocument docRx;
+            if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
+            {
+                std::cout << "FusionBus Device" << std::to_string(device->getId()) << " is present!!!" << std::endl;
+                device->setStatus(true); // set connection status to true
+            }
+            else
+            {
+                device->setStatus(false); // set connection status to false
+                if(device->getName().empty()) // if not registered (don't have a name)
+                    sensorList.deleteItem(device->getId()); // delete item from the list
+            }
+        }
+    });
+    pinMode(15, OUTPUT_OPEN_DRAIN); // switch back to opendrain for onewire bus
+}
+
+/**
+ * @brief Scan for a discoverable device on the uart bus to pair with (one device at a time).
+ * 
+ */
+void TempSensorService::obtainUartDevices()
+{
+    fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
+    uart_set_mode(UART_NUM_1, UART_MODE_RS485_HALF_DUPLEX); // tweak serial to become halfduplex opendrain
+    delay(100);
+    fSerial.println("FusionBusPair");
+    fSerial.flush(); // wait for full transmition
+    fSerial.end(); // end Tx
+    fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin rx
+    fSerial.read(); // flush out the initial null terminator byte (0x00)
+    delay(100); // wait for response
+    std::string rawResponse;
+    while(fSerial.available())
+        rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
+    fSerial.end(); // end rx
+    for (unsigned char c : rawResponse) 
+    {
+        std::cout << std::hex << (int)c << ' ';
+    }
+    std::cout << std::endl;
+
+    std::cout << "raw response:" << rawResponse << std::endl;
+    std::cout << "raw response.c_str():" << rawResponse.c_str() << std::endl;
+    // rawResponse = "{\"id\": 123456789}"; 
+    JsonDocument doc;
+    if(deserializeJson(doc, rawResponse.c_str()) == DeserializationError::Ok) // if response is a valid json
+    {
+        std::cout << "json valid!" << std::endl;
+        if(doc.containsKey("id") and doc.containsKey("type"))
+        {
+            auto id = doc["id"].as<uint32_t>(); // Extract id parameter
+            auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
+            std::cout << "FusionBus Device Found:" << std::to_string(id) << ", type: " << EnumCrafter::toString(devType) << std::endl;
+            if(!sensorList.getItem(id)) // if item ain't already present
+            {
+                std::unique_ptr<FusionBusItem> item = TempSensorList::createObjectFromType(rawResponse);
+                item->setId(id);
+                item->setStatus(true);
+                this->sensorList.addItem(std::move(item)); // add device to live list
+            }
+        }
+    }
+    else 
+        std::cout << "Deserialization failed of this rawResponse.c_str(): " << rawResponse.c_str() << std::endl;
+    pinMode(15, OUTPUT_OPEN_DRAIN); // switch back to opendrain for onewire operation
+}
+
+/**
  * @brief Scan for ds18b20 sensors on the 1wire bus.
  * 
  */
-void TempSensorService::obtainSensors()
+void TempSensorService::obtainOneWireDevices()
 {
     oneWireBus.begin(config.getSensorPin()); // restart the bus
     oneWireBus.reset(); // reset the bus
@@ -270,7 +293,7 @@ void TempSensorService::obtainSensors()
         
         if(item->getName().empty()) // if not registered
             sensorList.deleteItem(item->getId()); // delete the non-registered item from the list
-    });
+    }, [](const FusionBusItem *item) { return (item->getType() == FusionBusItem::DeviceType::TempSensor); }); // only iterate on temp sensors
     byte addr[8]; // address buffer
     while (oneWireBus.search(addr)) // start the search (scan)
     {
