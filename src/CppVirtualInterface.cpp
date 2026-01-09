@@ -71,6 +71,7 @@ int virtualMain()
     centralizedSignalHub->registerService(ioManager);
     centralizedSignalHub->registerService(thermostatManager);
     centralizedSignalHub->registerService(scheduler);
+    centralizedSignalHub->registerService(temperature); // fusionbus service
 
     logDispatcher->attachLoggableService(temperature);
     logDispatcher->attachLoggableService(ioManager);

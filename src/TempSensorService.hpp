@@ -18,12 +18,14 @@
 #include "TempSensorConfig.hpp"
 #include "ILoggableService.hpp"
 #include "TempSensorItem.hpp"
+#include "ISignalCompatibleService.hpp"
 
 class TempSensorService : 
     public IResourceController<TempSensorItem>, 
     public IConfigController<TempSensorConfig>,
     public IResourcePersistenceService, 
     public Subject<TempSensorService>, 
+    public ISignalCompatibleService,
     public ILoggableService
 {
 public:
@@ -46,6 +48,7 @@ public:
 
     std::string getName() const override;
     std::vector<ILoggableItem*> getLoggableItems() const override;
+    using Subject<TempSensorService>::attach;
 
 private:
     TempSensorService(); // private constructor for singleton pattern
@@ -54,6 +57,10 @@ private:
     void obtainUartDevices();
     void handleUartDevices();
     double getTempFromSensor(uint64_t address);
+
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override
+        { return sensorList.getAllAs<ISignalCompatibleItem>(); }
+    using ISignalCompatibleService::attach; // hide this attach to avoid ambiugity because we have two attaches from base classes
 
     OneWire oneWireBus;
     DallasTemperature sensors;

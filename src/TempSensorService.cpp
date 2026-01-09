@@ -58,6 +58,7 @@ void TempSensorService::update(uint64_t id, std::string json)
     else
         sensorList.addItem(std::move(fusionItem));
     storeAll();
+    Subject<ISignalCompatibleService>::notify(); // notify the centralized signal hub for item update/removal
 }
 
 /**
@@ -70,6 +71,7 @@ void TempSensorService::remove(uint64_t id)
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     sensorList.deleteItem(id);
     storeAll();
+    Subject<ISignalCompatibleService>::notify(); // notify the centralized signal hub for item update/remova
 }
 
 /**
@@ -101,7 +103,7 @@ void TempSensorService::loop(bool doNotify)
     obtainOneWireDevices(); // update the list of connected onewire devices (ds18b20 sensors)
     handleOneWireDevices(); // retrive temperature data from sensors
     if (doNotify)
-        notify(); // notify the observers when data is ready
+        Subject<TempSensorService>::notify(); // notify the observers when data is ready
     delay(10); // wait for bus stablization
     obtainUartDevices();
     delay(10); // wait for slave stablization
@@ -348,7 +350,7 @@ void TempSensorService::restoreAll()
  */
 std::string TempSensorService::getName() const
 {
-    return "TempSensor";
+    return "FusionBus";
 }
 
 /**
