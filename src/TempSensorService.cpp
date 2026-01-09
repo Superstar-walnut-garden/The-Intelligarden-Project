@@ -146,17 +146,17 @@ void TempSensorService::read(bool doNotify)
 
     std::cout << "raw response:" << rawResponse << std::endl;
     std::cout << "raw response.c_str():" << rawResponse.c_str() << std::endl;
-    // rawResponse = "{\"UUID\": 123456789}"; 
+    // rawResponse = "{\"id\": 123456789}"; 
     JsonDocument doc;
     if(deserializeJson(doc, rawResponse.c_str()) == DeserializationError::Ok) // if response is a valid json
     {
         std::cout << "json valid!" << std::endl;
-        if(doc.containsKey("UUID") and doc.containsKey("type"))
+        if(doc.containsKey("id") and doc.containsKey("type"))
         {
-            auto uuid = doc["UUID"].as<uint32_t>(); // Extract uuid parameter
+            auto id = doc["id"].as<uint32_t>(); // Extract id parameter
             auto devType = EnumCrafter::parse<FusionBusItem::DeviceType>(doc["type"].as<std::string>()).value_or(FusionBusItem::DeviceType::Unknown);
-            std::cout << "FusionBus Device Found:" << std::to_string(uuid) << ", type: " << EnumCrafter::toString(devType) << std::endl;
-            if(!sensorList.getItem(uuid)) // if item ain't already present
+            std::cout << "FusionBus Device Found:" << std::to_string(id) << ", type: " << EnumCrafter::toString(devType) << std::endl;
+            if(!sensorList.getItem(id)) // if item ain't already present
             {
                 std::unique_ptr<FusionBusItem> item = nullptr;
                 if(devType == FusionBusItem::DeviceType::VentDrive)
@@ -165,7 +165,7 @@ void TempSensorService::read(bool doNotify)
                     item = std::make_unique<FusionBusItem>();
                 if(devType == FusionBusItem::DeviceType::Unknown)
                     item = std::make_unique<FusionBusItem>();
-                item->setId(uuid);
+                item->setId(id);
                 item->setStatus(true);
                 this->sensorList.addItem(std::move(item)); // add device to live list
             }
@@ -186,7 +186,7 @@ void TempSensorService::read(bool doNotify)
                 delay(100); // wait for Tx stablization
                 JsonDocument doc;
                 std::string txStr;
-                doc["UUID"] = device->getId();
+                doc["id"] = device->getId();
                 serializeJson(doc, txStr);
                 fSerial.println(("FusionBusCommunicate" + txStr).c_str());
                 fSerial.flush(); // wait for full transmition
