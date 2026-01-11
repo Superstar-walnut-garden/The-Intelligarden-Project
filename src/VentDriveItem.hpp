@@ -28,7 +28,9 @@ public:
     double getEndstopMinDistance() const;
     State getCurrentState() const;
     int getVentingPercent() const;
+    bool getAutoHomeFlag() const;
     
+    void dropAutoHomeFlag();
     void setCurrentState(State state);
     void setCurrentVentingPercent(std::optional<int> currentVentingPercent);
     void setVentingPercent(int ventingPercent);
@@ -38,4 +40,5 @@ private:
     std::optional<int> currentVentingPercent;
     double length, stepPermm, speed, maxCompensation, acceleration, endstopMinDistance;
     State currentState;
+    bool autoHomeFlag;
 };

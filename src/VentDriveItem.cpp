@@ -8,7 +8,7 @@
  */
 VentDriveItem::VentDriveItem(): 
     FusionBusItem(FusionBusItem::DeviceType::VentDrive), ventingPercent(50), currentVentingPercent(std::nullopt),
-        length(100), stepPermm(200), speed(8), maxCompensation(10), acceleration(5), 
+        length(100), stepPermm(200), speed(8), maxCompensation(10), acceleration(5), autoHomeFlag(false), 
             endstopMinDistance(10), currentState(VentDriveItem::State::Unknown)
 {
     Serial.println("VentDriveItem created!!!!!!!!!!!");
@@ -35,6 +35,8 @@ VentDriveItem::VentDriveItem():
         maxCompensation = json["maxCompensation"].as<double>();
         acceleration = json["acceleration"].as<double>();
         endstopMinDistance = json["endstopMinDistance"].as<double>();
+        if((json["AutoHomeFlag"].as<bool>() | false)) // if autohome flag is true
+            autoHomeFlag = true; // raise autoHomeFlag
     });
 }
 
@@ -106,6 +108,25 @@ double VentDriveItem::getEndstopMinDistance() const
 VentDriveItem::State VentDriveItem::getCurrentState() const
 {
     return currentState;
+}
+
+/**
+ * @brief get autoHomeFlag
+ * 
+ * @return bool flag
+ */
+bool VentDriveItem::getAutoHomeFlag() const
+{
+    return autoHomeFlag;
+}
+
+/**
+ * @brief drop autoHomeFlag
+ * 
+ */
+void VentDriveItem::dropAutoHomeFlag()
+{
+    autoHomeFlag = false;
 }
 
 /**

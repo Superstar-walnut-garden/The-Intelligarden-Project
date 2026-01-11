@@ -102,12 +102,12 @@ void TempSensorService::loop(bool doNotify)
     std::lock_guard<std::mutex> lock(mtx); // Lock the mutex
     obtainOneWireDevices(); // update the list of connected onewire devices (ds18b20 sensors)
     handleOneWireDevices(); // retrive temperature data from sensors
-    if (doNotify)
-        Subject<TempSensorService>::notify(); // notify the observers when data is ready
     delay(10); // wait for bus stablization
     obtainUartDevices();
     delay(10); // wait for slave stablization
     handleUartDevices();
+    if (doNotify)
+        Subject<TempSensorService>::notify(); // notify the observers when data is ready
 }
 
 /**
@@ -236,8 +236,11 @@ void TempSensorService::handleUartDevices()
                             json["maxCompensation"] = castedDevice->getMaxCompensation();
                             json["ventingPercent"] = castedDevice->getVentingPercent();
 
-                            if(isUninitialized)
+                            if(isUninitialized or castedDevice->getAutoHomeFlag())
+                            {
                                 json["autoHomeFlag"] = true;
+                                castedDevice->dropAutoHomeFlag(); // drop flag
+                            }
                         });
                     }
                 }
