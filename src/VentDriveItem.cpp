@@ -9,7 +9,7 @@
 VentDriveItem::VentDriveItem(): 
     FusionBusItem(FusionBusItem::DeviceType::VentDrive), ventingPercent(50), currentVentingPercent(std::nullopt),
         length(100), stepPermm(200), speed(8), maxCompensation(10), acceleration(5), autoHomeFlag(false), 
-            endstopMinDistance(10), currentState(VentDriveItem::State::Unknown)
+            endstopMinDistance(10), currentState(VentDriveItem::State::Unknown), invertDir(false), invertEndstopPin(false)
 {
     Serial.println("VentDriveItem created!!!!!!!!!!!");
     registerToJsonCallback([this](JsonDocument &json) -> void
@@ -21,6 +21,8 @@ VentDriveItem::VentDriveItem():
         json["maxCompensation"] = maxCompensation;
         json["acceleration"] = acceleration;
         json["endstopMinDistance"] = endstopMinDistance;
+        json["invertEndstopPin"] = invertEndstopPin;
+        json["invertDir"] = invertDir;
 
         json["currentState"] = EnumCrafter::toString(currentState);
         if(currentVentingPercent.has_value())
@@ -35,6 +37,9 @@ VentDriveItem::VentDriveItem():
         maxCompensation = json["maxCompensation"].as<double>();
         acceleration = json["acceleration"].as<double>();
         endstopMinDistance = json["endstopMinDistance"].as<double>();
+        invertDir = json["invertDir"].as<bool>();
+        invertEndstopPin = json["invertEndstopPin"].as<bool>();
+        
         if((json["AutoHomeFlag"].as<bool>() | false)) // if autohome flag is true
             autoHomeFlag = true; // raise autoHomeFlag
     });
@@ -137,6 +142,26 @@ void VentDriveItem::dropAutoHomeFlag()
 int VentDriveItem::getVentingPercent() const
 {
     return ventingPercent;
+}
+
+/**
+ * @brief is motor direction inverted?
+ * 
+ * @return bool invertDir
+ */
+bool VentDriveItem::isDirInverted() const
+{
+    return invertDir;
+}
+
+/**
+ * @brief is endstop pin inverted?
+ * 
+ * @return bool invertEndstopPin
+ */
+bool VentDriveItem::isEndstopPinInverted() const
+{
+    return invertEndstopPin;
 }
 
 /**

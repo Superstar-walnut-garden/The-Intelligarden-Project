@@ -29,6 +29,8 @@ public:
     State getCurrentState() const;
     int getVentingPercent() const;
     bool getAutoHomeFlag() const;
+    bool isDirInverted() const;
+    bool isEndstopPinInverted() const;
     
     void dropAutoHomeFlag();
     void setCurrentState(State state);
@@ -41,4 +43,5 @@ private:
     double length, stepPermm, speed, maxCompensation, acceleration, endstopMinDistance;
     State currentState;
     bool autoHomeFlag;
+    bool invertDir, invertEndstopPin;
 };

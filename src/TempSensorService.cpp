@@ -237,6 +237,8 @@ void TempSensorService::handleUartDevices()
                             json["endstopMinDistance"] = castedDevice->getEndstopMinDistance();
                             json["maxCompensation"] = castedDevice->getMaxCompensation();
                             json["ventingPercent"] = castedDevice->getVentingPercent();
+                            json["invertDir"] = castedDevice->isDirInverted();
+                            json["invertEndstopPin"] = castedDevice->isEndstopPinInverted();
 
                             if(isUninitialized or castedDevice->getAutoHomeFlag())
                             {
