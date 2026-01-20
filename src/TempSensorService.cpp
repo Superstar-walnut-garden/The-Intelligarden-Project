@@ -225,6 +225,8 @@ void TempSensorService::handleUartDevices()
                     if(auto state = EnumCrafter::parse<VentDriveItem::State>(docRx["state"]))
                     {
                         castedDevice->setCurrentState(state.value());
+                        if(!docRx["ventingPercent"].isNull())
+                            castedDevice->setCurrentVentingPercent(docRx["ventingPercent"]);
                         auto isUninitialized = (state.value() == VentDriveItem::State::Uninitialized);
                         castedDevice->addResponseApender([isUninitialized, castedDevice](JsonDocument &json) -> void
                         {
@@ -322,6 +324,7 @@ void TempSensorService::obtainOneWireDevices()
         if(item->getName().empty()) // if not registered
             sensorList.deleteItem(item->getId()); // delete the non-registered item from the list
     }, [](const FusionBusItem *item) { return (item->getType() == FusionBusItem::DeviceType::TempSensor); }); // only iterate on temp sensors
+    // }, [](const FusionBusItem *item) { if(item) return (item->getType() == FusionBusItem::DeviceType::TempSensor); else return false; }); // only iterate on temp sensors
     byte addr[8]; // address buffer
     while (oneWireBus.search(addr)) // start the search (scan)
     {
