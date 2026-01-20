@@ -43,7 +43,8 @@ void WebApiService::init()
     // Serve HTML page to enter WiFi credentials
     server.serveStatic("/", SPIFFS, "/dist/")
         .setDefaultFile("index.html")
-        .setCacheControl("max-age=0"); // disable browser cache due to hash-free assets
+        .setCacheControl("max-age=0") // disable browser cache due to hash-free assets
+        .setAuthentication("admin", "12345654321");
 
     createEndpoint("/getCurrentTime", [](std::optional<uint64_t> id, std::string data) -> std::string
     {
