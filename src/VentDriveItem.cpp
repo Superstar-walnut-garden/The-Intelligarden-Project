@@ -9,7 +9,7 @@
 VentDriveItem::VentDriveItem(): 
     FusionBusItem(FusionBusItem::DeviceType::VentDrive), ventingPercent(50), currentVentingPercent(std::nullopt),
         length(100), stepPermm(200), speed(8), maxCompensation(10), acceleration(5), autoHomeFlag(false), 
-            endstopMinDistance(10), currentState(VentDriveItem::State::Unknown), invertDir(false), invertEndstopPin(false)
+            endstopExtraDistance(10), currentState(VentDriveItem::State::Unknown), invertDir(false), invertEndstopPin(false)
 {
     Serial.println("VentDriveItem created!!!!!!!!!!!");
     registerToJsonCallback([this](JsonDocument &json) -> void
@@ -20,7 +20,7 @@ VentDriveItem::VentDriveItem():
         json["speed"] = speed;
         json["maxCompensation"] = maxCompensation;
         json["acceleration"] = acceleration;
-        json["endstopMinDistance"] = endstopMinDistance;
+        json["endstopExtraDistance"] = endstopExtraDistance;
         json["invertEndstopPin"] = invertEndstopPin;
         json["invertDir"] = invertDir;
 
@@ -36,7 +36,7 @@ VentDriveItem::VentDriveItem():
         speed = json["speed"].as<double>();
         maxCompensation = json["maxCompensation"].as<double>();
         acceleration = json["acceleration"].as<double>();
-        endstopMinDistance = json["endstopMinDistance"].as<double>();
+        endstopExtraDistance = json["endstopExtraDistance"].as<double>();
         invertDir = json["invertDir"].as<bool>();
         invertEndstopPin = json["invertEndstopPin"].as<bool>();
         
@@ -96,13 +96,13 @@ double VentDriveItem::getAcceleration() const
 }
 
 /**
- * @brief get minimum distance to get from the endstop to expect endstop release
+ * @brief get extra distance to get from the endstop to endstop release
  * 
- * @return double endstopMinDistance
+ * @return double endstopExtraDistance
  */
-double VentDriveItem::getEndstopMinDistance() const
+double VentDriveItem::getEndstopExtraDistance() const
 {
-    return endstopMinDistance;
+    return endstopExtraDistance;
 }
 
 /**

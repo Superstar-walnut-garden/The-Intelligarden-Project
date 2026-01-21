@@ -234,7 +234,7 @@ void TempSensorService::handleUartDevices()
                             json["acceleration"] = castedDevice->getAcceleration();
                             json["speed"] = castedDevice->getSpeed();
                             json["stepPermm"] = castedDevice->getStepPermm();
-                            json["endstopMinDistance"] = castedDevice->getEndstopMinDistance();
+                            json["endstopExtraDistance"] = castedDevice->getEndstopExtraDistance();
                             json["maxCompensation"] = castedDevice->getMaxCompensation();
                             json["ventingPercent"] = castedDevice->getVentingPercent();
                             json["invertDir"] = castedDevice->isDirInverted();
@@ -385,15 +385,15 @@ std::string TempSensorService::getName() const
 }
 
 /**
- * @brief Get the list of loggable items (data logging enabled, connected and registered sensors).
+ * @brief Get the list of loggable items (data logging enabled, connected and registered devices).
  * 
  * @return std::vector<ILoggableItem*> The list of loggable items.
  */
 std::vector<ILoggableItem *> TempSensorService::getLoggableItems() const
 {
-    return sensorList.getAllAs<ILoggableItem, TempSensorItem>([](const TempSensorItem * item) -> bool
+    return sensorList.getAllAs<ILoggableItem, FusionBusItem>([](const FusionBusItem * item) -> bool
     {
-        return (item->isConnected() and !item->getName().empty() and item->isLoggingEnabled()); // only add if sensor is connected and has a name (registered)
+        return (item->isLoggingEnabled() and item->getStatus() and !item->getName().empty()); // only add if sensor is connected and has a name (registered)
     });
 }
 

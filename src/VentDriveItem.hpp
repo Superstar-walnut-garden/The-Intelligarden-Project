@@ -25,7 +25,7 @@ public:
     double getSpeed() const;
     double getMaxCompensation() const;
     double getAcceleration() const;
-    double getEndstopMinDistance() const;
+    double getEndstopExtraDistance() const;
     State getCurrentState() const;
     int getVentingPercent() const;
     bool getAutoHomeFlag() const;
@@ -40,7 +40,7 @@ public:
 private:
     int ventingPercent;
     std::optional<int> currentVentingPercent;
-    double length, stepPermm, speed, maxCompensation, acceleration, endstopMinDistance;
+    double length, stepPermm, speed, maxCompensation, acceleration, endstopExtraDistance;
     State currentState;
     bool autoHomeFlag;
     bool invertDir, invertEndstopPin;
