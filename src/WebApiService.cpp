@@ -86,7 +86,7 @@ void WebApiService::init()
     createEndpoint<TempSensorConfig>("/temp-sensor-config", TempSensorService::getInstance());
     createEndpoint("/signal-hub", CentralizedSignalHubService::getInstance());
 
-    createEndpoint<TempSensorItem>("/temp-sensor", TempSensorService::getInstance());
+    createEndpoint<TempSensorItem>("/fusionbus", TempSensorService::getInstance());
     createEndpoint<GpioItem>("/gpio", GpioService::getInstance());
     createEndpoint<ThermostatItem>("/thermostat", ThermostatService::getInstance());
     createEndpoint<SchedulerItem>("/scheduler", SchedulerService::getInstance());
