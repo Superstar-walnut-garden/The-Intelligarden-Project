@@ -165,6 +165,18 @@ void BaseList<T>::deleteItem(uint64_t id)
 }
 
 /**
+ * @brief delete item if a desired condition is present for an item
+ *
+ * @tparam T 
+ * @param deleteCondition lambda called on every item in the list. if returns true, item gets deleted from the list.
+ */
+template <class T>
+void BaseList<T>::deleteItemIf(std::function<bool(std::unique_ptr<T>& item)> deleteCondition)
+{
+    list.erase(std::remove_if(list.begin(), list.end(), deleteCondition), list.end());
+}
+
+/**
  * @brief For each item in the list, call the given function.
  *
  * @tparam T

@@ -25,6 +25,7 @@ public:
     virtual void printList();
     virtual void modifyItem(uint64_t id, std::unique_ptr<T> newItem);
     virtual void deleteItem(uint64_t id);
+    virtual void deleteItemIf(std::function<bool(std::unique_ptr<T>& item)> deleteCondition);
 
     virtual void forEach(std::function<void(T*)> func, std::function<bool(const T*)> filter = nullptr) const;
 
