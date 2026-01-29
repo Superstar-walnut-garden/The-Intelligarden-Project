@@ -95,16 +95,11 @@ void BaseItem::registerSerializationCallbacks()
         json["id"] = id;
         json["name"] = name;
         json["status"] = status;
-        Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 1");
-        Serial.printf("vtable=%p\n", *(void**)this); // just for debugging
-        Serial.println("BaseItem::registerToJsonCallback() lambda called from JsonSerializable 2");
     });
     registerFromJsonCallback([this](JsonDocument &json) -> void
     {
         id = json["id"].as<uint64_t>();
         name = json["name"].as<std::string>();
         status = json["status"].as<bool>();
-        Serial.printf("vtable=%p\n", *(void**)this); // just for debugging
-        Serial.println("BaseItem::registerFromJsonCallback() lambda called from JsonSerializable");
     });
 }
