@@ -32,6 +32,11 @@ public:
     bool isDirInverted() const;
     bool isEndstopPinInverted() const;
     
+    bool isAutoTempControlEnabled();
+    double getCloseStateTemp();
+    double getOpenStateTemp();
+    uint64_t getSensor();
+    
     void dropAutoHomeFlag();
     void setCurrentState(State state);
     void setCurrentVentingPercent(std::optional<int> currentVentingPercent);
@@ -44,4 +49,9 @@ private:
     State currentState;
     bool autoHomeFlag;
     bool invertDir, invertEndstopPin;
+
+    bool autoTempControl;
+    double closeStateTemp;
+    double openStateTemp;
+    uint64_t sensor;
 };

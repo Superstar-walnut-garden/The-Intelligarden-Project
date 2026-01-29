@@ -9,7 +9,8 @@
 VentDriveItem::VentDriveItem(): 
     FusionBusItem(FusionBusItem::DeviceType::VentDrive), ventingPercent(50), currentVentingPercent(std::nullopt),
         length(100), stepPermm(200), speed(8), maxCompensation(10), acceleration(5), autoHomeFlag(false), 
-            endstopExtraDistance(10), currentState(VentDriveItem::State::Unknown), invertDir(false), invertEndstopPin(false)
+            endstopExtraDistance(10), currentState(VentDriveItem::State::Unknown), invertDir(false), invertEndstopPin(false), 
+                autoTempControl(false), closeStateTemp(0.00), openStateTemp(30.00), sensor(-1)
 {
     Serial.println("VentDriveItem created!!!!!!!!!!!");
     registerToJsonCallback([this](JsonDocument &json) -> void
@@ -23,6 +24,11 @@ VentDriveItem::VentDriveItem():
         json["endstopExtraDistance"] = endstopExtraDistance;
         json["invertEndstopPin"] = invertEndstopPin;
         json["invertDir"] = invertDir;
+
+        json["autoTempControl"] = autoTempControl;
+        json["closeStateTemp"] = closeStateTemp;
+        json["openStateTemp"] = openStateTemp;
+        json["sensor"] = std::to_string(sensor);
 
         json["currentState"] = EnumCrafter::toString(currentState);
         if(currentVentingPercent.has_value())
@@ -39,6 +45,11 @@ VentDriveItem::VentDriveItem():
         endstopExtraDistance = json["endstopExtraDistance"].as<double>();
         invertDir = json["invertDir"].as<bool>();
         invertEndstopPin = json["invertEndstopPin"].as<bool>();
+
+        autoTempControl = json["autoTempControl"].as<bool>();
+        closeStateTemp = json["closeStateTemp"].as<double>();
+        openStateTemp = json["openStateTemp"].as<double>();
+        sensor = std::stoull(json["sensor"].as<std::string>()); // use string in json to handle 64bit integers
         
         if((json["AutoHomeFlag"].as<bool>() | false)) // if autohome flag is true
             autoHomeFlag = true; // raise autoHomeFlag
@@ -163,6 +174,47 @@ bool VentDriveItem::isEndstopPinInverted() const
 {
     return invertEndstopPin;
 }
+
+/**
+ * @brief is automatic venting percent calculation based on temperature enabled?
+ * 
+ * @return bool autoTempControl
+ */
+bool VentDriveItem::isAutoTempControlEnabled()
+{
+    return autoTempControl;
+}
+
+/**
+ * @brief get fully-closed-state (0% ventilation) temperature
+ * 
+ * @return double temperature
+ */
+double VentDriveItem::getCloseStateTemp()
+{
+    return closeStateTemp;
+}
+
+/**
+ * @brief get fully-open-state (100% ventilation) temperature
+ * 
+ * @return double temperature
+ */
+double VentDriveItem::getOpenStateTemp()
+{
+    return openStateTemp;
+}
+
+/**
+ * @brief get temp sensor id
+ * 
+ * @return double temperature (unsigned uint64_t of -1 is the default value if no sensor is selected)
+ */
+uint64_t VentDriveItem::getSensor()
+{
+    return sensor;
+}
+
 
 /**
  * @brief set current state of the device
