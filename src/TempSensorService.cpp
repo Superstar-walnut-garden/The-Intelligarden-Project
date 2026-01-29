@@ -2,6 +2,7 @@
 #include <driver/uart.h>
 #include "../EnumCrafter.hpp"
 #include "VentDriveItem.hpp"
+#include "CustomMathUtils.hpp"
 
 /**
  * @brief Initialize the instance of the TempSensorService to null.
@@ -190,6 +191,7 @@ void TempSensorService::handleOneWireDevices()
  */
 void TempSensorService::handleUartDevices()
 {
+    std::vector<uint64_t> pendingRemoves;
     sensorList.forEach([&](FusionBusItem *device) 
     {
         Serial.println(("------- item type ======>> " + std::string(EnumCrafter::toString(device->getType()))).c_str());
@@ -224,6 +226,12 @@ void TempSensorService::handleUartDevices()
                     auto castedDevice = sensorList.getAs<VentDriveItem>(device->getId());
                     if(auto state = EnumCrafter::parse<VentDriveItem::State>(docRx["state"]))
                     {
+                        if(castedDevice->isAutoTempControlEnabled()) // override venting percent if auto-temp-control is enabled
+                        {
+                            auto temp = getData(castedDevice->getSensor());
+                            if(temp != -127)
+                                castedDevice->setVentingPercent(CustomMathUtils::map(temp, castedDevice->getCloseStateTemp(), castedDevice->getOpenStateTemp(), 0, 100));
+                        }
                         castedDevice->setCurrentState(state.value());
                         if(!docRx["ventingPercent"].isNull())
                             castedDevice->setCurrentVentingPercent(docRx["ventingPercent"]);
@@ -253,9 +261,18 @@ void TempSensorService::handleUartDevices()
             {
                 device->setStatus(false); // set connection status to false
                 if(device->getName().empty()) // if not registered (don't have a name)
-                    sensorList.deleteItem(device->getId()); // delete item from the list
+                    pendingRemoves.push_back(device->getId());
             }
         }
+    });
+    sensorList.deleteItemIf([pendingRemoves](std::unique_ptr<FusionBusItem>& item) 
+    {   // delete unregistered devices that didn't responded (become disconnected)
+        for(const auto& id : pendingRemoves)
+        {
+            if(id == item->getId())
+                return true;
+        }
+        return false;
     });
     pinMode(15, OUTPUT_OPEN_DRAIN); // switch back to opendrain for onewire bus
 }
@@ -322,11 +339,11 @@ void TempSensorService::obtainOneWireDevices()
     sensorList.forEach([this](FusionBusItem *item) -> void 
     {
         item->setStatus(false); // reset the connection status of all items to false 
-        
-        if(item->getName().empty()) // if not registered
-            sensorList.deleteItem(item->getId()); // delete the non-registered item from the list
     }, [](const FusionBusItem *item) { return (item->getType() == FusionBusItem::DeviceType::TempSensor); }); // only iterate on temp sensors
-    // }, [](const FusionBusItem *item) { if(item) return (item->getType() == FusionBusItem::DeviceType::TempSensor); else return false; }); // only iterate on temp sensors
+    sensorList.deleteItemIf([](std::unique_ptr<FusionBusItem>& item) 
+    {   // delete unregistered sensors to allow redescovery if still present on the bus
+        return item->getName().empty() and (item->getType() == FusionBusItem::DeviceType::TempSensor);
+    });
     byte addr[8]; // address buffer
     while (oneWireBus.search(addr)) // start the search (scan)
     {
