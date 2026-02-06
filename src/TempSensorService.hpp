@@ -17,25 +17,27 @@
 #include "IConfigController.hpp"
 #include "TempSensorConfig.hpp"
 #include "ILoggableService.hpp"
+#include "TempSensorItem.hpp"
+#include "ISignalCompatibleService.hpp"
 
 class TempSensorService : 
     public IResourceController<TempSensorItem>, 
     public IConfigController<TempSensorConfig>,
     public IResourcePersistenceService, 
     public Subject<TempSensorService>, 
+    public ISignalCompatibleService,
     public ILoggableService
 {
 public:
     static TempSensorService *getInstance(); // get singleton instance
-    void read(bool doNotify = false); // request a temp conversion from sensors
-    double getData(std::string name); // returns sensor data from a registered sensor
+    void loop(bool doNotify = false); // request a temp conversion from sensors
     double getData(uint64_t id); // returns sensor data from a registered sensor
-    void forEachSensor(std::function<void(TempSensorItem)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
+    void forEachSensor(std::function<void(const TempSensorItem *)> callback, bool onlyRegisteredSensors = false); // iterate over each sensor.
 
-    std::string getAll() override;
-    std::string get(uint64_t id) override;
-    void create(TempSensorItem newItem) override;
-    void update(uint64_t id, TempSensorItem newItem) override; // modify a sensor
+    std::string getAll() const override;
+    std::string get(uint64_t id) const override;
+    void create(std::string newItem) override;
+    void update(uint64_t id, std::string newItem) override; // modify a sensor
     void remove(uint64_t id) override; // delete a sensor
 
     std::string getConfig() override;
@@ -45,22 +47,28 @@ public:
     void restoreAll() override;
 
     std::string getName() const override;
-    std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const override;
+    std::vector<ILoggableItem*> getLoggableItems() const override;
+    using Subject<TempSensorService>::attach;
 
 private:
     TempSensorService(); // private constructor for singleton pattern
-    void obtainSensors(); // helper function to obtain sensors
-    static void mergeAndCopy(TempSensorList &primary, TempSensorList secondary);
-
-    TempSensorList getCompleteList() const; // get a complete list of sensors
+    void obtainOneWireDevices();
+    void handleOneWireDevices();
+    void obtainUartDevices();
+    void handleUartDevices();
     double getTempFromSensor(uint64_t address);
+
+    std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override
+        { return sensorList.getAllAs<ISignalCompatibleItem>(); }
+    using ISignalCompatibleService::attach; // hide this attach to avoid ambiugity because we have two attaches from base classes
 
     OneWire oneWireBus;
     DallasTemperature sensors;
-    TempSensorList registeredSensorList; // sensors with a name associated to them
-    TempSensorList liveSensorList; // currently connected sensors (address only)
+    mutable TempSensorList sensorList; // sensors with a name associated to them
     TempSensorConfig config;
-    std::mutex mtx;
+    mutable std::mutex mtx;
+
+    HardwareSerial fSerial;
     
     static TempSensorService *instance;
 };

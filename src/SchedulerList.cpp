@@ -20,13 +20,15 @@ SchedulerList::SchedulerList(std::string json)
 */
 void SchedulerList::printList()
 {
-    for(auto & item : getList())
+    forEach([](SchedulerItem *item)
+    {
         std::cout <<
-            "ID: " << item.getId() << "\n" <<
-            "Start: " << item.getStartTime().toString() << "\n" <<
-            "Duration: " << item.getDuration().toString() << "\n" <<
-            "Weekday: " << item.getWeekday() << "\n" <<
-            "enabled: " << item.isEnabled() << "\n" <<
-            "Current Status: " << item.getStatus() <<
-            "Mode: " << item.getMode() << "\n\n";
+            "ID: " << item->getId() << "\n" <<
+            "Start: " << item->getStartTime().toString() << "\n" <<
+            "Duration: " << item->getDuration().toString() << "\n" <<
+            "Weekday: " << item->getWeekday() << "\n" <<
+            "enabled: " << item->isEnabled() << "\n" <<
+            "Current Status: " << item->getStatus() <<
+            "Mode: " << item->getMode() << "\n\n";
+    });
 }

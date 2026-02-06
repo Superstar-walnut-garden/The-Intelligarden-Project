@@ -14,7 +14,7 @@ DisplayService* DisplayService::instance = nullptr;
  * 
  */
 DisplayService::DisplayService()
-    : displayConfig(), oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(displayConfig.getAddress(), 2, 16), displayAvailable(false)
+    : displayConfig(Configuration::getInstance()->getDisplayConfig()), oled(U8G2_R0, U8X8_PIN_NONE, 22, 21), text("Booting up..."), charLcd(63, 2, 16), displayAvailable(false)
 {
     restoreAll(); // Restore the display configuration from persistent storage
     Serial.println(("display type: " + std::string(EnumCrafter::toString(displayConfig.getDisplayType()))).c_str());
@@ -138,10 +138,10 @@ void DisplayService::update(TempSensorService *temp)
 {
     Serial.println("DisplayService got an update!");
     text.clear();
-    temp->forEachSensor([this](TempSensorItem sensor) 
+    temp->forEachSensor([this](const TempSensorItem *sensor) 
     {
-        auto name = sensor.getName();
-        text += name + ": " + to_string_with_precision(sensor.getTemp(), 2) + "\n";
+        auto name = sensor->getName();
+        text += name + ": " + to_string_with_precision(sensor->getTemp(), 2) + "\n";
     }, false);
 }
 

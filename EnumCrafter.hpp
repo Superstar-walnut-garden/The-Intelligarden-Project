@@ -12,10 +12,12 @@
 #pragma once
 
 #include "src/DisplayConfig.hpp"
+#include "src/FusionBusItem.hpp"
 #include "src/LogDispatcherStatus.hpp"
 #include "src/SignalNameResolver.hpp"
 #include "src/SignalRouterItem.hpp"
 #include "src/StatusCode.hpp"
+#include "src/VentDriveItem.hpp"
 #include "src/WebApiService.hpp"
 
 #include <array>
@@ -34,6 +36,16 @@ constexpr std::string_view toString(SignalNameResolver::SignalType e) {
     switch (e) {
         case SignalNameResolver::SignalType::Broadcaster: return "Broadcaster";
         case SignalNameResolver::SignalType::Listener: return "Listener";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(FusionBusItem::DeviceType e) {
+    switch (e) {
+        case FusionBusItem::DeviceType::VentDrive: return "VentDrive";
+        case FusionBusItem::DeviceType::TempSensor: return "TempSensor";
+        case FusionBusItem::DeviceType::SoilSensor: return "SoilSensor";
+        case FusionBusItem::DeviceType::Unknown: return "Unknown";
         default: return "???";
     }
 }
@@ -76,6 +88,18 @@ constexpr std::string_view toString(LogDispatcherStatus e) {
     }
 }
 
+constexpr std::string_view toString(VentDriveItem::State e) {
+    switch (e) {
+        case VentDriveItem::State::Unknown: return "Unknown";
+        case VentDriveItem::State::Closing: return "Closing";
+        case VentDriveItem::State::Opening: return "Opening";
+        case VentDriveItem::State::Idle: return "Idle";
+        case VentDriveItem::State::Error: return "Error";
+        case VentDriveItem::State::Uninitialized: return "Uninitialized";
+        default: return "???";
+    }
+}
+
 constexpr std::string_view toString(DisplayConfig::DisplayType e) {
     switch (e) {
         case DisplayConfig::DisplayType::None: return "None";
@@ -89,6 +113,15 @@ template<>
 constexpr std::optional<SignalNameResolver::SignalType> parse<SignalNameResolver::SignalType>(std::string_view s) {
     if (s == "Broadcaster") return SignalNameResolver::SignalType::Broadcaster;
     if (s == "Listener") return SignalNameResolver::SignalType::Listener;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<FusionBusItem::DeviceType> parse<FusionBusItem::DeviceType>(std::string_view s) {
+    if (s == "VentDrive") return FusionBusItem::DeviceType::VentDrive;
+    if (s == "TempSensor") return FusionBusItem::DeviceType::TempSensor;
+    if (s == "SoilSensor") return FusionBusItem::DeviceType::SoilSensor;
+    if (s == "Unknown") return FusionBusItem::DeviceType::Unknown;
     return std::nullopt;
 }
 
@@ -127,6 +160,17 @@ constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::str
 }
 
 template<>
+constexpr std::optional<VentDriveItem::State> parse<VentDriveItem::State>(std::string_view s) {
+    if (s == "Unknown") return VentDriveItem::State::Unknown;
+    if (s == "Closing") return VentDriveItem::State::Closing;
+    if (s == "Opening") return VentDriveItem::State::Opening;
+    if (s == "Idle") return VentDriveItem::State::Idle;
+    if (s == "Error") return VentDriveItem::State::Error;
+    if (s == "Uninitialized") return VentDriveItem::State::Uninitialized;
+    return std::nullopt;
+}
+
+template<>
 constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
     if (s == "None") return DisplayConfig::DisplayType::None;
     if (s == "Oled") return DisplayConfig::DisplayType::Oled;
@@ -136,6 +180,9 @@ constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::Display
 
 template<>
 constexpr std::array<SignalNameResolver::SignalType, 2> makeIterable<SignalNameResolver::SignalType> = { SignalNameResolver::SignalType::Broadcaster, SignalNameResolver::SignalType::Listener };
+
+template<>
+constexpr std::array<FusionBusItem::DeviceType, 4> makeIterable<FusionBusItem::DeviceType> = { FusionBusItem::DeviceType::VentDrive, FusionBusItem::DeviceType::TempSensor, FusionBusItem::DeviceType::SoilSensor, FusionBusItem::DeviceType::Unknown };
 
 template<>
 constexpr std::array<WebApiService::Method, 4> makeIterable<WebApiService::Method> = { WebApiService::Method::Get, WebApiService::Method::Post, WebApiService::Method::Put, WebApiService::Method::Delete };
@@ -148,6 +195,9 @@ constexpr std::array<StatusCode, 3> makeIterable<StatusCode> = { StatusCode::SUC
 
 template<>
 constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
+
+template<>
+constexpr std::array<VentDriveItem::State, 6> makeIterable<VentDriveItem::State> = { VentDriveItem::State::Unknown, VentDriveItem::State::Closing, VentDriveItem::State::Opening, VentDriveItem::State::Idle, VentDriveItem::State::Error, VentDriveItem::State::Uninitialized };
 
 template<>
 constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };

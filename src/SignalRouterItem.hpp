@@ -47,8 +47,6 @@ public:
     };
 
 private:
-    void populateDerivedClassFromJson(JsonDocument &doc) override;
-    void derivedClassToJson(JsonDocument &doc) const override;
     std::vector<std::string> getLocalSignalNames() override;
     void evaluateStatus();
     using SignalCompatibleBaseItem::setStatus; // hide the base class setStatus method

@@ -98,11 +98,11 @@ void FirebaseService::update(SystemTimeService *systemTime)
         auto databasePath = fbData.getDatabaseRootName() + std::to_string(systemTime->getYear()) + "/" + std::to_string(systemTime->getMonth()) + "/" 
                         + std::to_string(systemTime->getDay()) + "/" + std::to_string(systemTime->getHour());
 
-        temperature->read();
+        // temperature->read();
         JsonDocument doc; // Adding sensor data to JSON 
-        temperature->forEachSensor([&doc, temperature](TempSensorItem sensor)
+        temperature->forEachSensor([&doc, temperature](const TempSensorItem *sensor)
         { 
-            doc[sensor.getName()] = temperature->getData(sensor.getName()); 
+            doc[sensor->getName()] = 0.00; // temperature->getData(sensor->getName()); 
         }, true);
         // Serialize JSON to string and print 
         String mergedSensorData; 

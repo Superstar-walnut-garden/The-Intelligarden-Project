@@ -16,11 +16,11 @@ public:
     static ThermostatService* getInstance();
     ~ThermostatService();
 
-    void create(ThermostatItem newItem) override;
+    void create(std::string json) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, ThermostatItem newItem) override;
-    std::string getAll() override;
-    std::string get(uint64_t) override;
+    void update(uint64_t id, std::string json) override;
+    std::string getAll() const override;
+    std::string get(uint64_t) const override;
     void storeAll() override;
     void restoreAll() override;
 
@@ -32,6 +32,6 @@ public:
 private:
     ThermostatService();
     static ThermostatService *instance;
-    ThermostatList list;
+    mutable ThermostatList list;
 
 };

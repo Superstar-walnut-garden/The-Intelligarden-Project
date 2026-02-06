@@ -16,6 +16,30 @@
     ]
   },
   {
+    "qualified_name": "FusionBusItem::DeviceType",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\FusionBusItem.hpp",
+    "line": 11,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "VentDrive",
+        "value": 0
+      },
+      {
+        "name": "TempSensor",
+        "value": 1
+      },
+      {
+        "name": "SoilSensor",
+        "value": 2
+      },
+      {
+        "name": "Unknown",
+        "value": 3
+      }
+    ]
+  },
+  {
     "qualified_name": "WebApiService::Method",
     "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
     "line": 25,
@@ -100,6 +124,38 @@
       {
         "name": "StorageNotReadyError",
         "value": 3
+      }
+    ]
+  },
+  {
+    "qualified_name": "VentDriveItem::State",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\VentDriveItem.hpp",
+    "line": 11,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Unknown",
+        "value": 0
+      },
+      {
+        "name": "Closing",
+        "value": 1
+      },
+      {
+        "name": "Opening",
+        "value": 2
+      },
+      {
+        "name": "Idle",
+        "value": 3
+      },
+      {
+        "name": "Error",
+        "value": 4
+      },
+      {
+        "name": "Uninitialized",
+        "value": 5
       }
     ]
   },
