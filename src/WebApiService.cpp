@@ -16,6 +16,7 @@
 #include "WifiHotspotConfig.hpp"
 #include "LogDispatcherService.hpp"
 #include "FileExplorerService.hpp"
+#include "TempSensorItem.hpp"
 
 /**
  * @brief Construct a new WebApiService object
@@ -42,7 +43,8 @@ void WebApiService::init()
     // Serve HTML page to enter WiFi credentials
     server.serveStatic("/", SPIFFS, "/dist/")
         .setDefaultFile("index.html")
-        .setCacheControl("max-age=0"); // disable browser cache due to hash-free assets
+        .setCacheControl("max-age=0") // disable browser cache due to hash-free assets
+        .setAuthentication("admin", "12345654321");
 
     createEndpoint("/getCurrentTime", [](std::optional<uint64_t> id, std::string data) -> std::string
     {
@@ -84,7 +86,7 @@ void WebApiService::init()
     createEndpoint<TempSensorConfig>("/temp-sensor-config", TempSensorService::getInstance());
     createEndpoint("/signal-hub", CentralizedSignalHubService::getInstance());
 
-    createEndpoint<TempSensorItem>("/temp-sensor", TempSensorService::getInstance());
+    createEndpoint<TempSensorItem>("/fusionbus", TempSensorService::getInstance());
     createEndpoint<GpioItem>("/gpio", GpioService::getInstance());
     createEndpoint<ThermostatItem>("/thermostat", ThermostatService::getInstance());
     createEndpoint<SchedulerItem>("/scheduler", SchedulerService::getInstance());
@@ -176,17 +178,15 @@ void WebApiService::createEndpoint(std::string uri, IResourceController<ItemType
     }, Method::Get);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t>  id, std::string data) -> std::string
     {
-        ItemType item;
-        item.populateFromJson(data);
-        resourceController->create(item);
+        resourceController->create(data);
         return "";
     }, Method::Post);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t>  id, std::string data) -> std::string
     {
-        ItemType item;
-        item.populateFromJson(data);
+        auto item = std::make_unique<ItemType>();
+        item->populateFromJson(data);
         if(id)
-            resourceController->update(id.value(), item);
+            resourceController->update(id.value(), data);
         return "";
     }, Method::Put);
     createEndpoint(uri, [resourceController] (std::optional<uint64_t> id, std::string data) -> std::string

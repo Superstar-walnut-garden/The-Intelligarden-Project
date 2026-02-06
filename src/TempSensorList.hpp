@@ -1,15 +1,14 @@
 #pragma once
 
-#include "TempSensorItem.hpp"
 #include "BaseList.hpp"
+#include "FusionBusItem.hpp"
 
-class TempSensorList : public BaseList<TempSensorItem>
+class TempSensorList : public BaseList<FusionBusItem>
 {
 public:
     TempSensorList();
     TempSensorList(std::string json);
-    void clearList();
-    bool doesExist(TempSensorItem &desiredItem);
-    TempSensorItem &getItem(std::string name);
-    using BaseList::getItem;
+    void repopulateWith(std::string json) override;
+    static std::unique_ptr<FusionBusItem> createObjectFromType(FusionBusItem::DeviceType devType);
+    static std::unique_ptr<FusionBusItem> createObjectFromType(std::string json);
 };

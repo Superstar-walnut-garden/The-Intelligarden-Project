@@ -10,7 +10,6 @@ class SchedulerItem: public SignalCompatibleBaseItem
 {
     public:
     SchedulerItem();
-    SchedulerItem(uint64_t id, std::string name, Time start, Time duration, std::string weekday, bool enabled, bool on, std::string mode = "weekly", bool skipped = false);
     Time getStartTime() const;
     Time getDuration() const;
     void setStartTime(Time start);
@@ -29,8 +28,6 @@ class SchedulerItem: public SignalCompatibleBaseItem
     std::vector<std::string> getLocalSignalNames() override;
 
     private:
-    void populateDerivedClassFromJson(JsonDocument &doc) override;
-    void derivedClassToJson(JsonDocument &doc) const override;
 
     std::string mode;
     Time start;

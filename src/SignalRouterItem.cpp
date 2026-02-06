@@ -8,7 +8,71 @@
  * 
  */
 SignalRouterItem::SignalRouterItem() 
-    : SignalCompatibleBaseItem(), broadcaster(), auxiliaryBroadcaster(), listeners(), mode(Mode::SingleSource) {}
+    : SignalCompatibleBaseItem(), broadcaster(), auxiliaryBroadcaster(), listeners(), mode(Mode::SingleSource) 
+{
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        // Create a nested array for listeners
+        auto listenersArray = json.createNestedArray("listeners");
+        for(const auto &listener : listeners) // add all listeners
+        {
+            JsonObject obj = listenersArray.createNestedObject();
+            obj["signalPath"] = listener.getSignalPath();
+            obj["inverted"] = listener.isInverted();
+            obj["status"] = listener.getStatus();
+        }
+        // broadcaster
+        // Create a nested object for broadcaster
+        auto broadcasterJsonObject = json.createNestedObject("broadcaster");
+        broadcasterJsonObject["signalPath"] = broadcaster.getSignalPath();
+        broadcasterJsonObject["inverted"] = broadcaster.isInverted();
+        broadcasterJsonObject["status"] = broadcaster.getStatus();
+
+        // auxiliaryBroadcaster
+        // Create a nested object for auxiliaryBroadcaster
+        auto auxiliaryBroadcasterJsonObject = json.createNestedObject("auxiliaryBroadcaster");
+        auxiliaryBroadcasterJsonObject["signalPath"] = auxiliaryBroadcaster.getSignalPath();
+        auxiliaryBroadcasterJsonObject["inverted"] = auxiliaryBroadcaster.isInverted();
+        auxiliaryBroadcasterJsonObject["status"] = auxiliaryBroadcaster.getStatus();
+
+        json["mode"] = EnumCrafter::toString(mode);  // Converts enum to string
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        // broadcaster
+        auto broadcasterJsonObject = json["broadcaster"].as<JsonObject>();
+        this->broadcaster = SignalEndpoint(
+            broadcasterJsonObject["signalPath"].as<std::string>(),
+            broadcasterJsonObject["inverted"].as<bool>()
+        );
+
+        // auxiliaryBroadcaster
+        auto auxiliaryBroadcasterJsonObject = json["auxiliaryBroadcaster"].as<JsonObject>();
+        this->auxiliaryBroadcaster = SignalEndpoint(
+            auxiliaryBroadcasterJsonObject["signalPath"].as<std::string>(),
+            auxiliaryBroadcasterJsonObject["inverted"].as<bool>()
+        );
+
+        // listeners
+        JsonArray listenersArray = json["listeners"].as<JsonArray>();
+        for(auto item : listenersArray) // get all listeners
+        {
+            std::string name = item["signalPath"].as<std::string>();
+            bool inverted = item["inverted"].as<bool>();
+
+            this->listeners.push_back(SignalEndpoint(name, inverted));
+        }
+
+        std::optional<Mode> modeOpt = EnumCrafter::parse<Mode>(json["mode"].as<std::string>());
+        if (modeOpt.has_value())
+            mode = modeOpt.value();
+        else
+        {
+            Serial.println("error: unsupported signal mod. switching to default 'SingleSource' mode");
+            mode = Mode::SingleSource; // default value if not found
+        }
+    });
+}
 
 /**
  * @brief Get the listeners of the SignalRouterItem.
@@ -136,79 +200,4 @@ void SignalRouterItem::evaluateStatus()
     // listeners evaluation
     for(auto &listener : listeners) // loop through listeners
         listener.setStatus(this->getStatus());
-}
-
-/**
- * @brief Populate the SignalRouterItem from a JSON document.
- * 
- * @param doc The JSON document containing the SignalRouterItem data.
- */
-void SignalRouterItem::populateDerivedClassFromJson(JsonDocument &doc)
-{
-    // broadcaster
-    auto broadcasterJsonObject = doc["broadcaster"].as<JsonObject>();
-    this->broadcaster = SignalEndpoint(
-        broadcasterJsonObject["signalPath"].as<std::string>(),
-        broadcasterJsonObject["inverted"].as<bool>()
-    );
-
-    // auxiliaryBroadcaster
-    auto auxiliaryBroadcasterJsonObject = doc["auxiliaryBroadcaster"].as<JsonObject>();
-    this->auxiliaryBroadcaster = SignalEndpoint(
-        auxiliaryBroadcasterJsonObject["signalPath"].as<std::string>(),
-        auxiliaryBroadcasterJsonObject["inverted"].as<bool>()
-    );
-
-    // listeners
-    JsonArray listenersArray = doc["listeners"].as<JsonArray>();
-    for(auto item : listenersArray) // get all listeners
-    {
-        std::string name = item["signalPath"].as<std::string>();
-        bool inverted = item["inverted"].as<bool>();
-
-        this->listeners.push_back(SignalEndpoint(name, inverted));
-    }
-
-    std::optional<Mode> modeOpt = EnumCrafter::parse<Mode>(doc["mode"].as<std::string>());
-    if (modeOpt.has_value())
-        mode = modeOpt.value();
-    else
-    {
-        Serial.println("error: unsupported signal mod. switching to default 'SingleSource' mode");
-        mode = Mode::SingleSource; // default value if not found
-    }
-
-}
-
-/**
- * @brief Convert the SignalRouterItem to a JSON document.
- * 
- * @param doc The JSON document to populate with the SignalRouterItem data.
- */
-void SignalRouterItem::derivedClassToJson(JsonDocument &doc) const
-{
-    // Create a nested array for listeners
-    auto listenersArray = doc.createNestedArray("listeners");
-    for(const auto &listener : listeners) // add all listeners
-    {
-        JsonObject obj = listenersArray.createNestedObject();
-        obj["signalPath"] = listener.getSignalPath();
-        obj["inverted"] = listener.isInverted();
-        obj["status"] = listener.getStatus();
-    }
-    // broadcaster
-    // Create a nested object for broadcaster
-    auto broadcasterJsonObject = doc.createNestedObject("broadcaster");
-    broadcasterJsonObject["signalPath"] = broadcaster.getSignalPath();
-    broadcasterJsonObject["inverted"] = broadcaster.isInverted();
-    broadcasterJsonObject["status"] = broadcaster.getStatus();
-
-    // auxiliaryBroadcaster
-    // Create a nested object for auxiliaryBroadcaster
-    auto auxiliaryBroadcasterJsonObject = doc.createNestedObject("auxiliaryBroadcaster");
-    auxiliaryBroadcasterJsonObject["signalPath"] = auxiliaryBroadcaster.getSignalPath();
-    auxiliaryBroadcasterJsonObject["inverted"] = auxiliaryBroadcaster.isInverted();
-    auxiliaryBroadcasterJsonObject["status"] = auxiliaryBroadcaster.getStatus();
-
-    doc["mode"] = EnumCrafter::toString(mode);  // Converts enum to string
 }

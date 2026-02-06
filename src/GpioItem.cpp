@@ -8,19 +8,28 @@
 GpioItem::GpioItem()
     : SignalCompatibleBaseItem(), mode(0), extraParameters(""), highDutyCycle(100), lastHighDutyCycle(-1)
 {
-}
+    registerToJsonCallback([this](JsonDocument &json) -> void
+    {
+        json["extraParameters"] = this->extraParameters;
+        json["mode"] = this->mode;
+        json["inverted"] = this->inverted;
+        json["highDutyCycle"] = this->highDutyCycle;
+        
+        json["loggingEnabled"] = this->loggingEnabled;
+        json["logOnlyOnChange"] = this->logOnlyOnDataChange;
+        json["logInterval"] = this->logInterval;
+    });
+    registerFromJsonCallback([this](JsonDocument &json) -> void
+    {
+        this->extraParameters = json["extraParameters"].as<std::string>();
+        this->mode = json["mode"].as<short>();
+        this->inverted = json["inverted"] | false;
+        this->highDutyCycle = json["highDutyCycle"] | 100;
 
-/** * @brief Construct a new GpioItem::GpioItem object
- * 
- * @param pin Pin number
- * @param name Name of the GPIO item
- * @param status Initial status of the GPIO item
- * @param mode Mode of the GPIO item (0 for input, 1 for output, etc.)
- * @param extraParameters Extra parameters for the GPIO item
- */
-GpioItem::GpioItem(int pin, std::string name, bool status, short mode, std::string extraParameters)
-    : SignalCompatibleBaseItem(pin, name, status), mode(mode), extraParameters(extraParameters), highDutyCycle(100), lastHighDutyCycle(-1)
-{
+        this->loggingEnabled = json["loggingEnabled"] | false;
+        this->logOnlyOnDataChange = json["logOnlyOnChange"] | false;
+        this->logInterval = json["logInterval"] | 60;
+    });
 }
 
 /** * @brief Get the pin number of the GPIO item
@@ -101,38 +110,6 @@ int GpioItem::getLastHighDutyCycle() const
 void GpioItem::setLastHighDutyCycle(int lastHighDutyCycle)
 {
     this->lastHighDutyCycle = lastHighDutyCycle;
-}
-
-/** * @brief Populate the derived class from JSON document
- * 
- * @param doc JSON document to populate from
- */
-void GpioItem::populateDerivedClassFromJson(JsonDocument &doc)
-{
-    this->extraParameters = doc["extraParameters"].as<std::string>();
-    this->mode = doc["mode"].as<short>();
-    this->inverted = doc["inverted"] | false;
-    this->highDutyCycle = doc["highDutyCycle"] | 100;
-
-    this->loggingEnabled = doc["loggingEnabled"] | false;
-    this->logOnlyOnDataChange = doc["logOnlyOnChange"] | false;
-    this->logInterval = doc["logInterval"] | 60;
-}
-
-/** * @brief Convert the derived class to JSON document
- * 
- * @param doc JSON document to convert to
- */
-void GpioItem::derivedClassToJson(JsonDocument &doc) const
-{
-    doc["extraParameters"] = this->extraParameters;
-    doc["mode"] = this->mode;
-    doc["inverted"] = this->inverted;
-    doc["highDutyCycle"] = this->highDutyCycle;
-    
-    doc["loggingEnabled"] = this->loggingEnabled;
-    doc["logOnlyOnChange"] = this->logOnlyOnDataChange;
-    doc["logInterval"] = this->logInterval;
 }
 
 /** * @brief Get the local signal names for the GPIO item

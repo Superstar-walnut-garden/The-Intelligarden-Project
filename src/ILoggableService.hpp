@@ -11,5 +11,5 @@ public:
     virtual ~ILoggableService() = default;
 
     virtual std::string getName() const = 0;
-    virtual std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const = 0;
+    virtual std::vector<ILoggableItem *> getLoggableItems() const = 0;
 };

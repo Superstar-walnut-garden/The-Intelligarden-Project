@@ -50,47 +50,46 @@ void SchedulerService::determineStatusofItems()
 {
     auto systemTime = SystemTimeService::getInstance(); // get direct access to system time
     auto currentTime = systemTime->getTime();
-    for (auto& item : list.getList()) // iterate over the list of items
+    list.forEach([&](SchedulerItem *item)
     {
-        auto setItemStatus = [this](SchedulerItem& item, bool status) // lambda to set the status of item
+        auto setItemStatus = [this](SchedulerItem* item, bool status) // lambda to set the status of item
         { 
             auto skipSignal = SignalRouterService::getInstance()->
                 getSignalValue(SignalNameResolver::toString(
-                    SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getSkipLocalSignalName())));
+                    SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getSkipLocalSignalName())));
             if(!status) // if the item is off, cancell the skip
-                item.setSkipped(false);
+                item->setSkipped(false);
             else if(skipSignal.has_value()) // if the item is on, and associated with a signal.
-                item.setSkipped(skipSignal.value()); // skip the item if the signal value is "true".
+                item->setSkipped(skipSignal.value()); // skip the item if the signal value is "true".
             
-            item.setStatus(status and !item.isSkipped()); 
-            Serial.println(("item" + std::to_string(item.getId()) + ": is" + std::to_string(item.getStatus())).c_str());
+            item->setStatus(status and !item->isSkipped()); 
+            Serial.println(("item" + std::to_string(item->getId()) + ": is" + std::to_string(item->getStatus())).c_str());
         };
-        auto& itemRef = list.getItem(item.getId());
-        if(item.getMode() == "weekly")
+        if(item->getMode() == "weekly")
         {
-            auto untilTime = item.getStartTime() + item.getDuration();
-            auto isCurrentTimeBetweenStartAndEnd = currentTime >= item.getStartTime() && currentTime <= untilTime;
-            auto newStatus = (systemTime->isCurrentWeekdayPresentIn(SystemTimeService::parseWeekday(item.getWeekday())) and isCurrentTimeBetweenStartAndEnd); // check weekday and time
-            setItemStatus(itemRef, newStatus);
-            broadcastItem(itemRef); // broadcast the real item (because only the reference gets updated in this "for" statement)
+            auto untilTime = item->getStartTime() + item->getDuration();
+            auto isCurrentTimeBetweenStartAndEnd = currentTime >= item->getStartTime() && currentTime <= untilTime;
+            auto newStatus = (systemTime->isCurrentWeekdayPresentIn(SystemTimeService::parseWeekday(item->getWeekday())) and isCurrentTimeBetweenStartAndEnd); // check weekday and time
+            setItemStatus(item, newStatus);
+            broadcastItem(item); // broadcast the real item (because only the reference gets updated in this "for" statement)
         }
-        else if(item.getMode() == "hourly")
+        else if(item->getMode() == "hourly")
         {
-            auto interval = item.getStartTime().getTimeInMinutes(), duration = item.getDuration().getTimeInMinutes();
+            auto interval = item->getStartTime().getTimeInMinutes(), duration = item->getDuration().getTimeInMinutes();
             auto ctime = currentTime.getTimeInMinutes(); // current time in minutes
             int cyclePosition = 0;
             if(interval != 0) // prevent division by zero
                 cyclePosition = ctime % interval;
             
             auto newStatus = (cyclePosition < duration);
-            setItemStatus(itemRef, newStatus);
-            broadcastItem(itemRef);
+            setItemStatus(item, newStatus);
+            broadcastItem(item);
         }
         else
         {
             Serial.println("Unsupported mode");
         }
-    }
+    });
 }
 
 /**
@@ -98,10 +97,12 @@ void SchedulerService::determineStatusofItems()
  * 
  * @param schedulerItem The SchedulerItem to be created.
  */
-void SchedulerService::create(SchedulerItem schedulerItem) 
+void SchedulerService::create(std::string json) 
 {
-    list.addItem(schedulerItem);
-    Serial.printf("Schedule %d created\n", schedulerItem.getId());
+    auto newItem = std::make_unique<SchedulerItem>();
+    newItem->populateFromJson(json);
+    Serial.printf("Schedule %d created\n", newItem->getId());
+    list.addItem(std::move(newItem));
     storeAll();
 }
 
@@ -123,9 +124,11 @@ void SchedulerService::remove(uint64_t id)
  * @param id The ID of the SchedulerItem to be modified.
  * @param newItem The new SchedulerItem with updated values.
  */
-void SchedulerService::update(uint64_t id, SchedulerItem newItem) 
+void SchedulerService::update(uint64_t id, std::string json) 
 {
-    list.modifyItem(id, newItem);
+    auto newItem = std::make_unique<SchedulerItem>();
+    newItem->populateFromJson(json);
+    list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
 }
@@ -155,7 +158,7 @@ void SchedulerService::restoreAll()
  * 
  * @return std::string The SchedulerService list in JSON format.
  */
-std::string SchedulerService::getAll()
+std::string SchedulerService::getAll() const
 {
     return list.toJson();
 }
@@ -165,9 +168,10 @@ std::string SchedulerService::getAll()
  * 
  * @return std::string an item in JSON format.
  */
-std::string SchedulerService::get(uint64_t id)
+std::string SchedulerService::get(uint64_t id) const
 {
-    return list.getItem(id).toJson();
+    auto item = list.getItem(id);
+    return item ? item->toJson() : "{}";   // return empty JSON object
 }
 
 /**
@@ -177,14 +181,7 @@ std::string SchedulerService::get(uint64_t id)
  */
 std::vector<ISignalCompatibleItem *> SchedulerService::getSignalCompatibleItems()
 {
-    std::vector<ISignalCompatibleItem *> items;
-    for (auto& item : list.getList())
-    {
-        items.push_back(&list.getItem(item.getId())); // pushback real reference of the item, not a copy
-        // Note: This assumes that the list's items are not going to be deleted or modified in a way that invalidates the pointers.
-        // If they are, you may need to handle that case to avoid dangling pointers.
-    }
-    return items;
+    return list.getAllAs<ISignalCompatibleItem>();
 }
 
 /**
@@ -201,12 +198,12 @@ void SchedulerService::loop()
  * 
  * @param item The SchedulerItem to be broadcasted.
  */
-void SchedulerService::broadcastItem(SchedulerItem &item)
+void SchedulerService::broadcastItem(SchedulerItem *item)
 {
     SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(
         SignalNameResolver::SignalNameParameters(
             this->getName(), 
-            item.getId(), 
-            item.getMainLocalSignalName()
-        )), item.getStatus());
+            item->getId(), 
+            item->getMainLocalSignalName()
+        )), item->getStatus());
 }

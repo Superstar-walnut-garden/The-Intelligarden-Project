@@ -45,9 +45,11 @@ ThermostatService* ThermostatService::getInstance()
  * 
  * @param newItem The new Thermostat item to add.
  */
-void ThermostatService::create(ThermostatItem newItem)
+void ThermostatService::create(std::string json)
 {
-    list.addItem(newItem);
+    auto newItem = std::make_unique<ThermostatItem>();
+    newItem->populateFromJson(json);
+    list.addItem(std::move(newItem));
     storeAll();
 }
 
@@ -69,9 +71,11 @@ void ThermostatService::remove(uint64_t id)
  * @param id The ID of the Thermostat item to update.
  * @param newItem The new Thermostat item to replace the old one.
  */
-void ThermostatService::update(uint64_t id, ThermostatItem newItem)
+void ThermostatService::update(uint64_t id, std::string json)
 {
-    list.modifyItem(id, newItem);
+    auto newItem = std::make_unique<ThermostatItem>();
+    newItem->populateFromJson(json);
+    list.modifyItem(id, std::move(newItem));
     notify();
     storeAll();
 }
@@ -81,7 +85,7 @@ void ThermostatService::update(uint64_t id, ThermostatItem newItem)
  * 
  * @return std::string The Thermostat list in JSON format.
  */
-std::string ThermostatService::getAll()
+std::string ThermostatService::getAll() const
 {
     return list.toJson();
 }
@@ -91,9 +95,10 @@ std::string ThermostatService::getAll()
  * @param id id of the desired item
  * @return std::string The Thermostat item in JSON format.
  */
-std::string ThermostatService::get(uint64_t id)
+std::string ThermostatService::get(uint64_t id) const
 {
-    return list.getItem(id).toJson();
+    auto item = list.getItem(id);
+    return item ? item->toJson() : "{}";
 }
 
 /**
@@ -124,10 +129,8 @@ std::string ThermostatService::getName() const
 
 std::vector<ISignalCompatibleItem *> ThermostatService::getSignalCompatibleItems()
 {
-    std::vector<ISignalCompatibleItem *> signalCompatibleList;
-    for(auto &item : list.getList()) // copy list
-        signalCompatibleList.push_back(&list.getItem(item.getId()));
-    return signalCompatibleList;
+    
+    return list.getAllAs<ISignalCompatibleItem>();;
 }
 
 /**
@@ -140,40 +143,40 @@ void ThermostatService::update(TempSensorService* temperature)
     SignalNameResolver::SignalNameParameters signalNameParameters;
     signalNameParameters.subsystemName = this->getName();
 
-    for(auto &item : list.getList())
+    list.forEach([&](ThermostatItem *item)
     {
-        signalNameParameters.id = item.getId();
+        signalNameParameters.id = item->getId();
 
-        auto temp = temperature->getData(item.getSensor()); // retrive temp value
-        auto setpoint = item.getSetpoint(); // use the main setpoint by default;
-        auto hysteresis = item.getHysteresis();
+        auto temp = temperature->getData(item->getSensor()); // retrive temp value
+        auto setpoint = item->getSetpoint(); // use the main setpoint by default;
+        auto hysteresis = item->getHysteresis();
         auto altTempSignal = SignalRouterService::getInstance()->getSignalValue(SignalNameResolver::toString(
-            SignalNameResolver::SignalNameParameters(this->getName(), item.getId(), item.getAltSetpointLocalSignalName())));
+            SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getAltSetpointLocalSignalName())));
         
         if(altTempSignal.has_value()) // if it's associated with a signal
             if(altTempSignal.value() == true) // if signal value is true
-                setpoint = item.getAltSetpoint(); // use the secondary setpoint
+                setpoint = item->getAltSetpoint(); // use the secondary setpoint
         
         // TempSensorService control algorithm
         if(temp > (setpoint + hysteresis)) // if temperature rises
         {
-            signalNameParameters.localSignalName = item.getCoolerLocalSignalName();
+            signalNameParameters.localSignalName = item->getCoolerLocalSignalName();
             SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), true); // turn on cooler
         }
         if(temp <= (setpoint - (hysteresis / 2)))
         {
-            signalNameParameters.localSignalName = item.getCoolerLocalSignalName();
+            signalNameParameters.localSignalName = item->getCoolerLocalSignalName();
             SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), false); // turn off cooler
         }
         if(temp < (setpoint - hysteresis))
         {
-            signalNameParameters.localSignalName = item.getHeaterLocalSignalName();
+            signalNameParameters.localSignalName = item->getHeaterLocalSignalName();
             SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), true); // turn on heater
         }
         if(temp >= (setpoint + (hysteresis / 2)))
         {
-            signalNameParameters.localSignalName = item.getHeaterLocalSignalName();
+            signalNameParameters.localSignalName = item->getHeaterLocalSignalName();
             SignalRouterService::getInstance()->setSignalValue(SignalNameResolver::toString(signalNameParameters), false); // turn off heater
         }
-    }
+    });
 }

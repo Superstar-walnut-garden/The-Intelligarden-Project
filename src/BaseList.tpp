@@ -30,49 +30,50 @@ BaseList<T>::BaseList(std::string json)
  * 
  * @tparam T 
  * @param id
- * @return T& 
+ * @return T* The desired item (nullptr if not found)
  */
 template <class T>
-T &BaseList<T>::getItem(uint64_t id)
+T *BaseList<T>::getItem(uint64_t id)
 {
-    static auto nullItem = T(); // item with default parameters (id = -1)
     for(auto &item : list)
     {
-        if(item.getId() == id)
-            return item;
+        if(item->getId() == id)
+            return item.get();
     }
-    return nullItem;
+    return nullptr;
 }
 
 /**
  * @brief Get the list of items.
  * 
  * @tparam T 
- * @return std::vector<T> 
+ * @return std::vector<std::unique_ptr<T>>& 
  */
 template <class T>
-std::vector<T> BaseList<T>::getList() const
+std::vector<std::unique_ptr<T>> &BaseList<T>::getList() 
 {
     return list;
 }
 
 /**
  * @brief Convert the list to a JSON string.
- * 
- * @tparam T 
+ *
+ * @tparam T
+ * @param filter Optional filter function to decide which items to include
  * @return std::string of the list in JSON format
  */
 template <class T>
-std::string BaseList<T>::toJson() const
+std::string BaseList<T>::toJson(std::function<bool(const T*)> filter) const
 {
     JsonDocument doc;
     JsonArray array = doc.to<JsonArray>();
 
-    for (auto& item : list) 
+    // Reuse forEach with optional filter
+    this->forEach([&](T* item) 
     {
         JsonObject obj = array.add<JsonObject>();
-        deserializeJson(obj, item.toJson()); // add items
-    }
+        deserializeJson(obj, item->toJson());
+    }, filter);
 
     std::string output;
     serializeJson(doc, output);
@@ -86,9 +87,9 @@ std::string BaseList<T>::toJson() const
  * @param item new item to add to the list
  */
 template <class T>
-void BaseList<T>::addItem(T item)
+void BaseList<T>::addItem(std::unique_ptr<T> item)
 {
-    list.push_back(item);
+    list.push_back(std::move(item));
 }
 
 /**
@@ -108,9 +109,9 @@ void BaseList<T>::repopulateWith(std::string json)
     {
         std::string jsonStr;
         serializeJson(item, jsonStr);
-        T populatedItem = T();
-        populatedItem.populateFromJson(jsonStr);
-        list.push_back(populatedItem);
+        auto populatedItem = std::make_unique<T>();
+        populatedItem->populateFromJson(jsonStr);
+        list.push_back(std::move(populatedItem));
     }
 }
 
@@ -124,9 +125,9 @@ void BaseList<T>::printList()
 {
     for(auto & item : list)
         std::cout <<
-            "id: " << item.getId() << std::endl <<
-            "name: " << item.getName() << std::endl <<
-            "status: " << item.getStatus() << std::endl;
+            "id: " << item->getId() << std::endl <<
+            "name: " << item->getName() << std::endl <<
+            "status: " << item->getStatus() << std::endl;
 }
 
 /**
@@ -137,13 +138,13 @@ void BaseList<T>::printList()
  * @param newItem new item to replace the old one
  */
 template <class T>
-void BaseList<T>::modifyItem(uint64_t id, T& newItem)
+void BaseList<T>::modifyItem(uint64_t id, std::unique_ptr<T> newItem)
 {
     for (auto& item : list)
     {
-        if (item.getId() == id)
+        if (item->getId() == id)
         {
-            item = newItem;
+            item = std::move(newItem);
             return;
         }
     }
@@ -158,34 +159,98 @@ void BaseList<T>::modifyItem(uint64_t id, T& newItem)
 template <class T>
 void BaseList<T>::deleteItem(uint64_t id)
 {
-    list.erase(std::remove_if(list.begin(), list.end(), [id](T& item) {
-        return item.getId() == id;
+    list.erase(std::remove_if(list.begin(), list.end(), [id](std::unique_ptr<T>& item) {
+        return item->getId() == id;
     }), list.end());
 }
 
 /**
- * @brief for each item in the list, call the given function.
- * 
- * @tparam T
- * @param func function to call for each item in the list
+ * @brief delete item if a desired condition is present for an item
+ *
+ * @tparam T 
+ * @param deleteCondition lambda called on every item in the list. if returns true, item gets deleted from the list.
  */
 template <class T>
-void BaseList<T>::forEach(std::function<void(T&)> func)
-    {
-        for (auto &item : this->list)
-        {
-            func(item);
-        }
-    }
+void BaseList<T>::deleteItemIf(std::function<bool(std::unique_ptr<T>& item)> deleteCondition)
+{
+    list.erase(std::remove_if(list.begin(), list.end(), deleteCondition), list.end());
+}
 
 /**
- * @brief Get a reference to the list.
- * 
- * @tparam T 
- * @return std::vector<T>& 
+ * @brief For each item in the list, call the given function.
+ *
+ * @tparam T
+ * @param func   Function to call for each item in the list
+ * @param filter Optional filter function to decide which items to include
  */
 template <class T>
-std::vector<T> &BaseList<T>::getListRef()
+void BaseList<T>::forEach(std::function<void(T*)> func, std::function<bool(const T*)> filter) const
 {
-    return list;
+    for (auto &item : this->list)
+    {
+        T* ptr = item.get();
+        if (!filter || filter(ptr)) {
+            func(ptr);
+        }
+    }
+}
+
+
+/**
+ * @brief Get an item from the list by its ID, casted to a specific interface.
+ * 
+ * @tparam I Interface type to cast to
+ * @param id ID of the item
+ * @return I* Pointer to the interface, or nullptr if not found / not castable
+ */
+template <class T>
+template <class I>
+I* BaseList<T>::getAs(uint64_t id) const
+{
+    for (auto &item : list)
+    {
+        if (item->getId() == id)
+            return static_cast<I*>(item.get());
+    }
+    return nullptr;
+}
+
+/**
+ * @brief Get all items that implement a specific interface, with optional filtering.
+ *
+ * @tparam I Interface type
+ * @tparam F Filter type (defaults to T)
+ * @param filter Optional filter function to decide which items to include
+ * @return std::vector<I*> Non-owning pointers valid while items exist in the list
+ */
+template <class T>
+template <class I, class F>
+std::vector<I*> BaseList<T>::getAllAs(std::function<bool(const F*)> filter) const
+{
+    std::vector<I*> result;
+    for (auto &item : list)
+    {
+        T* ptr = item.get();
+        if (auto* casted = static_cast<I*>(ptr))
+        {
+            if (!filter) {
+                result.push_back(casted);
+            } else {
+                // Compile-time branch: choose correct pointer type
+                if constexpr (std::is_same_v<F, I>) {
+                    if (filter(casted)) {
+                        result.push_back(casted);
+                    }
+                } else if constexpr (std::is_same_v<F, T>) {
+                    if (filter(ptr)) {
+                        result.push_back(casted);
+                    }
+                } else {
+                    static_assert(std::is_base_of_v<T, F> || std::is_base_of_v<I, F>,
+                                  "Filter type F must be related to T or I");
+                }
+            }
+        }
+    }
+    return result;
 }

@@ -1,0 +1,57 @@
+#pragma once
+
+#include "FusionBusItem.hpp"
+#include "ILoggableItem.hpp"
+#include <string>
+
+class VentDriveItem : public FusionBusItem
+{
+public:
+    VentDriveItem();
+    enum class State
+    {
+        Unknown,
+        Closing,
+        Opening,
+        Idle,
+        Error,
+        Uninitialized
+    };
+    
+    virtual std::vector<std::string> getLocalSignalNames() override;
+
+    double getLength() const;
+    double getStepPermm() const;
+    double getSpeed() const;
+    double getMaxCompensation() const;
+    double getAcceleration() const;
+    double getEndstopExtraDistance() const;
+    State getCurrentState() const;
+    int getVentingPercent() const;
+    bool getAutoHomeFlag() const;
+    bool isDirInverted() const;
+    bool isEndstopPinInverted() const;
+    
+    bool isAutoTempControlEnabled();
+    double getCloseStateTemp();
+    double getOpenStateTemp();
+    uint64_t getSensor();
+    
+    void dropAutoHomeFlag();
+    void setCurrentState(State state);
+    void setCurrentVentingPercent(std::optional<int> currentVentingPercent);
+    void setVentingPercent(int ventingPercent);
+
+private:
+    int ventingPercent;
+    std::optional<int> currentVentingPercent;
+    double length, stepPermm, speed, maxCompensation, acceleration, endstopExtraDistance;
+    State currentState;
+    bool autoHomeFlag;
+    bool invertDir, invertEndstopPin;
+
+    bool autoTempControl;
+    double closeStateTemp;
+    double openStateTemp;
+    uint64_t sensor;
+};

@@ -71,6 +71,7 @@ int virtualMain()
     centralizedSignalHub->registerService(ioManager);
     centralizedSignalHub->registerService(thermostatManager);
     centralizedSignalHub->registerService(scheduler);
+    centralizedSignalHub->registerService(temperature); // fusionbus service
 
     logDispatcher->attachLoggableService(temperature);
     logDispatcher->attachLoggableService(ioManager);
@@ -110,7 +111,7 @@ int virtualMain()
         display->drawUI();
         delay(100);
 
-        temperature->read(true); // read and notify the observers
+        temperature->loop(true); // read and notify the observers
         systemTime->notifierEngine();
         if(systemTime->isTimeUpdated()) // scheduler should only run if the time is updated (time subsystem initialized)
         {

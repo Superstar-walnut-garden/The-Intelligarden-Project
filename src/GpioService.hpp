@@ -19,11 +19,11 @@ public:
     static GpioService* getInstance();
     
 
-    void create(GpioItem newItem) override;
+    void create(std::string json) override;
     void remove(uint64_t id) override;
-    void update(uint64_t id, GpioItem newItem) override;
-    std::string get(uint64_t id) override;
-    std::string getAll() override;
+    void update(uint64_t id, std::string json) override;
+    std::string get(uint64_t id) const override;
+    std::string getAll() const override;
 
     void storeAll() override;
     void restoreAll() override;
@@ -31,7 +31,7 @@ public:
     std::string getName() const override;
     std::vector<ISignalCompatibleItem *> getSignalCompatibleItems() override;
 
-    std::vector<std::unique_ptr<ILoggableItem>> getLoggableItems() const override;
+    std::vector<ILoggableItem *> getLoggableItems() const override;
 
     void syncHardware();
 
@@ -39,6 +39,6 @@ private:
     GpioService();
     ~GpioService();
     static GpioService *instance;
-    GpioList list;
+    mutable GpioList list;
 
 };
