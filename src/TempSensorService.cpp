@@ -3,6 +3,9 @@
 #include "../EnumCrafter.hpp"
 #include "VentDriveItem.hpp"
 #include "CustomMathUtils.hpp"
+#include "esp_rom_gpio.h"
+#include "soc/uart_periph.h"
+#include "driver/uart.h"
 
 /**
  * @brief Initialize the instance of the TempSensorService to null.
@@ -192,13 +195,19 @@ void TempSensorService::handleOneWireDevices()
 void TempSensorService::handleUartDevices()
 {
     std::vector<uint64_t> pendingRemoves;
+    fSerial.begin(38400, SERIAL_8N1, -1, 15);
+    uart_set_hw_flow_ctrl(UART_NUM_1, UART_HW_FLOWCTRL_DISABLE, 0);
+    uart_set_mode(UART_NUM_1, UART_MODE_RS485_HALF_DUPLEX);
+    gpio_set_direction(static_cast<gpio_num_t>(15), GPIO_MODE_INPUT_OUTPUT_OD);
+    esp_rom_gpio_connect_out_signal(15, UART_PERIPH_SIGNAL(UART_NUM_1, SOC_UART_TX_PIN_IDX), false, false);
+    esp_rom_gpio_connect_in_signal(15, UART_PERIPH_SIGNAL(UART_NUM_1, SOC_UART_RX_PIN_IDX), false);
+    if(fSerial.available()) fSerial.read(); // flush out rx garbage
+    delay(100); // wait for Tx stablization
     sensorList.forEach([&](FusionBusItem *device) 
     {
         Serial.println(("------- item type ======>> " + std::string(EnumCrafter::toString(device->getType()))).c_str());
         if(device->getType() != FusionBusItem::DeviceType::TempSensor) // if it wasn't temp sensor (wasn't on onewire bus)
         {
-            fSerial.begin(38400, SERIAL_8N1, -1, 15); // tx only
-            delay(100); // wait for Tx stablization
             JsonDocument doc;
             std::string txStr;
             doc["id"] = device->getId();
@@ -206,16 +215,19 @@ void TempSensorService::handleUartDevices()
             serializeJson(doc, txStr);
             fSerial.println(("FusionBusCommunicate" + txStr).c_str());
             fSerial.flush(); // wait for full transmition
-            fSerial.end(); // end Tx
-
-            fSerial.begin(38400, SERIAL_8N1, 15, -1); // begin Rx
-            fSerial.read(); // flush out the initial null terminator byte (0x00)
-            delay(1000); // wait for response
+            delay(250); // wait for response
             std::string rawResponse;
+            bool dataStarted = false;
             while(fSerial.available())
-                rawResponse += static_cast<char>(fSerial.read()); // receive slave response bytes
-            fSerial.end(); // end Rx
-            std::cout << "raw presense check response:" << rawResponse << std::endl;
+            {
+                auto data = static_cast<char>(fSerial.read());
+                if(!dataStarted && data != 0x00) // ignore the initial null-byte garbages
+                    dataStarted = true;
+                if(dataStarted)
+                    rawResponse += data; // receive slave response bytes
+            }
+            std::cout << "raw response :" << rawResponse << std::endl;
+            std::cout << "raw response.c_str() :" << rawResponse.c_str() << std::endl;
             JsonDocument docRx;
             if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
             {
@@ -235,6 +247,8 @@ void TempSensorService::handleUartDevices()
                         castedDevice->setCurrentState(state.value());
                         if(!docRx["ventingPercent"].isNull())
                             castedDevice->setCurrentVentingPercent(docRx["ventingPercent"]);
+                        else
+                            castedDevice->setCurrentVentingPercent(std::nullopt);
                         auto isUninitialized = (state.value() == VentDriveItem::State::Uninitialized);
                         castedDevice->addResponseApender([isUninitialized, castedDevice](JsonDocument &json) -> void
                         {
@@ -274,6 +288,7 @@ void TempSensorService::handleUartDevices()
         }
         return false;
     });
+    fSerial.end(); // end Rx
     pinMode(15, OUTPUT_OPEN_DRAIN); // switch back to opendrain for onewire bus
 }
 
