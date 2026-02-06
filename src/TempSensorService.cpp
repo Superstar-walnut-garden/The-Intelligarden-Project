@@ -318,7 +318,6 @@ void TempSensorService::obtainUartDevices()
     std::cout << std::endl;
 
     std::cout << "raw response:" << rawResponse << std::endl;
-    std::cout << "raw response.c_str():" << rawResponse.c_str() << std::endl;
     // rawResponse = "{\"id\": 123456789}"; 
     JsonDocument doc;
     if(deserializeJson(doc, rawResponse.c_str()) == DeserializationError::Ok) // if response is a valid json
