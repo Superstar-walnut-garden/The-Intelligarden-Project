@@ -35,6 +35,7 @@ public:
     bool isAutoTempControlEnabled();
     double getCloseStateTemp();
     double getOpenStateTemp();
+    double getHysteresis();
     uint64_t getSensor();
     
     void dropAutoHomeFlag();
@@ -53,5 +54,6 @@ private:
     bool autoTempControl;
     double closeStateTemp;
     double openStateTemp;
+    double hysteresis;
     uint64_t sensor;
 };
