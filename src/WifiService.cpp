@@ -87,6 +87,8 @@ void WifiService::connect()
     // Connect to WiFi with the stored credentials
     WiFi.setAutoReconnect(false);
     WiFi.setSleep(false);
+    WiFi.disconnect(true, true);
+    delay(50);
     if(wifiOn)
     {
         Serial.println("wifi is on!");
