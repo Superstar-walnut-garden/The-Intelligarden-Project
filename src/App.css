@@ -1,0 +1,21 @@
+/* src/index.css */
+.widget-card {
+    width: 200px;
+    height: 200px;
+    transition: transform 0.2s;
+  }
+  
+  .widget-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: bold;
+  }
+  
+  .card-text {
+    font-size: 1rem;
+    color: #6c757d;
+  }
+  

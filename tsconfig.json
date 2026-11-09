@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "noEmitOnError": false,
+    "noEmit": true,
+    "strict": false
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}
