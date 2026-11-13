@@ -1,13 +1,20 @@
 Import("env")
 import os
 
+
 def before_build_spiffs(source, target, env):
     print("Building React App...")
-    env.Execute("cd intelligarden-web-app && npm run build")
+    if env.Execute("cd webapp && npm run build -- --logLevel warn") != 0:
+        raise RuntimeError("React App build failed")
+
     print("React App built!")
     print("Removing old SPIFFS image...")
-    env.Execute("node file_operations.js remove data/dist")
+    if env.Execute("node file_operations.js remove data/dist") != 0:
+        raise RuntimeError("Failed to remove old SPIFFS assets")
+
     print("Copying React App to SPIFFS...")
-    env.Execute("node file_operations.js copy intelligarden-web-app/dist data/dist")
+    if env.Execute("node file_operations.js copy webapp/dist data/dist") != 0:
+        raise RuntimeError("Failed to copy React App assets")
+
 
 env.AddPreAction("$BUILD_DIR/spiffs.bin", before_build_spiffs)
