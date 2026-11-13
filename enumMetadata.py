@@ -181,10 +181,8 @@ def parse_all(
     return all_results
 
 
-def main() -> None:
-    opts = parse_args()
-    cfg = load_config(opts.config)
-
+def generate_metadata(config_path: Path) -> List[Dict]:
+    cfg = load_config(config_path)
     sources = collect_files(cfg["sources"])
     inc_dirs = cfg.get("include_dirs", [])
     output = Path(cfg["output"])
@@ -197,6 +195,12 @@ def main() -> None:
     with output.open("w") as f:
         json.dump(json_out, f, indent=2)
     logging.info(f"Wrote metadata for {len(all_meta)} enums to {output}")
+    return json_out
+
+
+def main() -> None:
+    opts = parse_args()
+    generate_metadata(opts.config)
 
 
 if __name__ == "__main__":

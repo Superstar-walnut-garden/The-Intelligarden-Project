@@ -1,8 +1,5 @@
-import argparse
-import json
 import os
-import subprocess
-import sys
+from pathlib import Path
 
 
 def sanitize_include_path(path):
@@ -94,23 +91,26 @@ constexpr std::array<EnumType, 0> makeIterable = {{}};
     return header
 
 
-# Load JSON and generate header
-parser = argparse.ArgumentParser()
-parser.add_argument("config_file", help="Path to the enum metadata config JSON file")
-args = parser.parse_args()
+def generate_code(enums) -> None:
+    header_code = generate_header(enums)
+    with open("enumcrafter.hpp", "w") as out:
+        out.write(header_code)
 
-with open(args.config_file) as f:
-    config = json.load(f)
 
-subprocess.run(
-    [sys.executable, os.path.join(os.path.dirname(__file__), "enumMetadata.py"), args.config_file],
-    check=True,
-)
+def run_codegen(config_file: Path) -> None:
+    from enumMetadata import generate_metadata
 
-with open(config["output"]) as f:
-    enums = json.load(f)
+    generate_code(generate_metadata(config_file))
 
-header_code = generate_header(enums)
 
-with open("enumcrafter.hpp", "w") as out:
-    out.write(header_code)
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config_file", type=Path, help="Path to the enum metadata config JSON file")
+    args = parser.parse_args()
+    run_codegen(args.config_file)
+
+
+if __name__ == "__main__":
+    main()
