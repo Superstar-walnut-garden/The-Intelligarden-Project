@@ -1,0 +1,3 @@
+[submodule "tools/EnumCrafter"]
+	path = tools/EnumCrafter
+	url = https://github.com/mahyar1284/EnumCrafter.git

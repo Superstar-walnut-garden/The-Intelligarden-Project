@@ -19,6 +19,33 @@ SandFlush Pro is based on the [IntelliGarden Project](https://github.com/Superst
 - **Firmware:** C++
 - **Web Application:** TypeScript, React
 
+## EnumCrafter Code Generation
+
+Initialize the EnumCrafter submodule when cloning:
+
+```bash
+git clone --recurse-submodules https://github.com/mahyar1284/sandflush-pro.git
+```
+
+For an existing checkout, run `git submodule update --init --recursive`. Install
+the Python dependency and run the tool from the project root:
+
+```bash
+python -m pip install -r tools/EnumCrafter/requirements.txt
+python tools/EnumCrafter/main.py
+```
+
+The default config is the project-root `config.json`. Its `output` value is a
+directory where both `enum_metadata.json` and `EnumCrafter.hpp` are generated.
+Set `namespace` to choose the namespace for the generated functions (default:
+`EnumCrafter`). Pass a different config path to override it, or use
+`--metadata-only` to skip header generation:
+
+```bash
+python tools/EnumCrafter/main.py path/to/config.json
+python tools/EnumCrafter/main.py --metadata-only
+```
+
 ## Contributing
 
 Contributions, ideas, bug reports, and feature suggestions are welcome! Feel free to open an issue to discuss improvements or submit a pull request with your changes. All contributions should prioritize reliability, maintainability, and practical real-world irrigation applications.

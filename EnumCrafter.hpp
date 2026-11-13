@@ -88,6 +88,15 @@ constexpr std::string_view toString(LogDispatcherStatus e) {
     }
 }
 
+constexpr std::string_view toString(DisplayConfig::DisplayType e) {
+    switch (e) {
+        case DisplayConfig::DisplayType::None: return "None";
+        case DisplayConfig::DisplayType::Oled: return "Oled";
+        case DisplayConfig::DisplayType::CharLcd: return "CharLcd";
+        default: return "???";
+    }
+}
+
 constexpr std::string_view toString(VentDriveItem::State e) {
     switch (e) {
         case VentDriveItem::State::Unknown: return "Unknown";
@@ -96,15 +105,6 @@ constexpr std::string_view toString(VentDriveItem::State e) {
         case VentDriveItem::State::Idle: return "Idle";
         case VentDriveItem::State::Error: return "Error";
         case VentDriveItem::State::Uninitialized: return "Uninitialized";
-        default: return "???";
-    }
-}
-
-constexpr std::string_view toString(DisplayConfig::DisplayType e) {
-    switch (e) {
-        case DisplayConfig::DisplayType::None: return "None";
-        case DisplayConfig::DisplayType::Oled: return "Oled";
-        case DisplayConfig::DisplayType::CharLcd: return "CharLcd";
         default: return "???";
     }
 }
@@ -160,6 +160,14 @@ constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::str
 }
 
 template<>
+constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
+    if (s == "None") return DisplayConfig::DisplayType::None;
+    if (s == "Oled") return DisplayConfig::DisplayType::Oled;
+    if (s == "CharLcd") return DisplayConfig::DisplayType::CharLcd;
+    return std::nullopt;
+}
+
+template<>
 constexpr std::optional<VentDriveItem::State> parse<VentDriveItem::State>(std::string_view s) {
     if (s == "Unknown") return VentDriveItem::State::Unknown;
     if (s == "Closing") return VentDriveItem::State::Closing;
@@ -167,14 +175,6 @@ constexpr std::optional<VentDriveItem::State> parse<VentDriveItem::State>(std::s
     if (s == "Idle") return VentDriveItem::State::Idle;
     if (s == "Error") return VentDriveItem::State::Error;
     if (s == "Uninitialized") return VentDriveItem::State::Uninitialized;
-    return std::nullopt;
-}
-
-template<>
-constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::DisplayType>(std::string_view s) {
-    if (s == "None") return DisplayConfig::DisplayType::None;
-    if (s == "Oled") return DisplayConfig::DisplayType::Oled;
-    if (s == "CharLcd") return DisplayConfig::DisplayType::CharLcd;
     return std::nullopt;
 }
 
@@ -197,9 +197,9 @@ template<>
 constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
 
 template<>
-constexpr std::array<VentDriveItem::State, 6> makeIterable<VentDriveItem::State> = { VentDriveItem::State::Unknown, VentDriveItem::State::Closing, VentDriveItem::State::Opening, VentDriveItem::State::Idle, VentDriveItem::State::Error, VentDriveItem::State::Uninitialized };
+constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
 
 template<>
-constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
+constexpr std::array<VentDriveItem::State, 6> makeIterable<VentDriveItem::State> = { VentDriveItem::State::Unknown, VentDriveItem::State::Closing, VentDriveItem::State::Opening, VentDriveItem::State::Idle, VentDriveItem::State::Error, VentDriveItem::State::Uninitialized };
 
 } // namespace EnumCrafter
