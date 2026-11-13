@@ -1,8 +1,8 @@
 import argparse
 from pathlib import Path
 
-from EnumCrafterCodeGen import run_codegen
-from enumMetadata import generate_metadata
+from code_gen import run_codegen
+from metadata_gen import generate_metadata
 
 
 def main() -> None:

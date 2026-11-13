@@ -98,7 +98,7 @@ def generate_code(enums) -> None:
 
 
 def run_codegen(config_file: Path) -> None:
-    from enumMetadata import generate_metadata
+    from metadata_gen import generate_metadata
 
     generate_code(generate_metadata(config_file))
 
@@ -107,7 +107,9 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("config_file", type=Path, help="Path to the enum metadata config JSON file")
+    parser.add_argument(
+        "config_file", type=Path, help="Path to the enum metadata config JSON file"
+    )
     args = parser.parse_args()
     run_codegen(args.config_file)
 
