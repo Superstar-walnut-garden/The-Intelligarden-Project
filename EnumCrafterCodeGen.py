@@ -1,5 +1,8 @@
+import argparse
 import json
 import os
+import subprocess
+import sys
 
 
 def sanitize_include_path(path):
@@ -92,7 +95,19 @@ constexpr std::array<EnumType, 0> makeIterable = {{}};
 
 
 # Load JSON and generate header
-with open("enum_metadata.json") as f:
+parser = argparse.ArgumentParser()
+parser.add_argument("config_file", help="Path to the enum metadata config JSON file")
+args = parser.parse_args()
+
+with open(args.config_file) as f:
+    config = json.load(f)
+
+subprocess.run(
+    [sys.executable, os.path.join(os.path.dirname(__file__), "enumMetadata.py"), args.config_file],
+    check=True,
+)
+
+with open(config["output"]) as f:
     enums = json.load(f)
 
 header_code = generate_header(enums)
