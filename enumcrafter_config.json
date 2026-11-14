@@ -1,0 +1,8 @@
+{
+    "sources": [
+        "./src/"
+    ],
+    "include_dirs": [],
+    "output": ".",
+    "namespace": "EnumCrafter"
+}
