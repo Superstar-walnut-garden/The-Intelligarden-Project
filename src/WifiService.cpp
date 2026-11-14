@@ -88,7 +88,7 @@ void WifiService::connect()
     WiFi.setAutoReconnect(false);
     WiFi.setSleep(false);
     WiFi.disconnect(true, true);
-    delay(50);
+    delay(100);
     if(wifiOn)
     {
         Serial.println("wifi is on!");
