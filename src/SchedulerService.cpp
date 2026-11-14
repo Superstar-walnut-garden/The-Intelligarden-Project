@@ -59,8 +59,8 @@ void SchedulerService::determineStatusofItems()
                     SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getSkipLocalSignalName())));
             if(!status) // if the item is off, cancell the skip
                 item->setSkipped(false);
-            else if(skipSignal.has_value()) // if the item is on, and associated with a signal.
-                item->setSkipped(skipSignal.value()); // skip the item if the signal value is "true".
+            else if(skipSignal.has_value() and skipSignal.value()) // if the item is on, and associated with a signal.
+                item->setSkipped(true); // skip the item if the signal value is "true".
             
             item->setStatus(status and !item->isSkipped()); 
             Serial.println(("item" + std::to_string(item->getId()) + ": is" + std::to_string(item->getStatus())).c_str());
