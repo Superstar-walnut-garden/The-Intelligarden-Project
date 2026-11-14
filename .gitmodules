@@ -1,3 +1,7 @@
 [submodule "tools/EnumCrafter"]
 	path = tools/EnumCrafter
 	url = https://github.com/mahyar1284/EnumCrafter.git
+
+[submodule "intelligarden-web-app"]
+	path = intelligarden-web-app
+	url = https://github.com/Superstar-walnut-garden/intelligarden-web-app
