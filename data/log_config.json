@@ -1,0 +1,6 @@
+{
+  "maxFileSizeBytes": 5000,
+  "maxFileRotationCount": 24,
+  "enabled": true,
+  "basePath": "/dataLogs"
+}

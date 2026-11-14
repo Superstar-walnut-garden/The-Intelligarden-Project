@@ -176,6 +176,7 @@ std::string TempSensorService::get(uint64_t id) const
  */
 void TempSensorService::handleOneWireDevices()
 {
+    sensors.setResolution(11);
     sensors.requestTemperatures();
     sensorList.forEach([this](FusionBusItem *item) -> void 
     {
