@@ -114,10 +114,10 @@ void FirebaseService::update(SystemTimeService *systemTime)
         // Convert std::string to Arduino String
         //String databasePathStr = String(databasePath.c_str());
 
-        if (!Firebase.RTDB.get(&fbdo, databasePath)) 
+        if (!Firebase.getJSON(fbdo, databasePath)) 
         {
             Serial.println("New data is about to be registered on the database!");
-            if (Firebase.RTDB.setJSON(&fbdo, databasePath, &fbJson)) 
+            if (Firebase.setJSON(fbdo, databasePath, fbJson)) 
             {
                 updateTimestamp = hour;
                 Serial.println("PASSED");
