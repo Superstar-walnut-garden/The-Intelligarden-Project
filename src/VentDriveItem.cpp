@@ -28,6 +28,7 @@ VentDriveItem::VentDriveItem():
         json["autoTempControl"] = autoTempControl;
         json["closeStateTemp"] = closeStateTemp;
         json["openStateTemp"] = openStateTemp;
+        json["hysteresis"] = hysteresis;
         json["sensor"] = std::to_string(sensor);
 
         json["currentState"] = EnumCrafter::toString(currentState);
@@ -49,6 +50,7 @@ VentDriveItem::VentDriveItem():
         autoTempControl = json["autoTempControl"].as<bool>();
         closeStateTemp = json["closeStateTemp"].as<double>();
         openStateTemp = json["openStateTemp"].as<double>();
+        hysteresis = json["hysteresis"].as<double>();
         sensor = std::stoull(json["sensor"].as<std::string>()); // use string in json to handle 64bit integers
         
         if((json["AutoHomeFlag"].as<bool>() | false)) // if autohome flag is true
@@ -204,6 +206,17 @@ double VentDriveItem::getOpenStateTemp()
 {
     return openStateTemp;
 }
+
+/**
+ * @brief get hystresis temperature
+ * 
+ * @return double hystresis
+ */
+double VentDriveItem::getHysteresis()
+{
+    return hysteresis;
+}
+
 
 /**
  * @brief get temp sensor id
