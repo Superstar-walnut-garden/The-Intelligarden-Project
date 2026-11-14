@@ -227,7 +227,6 @@ void TempSensorService::handleUartDevices()
                     rawResponse += data; // receive slave response bytes
             }
             std::cout << "raw response :" << rawResponse << std::endl;
-            std::cout << "raw response.c_str() :" << rawResponse.c_str() << std::endl;
             JsonDocument docRx;
             if(!deserializeJson(docRx, rawResponse)) // if response is a valid json
             {
@@ -241,8 +240,14 @@ void TempSensorService::handleUartDevices()
                         if(castedDevice->isAutoTempControlEnabled()) // override venting percent if auto-temp-control is enabled
                         {
                             auto temp = getData(castedDevice->getSensor());
-                            if(temp != -127)
-                                castedDevice->setVentingPercent(CustomMathUtils::map(temp, castedDevice->getCloseStateTemp(), castedDevice->getOpenStateTemp(), 0, 100));
+                            if(temp != -127) // trying to implement hystresis
+                            {
+                                auto prevTemp = CustomMathUtils::map(castedDevice->getVentingPercent(), 0, 100,  castedDevice->getCloseStateTemp(), castedDevice->getOpenStateTemp());
+                                auto ventingPercent = CustomMathUtils::map(temp, castedDevice->getCloseStateTemp(), castedDevice->getOpenStateTemp(), 0, 100);
+                                auto tempDiff = std::abs(prevTemp - temp);
+                                if((tempDiff >= (castedDevice->getHysteresis() / 2.00)) or ventingPercent == 100 or ventingPercent == 0)
+                                    castedDevice->setVentingPercent(ventingPercent);
+                            }
                         }
                         castedDevice->setCurrentState(state.value());
                         if(!docRx["ventingPercent"].isNull())
