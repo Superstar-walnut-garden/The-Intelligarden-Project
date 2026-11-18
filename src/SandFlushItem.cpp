@@ -87,14 +87,6 @@ SandFlushItem::SandFlushItem()
 
         if((json["cancelFlush"].as<bool>() | false)) // if cancel flush is true
             this->cancelFlush = true; // raise cancel flush
-
-        // update and generate filter backwash status signal names based on parallelFilterCount
-        filterBackwashSignalNames.clear(); // clear the existing signal names
-        for(int i = 0; i < this->parallelFilterCount; i++) // generate new signal names based on the updated parallelFilterCount
-        {
-            auto signalName = SignalNameResolver::generateLocalSignalName("backwashingFilter" + std::to_string(i), SignalNameResolver::SignalType::Broadcaster);
-            filterBackwashSignalNames.push_back(signalName);
-        }
     });
 }
 
@@ -219,7 +211,7 @@ short SandFlushItem::getBackwashingFilterNumber() const
 }
 
 /**
- * @brief Get the remaining time left in the backwash phase.
+ * @brief Get the remaining time (seconds) left in the backwash phase.
  *
  * @return int The remaining backwash time.
  */
@@ -267,7 +259,7 @@ bool SandFlushItem::isCancelFlush()
 /**
  * @brief Get the elapsed filtration time since the last backwash event.
  *
- * @return long int The filtration time since the last backwash.
+ * @return long int The filtration time (minutes) since the last backwash.
  */
 long int SandFlushItem::getFiltrationTimeSinceBackwash() const
 {
@@ -295,13 +287,97 @@ uint64_t SandFlushItem::getPressureSensorId() const
 }
 
 /**
+ * @brief Set the current measured differential pressure.
+ *
+ * @param dp The measured differential pressure value.
+ */
+void SandFlushItem::setDp(double dp)
+{
+    this->dp = dp;
+}
+
+/**
+ * @brief Set whether the flush sequence runs in reverse order.
+ *
+ * @param reversed true to reverse the flush sequence, false for normal order.
+ */
+void SandFlushItem::setFlushSequenceReversed(bool reversed)
+{
+    this->flushSequenceReversed = reversed;
+}
+
+/**
+ * @brief Toggle whether the flush sequence runs in reverse order.
+ */
+void SandFlushItem::toggleFlushSequenceReversed()
+{
+    this->flushSequenceReversed = !this->flushSequenceReversed;
+}
+
+/**
+ * @brief Set the current operating state of the sand-flush controller.
+ *
+ * @param operatingState The new operating state.
+ */
+void SandFlushItem::setOperatingState(OperatingState operatingState)
+{
+    this->operatingState = operatingState;
+}
+
+/**
+ * @brief Set the filter currently being backwashed.
+ *
+ * @param filterNumber The backwashing filter number.
+ */
+void SandFlushItem::setBackwashingFilterNumber(short filterNumber)
+{
+    this->backwashingFilterNumber = filterNumber;
+}
+
+/**
+ * @brief Set the remaining time (seconds) left in the backwash phase.
+ *
+ * @param remainingBackwashTime The remaining backwash time.
+ */
+void SandFlushItem::setRemainingBackwashTime(int remainingBackwashTime)
+{
+    this->remainingBackwashTime = remainingBackwashTime;
+}
+
+/**
+ * @brief Set the elapsed filtration time since the last backwash.
+ *
+ * @param filtrationTimeSinceBackwash The filtration time (minutes) since the last backwash.
+ */
+void SandFlushItem::setFiltrationTimeSinceBackwash(long int filtrationTimeSinceBackwash)
+{
+    this->filtrationTimeSinceBackwash = filtrationTimeSinceBackwash;
+}
+
+/**
+ * @brief Get the FiltrationSystemRunning signal name (listener)
+ *
+ * @return std::string signal names
+ */
+std::string SandFlushItem::getFiltrationSystemRunningSignalName() const
+{
+    return SignalNameResolver::generateLocalSignalName("filtrationSystemRunning", SignalNameResolver::SignalType::Listener);
+}
+
+/**
  * @brief Get the signal names generated for each filter backwash state.
  *
  * @return std::vector<std::string> The list of generated backwash signal names.
  */
 std::vector<std::string> SandFlushItem::getFilterBackwashSignalNames() const
 {
-    return this->filterBackwashSignalNames;
+    std::vector<std::string> signalNames;
+    for(int i = 0; i < this->parallelFilterCount; i++) // generate new signal names based on the updated parallelFilterCount
+    {
+        auto signal = SignalNameResolver::generateLocalSignalName("backwashingFilter" + std::to_string(i), SignalNameResolver::SignalType::Broadcaster);
+        signalNames.push_back(signal);
+    }
+    return signalNames;
 }
 
 /**
@@ -311,7 +387,8 @@ std::vector<std::string> SandFlushItem::getFilterBackwashSignalNames() const
  */
 std::vector<std::string> SandFlushItem::getLocalSignalNames()
 {
-    auto signalList = std::vector<std::string>();
+    auto signalList = getFilterBackwashSignalNames();
+    signalList.push_back(getFiltrationSystemRunningSignalName());
     
     return signalList;
 }

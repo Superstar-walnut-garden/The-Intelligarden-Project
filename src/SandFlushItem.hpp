@@ -33,6 +33,15 @@ public:
     TriggerMode getTriggerMode() const;
     uint64_t getPressureSensorId() const;
 
+    void setDp(double dp);
+    void setFlushSequenceReversed(bool reversed);
+    void toggleFlushSequenceReversed();
+    void setOperatingState(OperatingState operatingState);
+    void setBackwashingFilterNumber(short filterNumber);
+    void setRemainingBackwashTime(int remainingBackwashTime);
+    void setFiltrationTimeSinceBackwash(long int filtrationTimeSinceBackwash);
+
+    std::string getFiltrationSystemRunningSignalName() const;
     std::vector<std::string> getFilterBackwashSignalNames() const;
     std::vector<std::string> getLocalSignalNames() override;
 
@@ -43,6 +52,9 @@ public:
     bool logOnlyOnChange() const override { return true; }
     std::string getData() const override { return "";};
     bool isLoggingEnabled() const override { return false;};
+
+    std::chrono::steady_clock::time_point backwashStartTime;
+    std::chrono::steady_clock::time_point filtrationStartTime;
 
 private:
     double valveDelay;
@@ -57,12 +69,10 @@ private:
     bool flushSequenceReversed;
     OperatingState operatingState;
     short backwashingFilterNumber;
-    int remainingBackwashTime;
+    int remainingBackwashTime; // seconds
     bool manualFlush;
     bool cancelFlush;
-    long int filtrationTimeSinceBackwash;
+    long int filtrationTimeSinceBackwash; // minutes
     TriggerMode triggerMode;
     uint64_t pressureSensorId;
-
-    std::vector<std::string> filterBackwashSignalNames;
 };
