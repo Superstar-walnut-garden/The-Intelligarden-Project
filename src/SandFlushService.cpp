@@ -198,7 +198,7 @@ void SandFlushService::update(uint64_t id, std::string json)
  */
 void SandFlushService::storeAll()
 {
-    // Configuration::getInstance()->setSandFlushList(list.toJson());
+    Configuration::getInstance()->setSandFlush(list.toJson());
 }
 
 /**
@@ -207,9 +207,9 @@ void SandFlushService::storeAll()
  */
 void SandFlushService::restoreAll() 
 {
-    // auto data = Configuration::getInstance()->getSandFlushList();
-    // if (data.empty()) return;
-    //     list.repopulateWith(data);
+    auto data = Configuration::getInstance()->getSandFlush();
+    if (data.empty()) return;
+        list.repopulateWith(data);
 }
 
 /**
