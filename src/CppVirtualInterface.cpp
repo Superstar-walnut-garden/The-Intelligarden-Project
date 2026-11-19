@@ -31,6 +31,7 @@
 #include "IExternalStorage.hpp"
 #include "SpiMicroSd.hpp"
 #include "LogDispatcherService.hpp"
+#include "SandFlushService.hpp"
 
 
 int virtualMain()
@@ -56,6 +57,8 @@ int virtualMain()
     auto *storage = SpiMicroSd::getInstance();
     auto *logDispatcher = LogDispatcherService::getInstance();
     auto *temperature = TempSensorService::getInstance();
+    auto *sandFlush = SandFlushService::getInstance();
+
     if(storage->isReady())
     {
         Serial.println("SD Card is ready!");
@@ -72,9 +75,11 @@ int virtualMain()
     centralizedSignalHub->registerService(thermostatManager);
     centralizedSignalHub->registerService(scheduler);
     centralizedSignalHub->registerService(temperature); // fusionbus service
+    centralizedSignalHub->registerService(sandFlush);
 
     logDispatcher->attachLoggableService(temperature);
     logDispatcher->attachLoggableService(ioManager);
+    // logDispatcher->attachLoggableService(sandFlush);
 
     display->drawUI();
     systemMaintainer.refreshCycleTime(); // software implemented watchdog
@@ -123,6 +128,7 @@ int virtualMain()
         logDispatcher->loop();
         wifiSetup->loop();
         ioManager->syncHardware();
+        sandFlush->loop();
         Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
         Serial.printf("Free Flash: %d bytes\n", SPIFFS.totalBytes() - SPIFFS.usedBytes());
         if(storage->isReady())
