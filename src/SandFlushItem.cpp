@@ -26,13 +26,13 @@ SandFlushItem::SandFlushItem()
       dp(0),
       switchSequence(false),
       flushSequenceReversed(false),
-      operatingState{},
       backwashingFilterNumber(0),
       remainingBackwashTime(0),
       manualFlush(false),
       cancelFlush(false),
       filtrationTimeSinceBackwash(0),
-      triggerMode{},
+      triggerMode(TriggerMode::DP),
+      operatingState(OperatingState::Idle),
       pressureSensorId(0)
 {
     registerToJsonCallback([this](JsonDocument &json) -> void
