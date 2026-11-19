@@ -192,9 +192,7 @@ void SandFlushService::remove(uint64_t id)
  */
 void SandFlushService::update(uint64_t id, std::string json) 
 {
-    auto newItem = std::make_unique<SandFlushItem>();
-    newItem->populateFromJson(json);
-    list.modifyItem(id, std::move(newItem));
+    list.getItem(id)->populateFromJson(json);
     notify();
     storeAll();
 }
