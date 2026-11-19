@@ -155,6 +155,7 @@ void SandFlushService::determineStatusofItems()
                 return;
             }
         }
+        broadcastItem(item); // broadcast backwash signals
     });
 }
 
