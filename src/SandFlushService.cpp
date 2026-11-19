@@ -55,7 +55,7 @@ void SandFlushService::determineStatusofItems()
                 getSignalValue(SignalNameResolver::toString(
                     SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getFiltrationSystemRunningSignalName())));
         auto filtrationSystemRunning = (filtrationSystemRunningSignal.has_value() and filtrationSystemRunningSignal.value());
-        if(!filtrationSystemRunning)
+        if(!filtrationSystemRunning or !item->getStatus())
         {
             item->setOperatingState(SandFlushItem::OperatingState::Idle); // transition to idle
             item->setBackwashingFilterNumber(-1); // reset backwashing filter number
@@ -82,7 +82,7 @@ void SandFlushService::determineStatusofItems()
             }
 
             // if something triggers backwashing
-            if(false /* dp or interval triggers backwashing*/) // transition to backwashing
+            if(item->isManualFlush() or (item->getFiltrationTimeSinceBackwash() > item->getFlushInterval())/* or dp or interval triggers backwashing*/) // transition to backwashing
             {
                 item->setOperatingState(SandFlushItem::OperatingState::Backwashing);
                 item->setBackwashingFilterNumber(0);
@@ -146,6 +146,13 @@ void SandFlushService::determineStatusofItems()
                 }
 
                 timeOffset += inactiveDuration;
+            }
+            if(item->isCancelFlush()) // cancel backwash
+            {
+                item->setRemainingBackwashTime(0);
+                item->setBackwashingFilterNumber(-1);
+                item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition back to filtering
+                return;
             }
         }
     });
