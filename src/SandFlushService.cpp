@@ -160,7 +160,7 @@ void SandFlushService::create(std::string json)
 {
     auto newItem = std::make_unique<SandFlushItem>();
     newItem->populateFromJson(json);
-    Serial.printf("Schedule %d created\n", newItem->getId());
+    Serial.printf("SandFlushItem %d created\n", newItem->getId());
     list.addItem(std::move(newItem));
     storeAll();
 }
