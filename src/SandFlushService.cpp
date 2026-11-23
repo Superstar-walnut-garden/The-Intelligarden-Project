@@ -49,25 +49,23 @@ SandFlushService* SandFlushService::getInstance()
 void SandFlushService::determineStatusofItems() 
 {
     auto systemTime = SystemTimeService::getInstance(); // get direct access to system time
+    short postponeTime = 30; // minutes
     list.forEach([&](SandFlushItem *item)
     {
-        auto filtrationSystemRunningSignal = SignalRouterService::getInstance()->
-                getSignalValue(SignalNameResolver::toString(
-                    SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getFiltrationSystemRunningSignalName())));
-        auto filtrationSystemRunning = (filtrationSystemRunningSignal.has_value() and filtrationSystemRunningSignal.value());
-        if(!filtrationSystemRunning or !item->getStatus())
+        // lambda helpers
+        auto calculateAutoBackwashRetryInTime = [&]() -> void
         {
-            item->setOperatingState(SandFlushItem::OperatingState::Idle); // transition to idle
-            item->setBackwashingFilterNumber(-1); // reset backwashing filter number
-            item->setRemainingBackwashTime(0); // reset backwashing remaining time
-        }
-        else if (item->getOperatingState() == SandFlushItem::OperatingState::Idle)
+            auto elapsedMinutes = item->autoBackwashCancelTime.has_value() ? std::chrono::duration_cast<std::chrono::minutes>(std::chrono::steady_clock::now() - item->autoBackwashCancelTime.value()).count() : postponeTime;
+            if(elapsedMinutes > postponeTime) 
+                elapsedMinutes = postponeTime; // limit elapsed to max (postpone time)
+            item->setAutoBackwashRetryIn(postponeTime - elapsedMinutes); // calculate remaining time to perform a retry
+        };
+        auto cancelAutoBackwash = [&]() -> void
         {
-            item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition to filtration mode
-            item->filtrationStartTime = std::chrono::steady_clock::now();
-        }
-
-        if (item->getOperatingState() == SandFlushItem::OperatingState::Filtering) 
+            item->autoBackwashCancelTime = std::chrono::steady_clock::now();
+            item->setAutoBackwashInterrupted(true); // set auto backwash interrupted flag
+        };
+        auto calculateFiltrationTimeSinceBackwash =  [&]() -> void
         {
             // increment filteration timer (item->setFiltrationTimeSinceBackwash(x)) for every minute of filteration
             auto elapsed = std::chrono::steady_clock::now() - item->filtrationStartTime;
@@ -80,13 +78,48 @@ void SandFlushService::determineStatusofItems()
 
                 item->filtrationStartTime += std::chrono::minutes(elapsedMinutes);
             }
+        };
+        auto startBackwash = [&]() -> void
+        {
+            item->setOperatingState(SandFlushItem::OperatingState::Backwashing);
+            item->setBackwashingFilterNumber(0);
+            item->backwashStartTime = std::chrono::steady_clock::now();
+        };
 
+        auto filtrationSystemRunningSignal = SignalRouterService::getInstance()->
+                getSignalValue(SignalNameResolver::toString(
+                    SignalNameResolver::SignalNameParameters(this->getName(), item->getId(), item->getFiltrationSystemRunningSignalName())));
+        auto filtrationSystemRunning = (filtrationSystemRunningSignal.has_value() and filtrationSystemRunningSignal.value());
+        if(!filtrationSystemRunning or !item->getStatus())
+        {
+            if((item->getOperatingState() == SandFlushItem::OperatingState::Backwashing) and !item->isBackwashTriggeredManually())
+                item->setAutoBackwashInterrupted(true);
+            item->setBackwashTriggeredManually(false);
+            item->setOperatingState(SandFlushItem::OperatingState::Idle); // transition to idle
+            item->setBackwashingFilterNumber(-1); // reset backwashing filter number
+            item->setRemainingBackwashTime(0); // reset backwashing remaining time
+            item->isCancelFlush(); // consume and reject cancel flag
+            item->isManualFlush(); // consume and reject manual flag
+        }
+        else if (item->getOperatingState() == SandFlushItem::OperatingState::Idle)
+        {
+            item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition to filtration mode
+            item->filtrationStartTime = std::chrono::steady_clock::now();
+        }
+
+        if (item->getOperatingState() == SandFlushItem::OperatingState::Filtering) 
+        {
+            calculateFiltrationTimeSinceBackwash();
             // if something triggers backwashing
-            if(item->isManualFlush() or (item->getFiltrationTimeSinceBackwash() > item->getFlushInterval())/* or dp or interval triggers backwashing*/) // transition to backwashing
+            auto manualTrigger = item->isManualFlush();
+            auto intervalTrigger = (item->getFiltrationTimeSinceBackwash() > item->getFlushInterval());
+            auto pendingAutoBackwash = item->isAutoBackwashInterrupted();
+            auto dpTrigger = false;
+            auto autoTrigger = (intervalTrigger or pendingAutoBackwash or dpTrigger) and item->getAutoBackwashRetryIn() == 0;
+            if(manualTrigger or autoTrigger) // transition to backwashing
             {
-                item->setOperatingState(SandFlushItem::OperatingState::Backwashing);
-                item->setBackwashingFilterNumber(0);
-                item->backwashStartTime = std::chrono::steady_clock::now();
+                item->setBackwashTriggeredManually(manualTrigger);
+                startBackwash();
             }
             
         }
@@ -106,56 +139,62 @@ void SandFlushService::determineStatusofItems()
                 std::chrono::steady_clock::now() - item->backwashStartTime
             ).count();
 
-            if (elapsedSeconds >= totalBackwashTime) // total backwash sequence finished
+            if (elapsedSeconds < totalBackwashTime) // ongoing backwash sequence
             {
+                item->setRemainingBackwashTime(
+                    static_cast<int>(std::ceil(totalBackwashTime - elapsedSeconds))
+                );
+
+                double timeOffset = 0;
+
+                for (int i = 0; i < filterCount; i++)
+                {
+                    // Valve opening delay + actual flushing
+                    const double activeDuration = valveDelay + flushDuration;
+
+                    if (elapsedSeconds < timeOffset + activeDuration)
+                    {
+                        item->setBackwashingFilterNumber(i);
+                        break;
+                    }
+
+                    timeOffset += activeDuration;
+
+                    // Valve closing delay + dwell time
+                    const double inactiveDuration =
+                        valveDelay + (i < filterCount - 1 ? dwellTime : 0);
+
+                    if (elapsedSeconds < timeOffset + inactiveDuration)
+                    {
+                        item->setBackwashingFilterNumber(-1);
+                        break;
+                    }
+
+                    timeOffset += inactiveDuration;
+                }
+                if(item->isCancelFlush()) // cancel backwash
+                {
+                    if(!item->isBackwashTriggeredManually()) // if trigger source was automatic
+                        cancelAutoBackwash();
+                    item->setBackwashTriggeredManually(false);
+                    item->setBackwashingFilterNumber(-1);
+                    item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition back to filtering
+                }
+            }
+            else // total backwash sequence finished
+            {
+                item->setBackwashTriggeredManually(false);
+                item->setAutoBackwashInterrupted(false);
+                item->autoBackwashCancelTime = std::nullopt;
                 item->setRemainingBackwashTime(0);
                 item->setBackwashingFilterNumber(-1);
                 item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition back to filtering
                 item->setFiltrationTimeSinceBackwash(0); // reset filteration timer
                 item->filtrationStartTime = std::chrono::steady_clock::now();
-                return;
-            }
-
-            item->setRemainingBackwashTime(
-                static_cast<int>(std::ceil(totalBackwashTime - elapsedSeconds))
-            );
-
-            double timeOffset = 0;
-
-            for (int i = 0; i < filterCount; i++)
-            {
-                // Valve opening delay + actual flushing
-                const double activeDuration = valveDelay + flushDuration;
-
-                if (elapsedSeconds < timeOffset + activeDuration)
-                {
-                    item->setBackwashingFilterNumber(i);
-                    break;
-                }
-
-                timeOffset += activeDuration;
-
-                // Valve closing delay + dwell time
-                const double inactiveDuration =
-                    valveDelay + (i < filterCount - 1 ? dwellTime : 0);
-
-                if (elapsedSeconds < timeOffset + inactiveDuration)
-                {
-                    item->setBackwashingFilterNumber(-1);
-                    break;
-                }
-
-                timeOffset += inactiveDuration;
-            }
-            if(item->isCancelFlush()) // cancel backwash
-            {
-                item->setRemainingBackwashTime(0);
-                item->setBackwashingFilterNumber(-1);
-                item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition back to filtering
-                return;
             }
         }
         broadcastItem(item); // broadcast backwash signals
+        calculateAutoBackwashRetryInTime();
     });
 }
 

@@ -27,6 +27,9 @@ public:
     OperatingState getOperatingState() const;
     short getBackwashingFilterNumber() const;
     int getRemainingBackwashTime() const;
+    short getAutoBackwashRetryIn() const;
+    bool isAutoBackwashInterrupted() const;
+    bool isBackwashTriggeredManually() const;
     bool isManualFlush();
     bool isCancelFlush();
     long int getFiltrationTimeSinceBackwash() const;
@@ -39,6 +42,9 @@ public:
     void setOperatingState(OperatingState operatingState);
     void setBackwashingFilterNumber(short filterNumber);
     void setRemainingBackwashTime(int remainingBackwashTime);
+    void setAutoBackwashRetryIn(short retryIn);
+    void setAutoBackwashInterrupted(bool interrupted);
+    void setBackwashTriggeredManually(bool triggeredManually);
     void setFiltrationTimeSinceBackwash(long int filtrationTimeSinceBackwash);
 
     std::string getFiltrationSystemRunningSignalName() const;
@@ -55,6 +61,7 @@ public:
 
     std::chrono::steady_clock::time_point backwashStartTime;
     std::chrono::steady_clock::time_point filtrationStartTime;
+    std::optional<std::chrono::steady_clock::time_point> autoBackwashCancelTime = std::nullopt;
 
 private:
     double valveDelay;
@@ -72,6 +79,9 @@ private:
     int remainingBackwashTime; // seconds
     bool manualFlush;
     bool cancelFlush;
+    bool backwashTriggeredManually;
+    short autoBackwashRetryIn;
+    bool autoBackwashInterrupted;
     long int filtrationTimeSinceBackwash; // minutes
     TriggerMode triggerMode;
     uint64_t pressureSensorId;

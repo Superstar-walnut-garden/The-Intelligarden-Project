@@ -26,10 +26,13 @@ SandFlushItem::SandFlushItem()
       dp(0),
       switchSequence(false),
       flushSequenceReversed(false),
-      backwashingFilterNumber(0),
+      backwashingFilterNumber(-1),
       remainingBackwashTime(0),
       manualFlush(false),
       cancelFlush(false),
+      backwashTriggeredManually(false),
+      autoBackwashRetryIn(0),
+      autoBackwashInterrupted(false),
       filtrationTimeSinceBackwash(0),
       triggerMode(TriggerMode::DP),
       operatingState(OperatingState::Idle),
@@ -55,6 +58,8 @@ SandFlushItem::SandFlushItem()
         json["flushSequenceReversed"] = this->flushSequenceReversed;
         json["backwashingFilterNumber"] = this->backwashingFilterNumber;
         json["filtrationTimeSinceBackwash"] = this->filtrationTimeSinceBackwash;
+        json["autoBackwashRetryIn"] = this->autoBackwashRetryIn;
+        json["autoBackwashInterrupted"] = this->autoBackwashInterrupted;
 
         // Enforce command-type parameters to stay false
         json["manualFlush"] = false;
@@ -79,7 +84,9 @@ SandFlushItem::SandFlushItem()
         this->operatingState;
         this->backwashingFilterNumber;
         this->remainingBackwashTime;
-        this->filtrationTimeSinceBackwash; // maybe later save and load this separately to EEPROM or SPIFFS to keep track of filtration time since last backwash even after power loss, but for now it is just a runtime parameter
+        this->filtrationTimeSinceBackwash; 
+        this->autoBackwashRetryIn;
+        this->autoBackwashInterrupted; // maybe later save and load this separately to EEPROM or SPIFFS to keep track of filtration time since last backwash even after power loss, but for now it is just a runtime parameter
 
         // commands
         if((json["manualFlush"].as<bool>() | false)) // if manual flush is true
@@ -221,6 +228,36 @@ int SandFlushItem::getRemainingBackwashTime() const
 }
 
 /**
+ * @brief Get the remaining time before an automatic backwash retry.
+ *
+ * @return short The automatic backwash retry interval.
+ */
+short SandFlushItem::getAutoBackwashRetryIn() const
+{
+    return this->autoBackwashRetryIn;
+}
+
+/**
+ * @brief Check whether an automatic backwash was interrupted.
+ *
+ * @return true if the automatic backwash was interrupted, otherwise false.
+ */
+bool SandFlushItem::isAutoBackwashInterrupted() const
+{
+    return this->autoBackwashInterrupted;
+}
+
+/**
+ * @brief Check whether the backwash was triggered manually.
+ *
+ * @return true if the backwash was triggered manually, otherwise false.
+ */
+bool SandFlushItem::isBackwashTriggeredManually() const
+{
+    return this->backwashTriggeredManually;
+}
+
+/**
  * @brief Consume a queued manual flush request.
  *
  * The method reads the pending flag and clears it so the request is only acted
@@ -342,6 +379,36 @@ void SandFlushItem::setBackwashingFilterNumber(short filterNumber)
 void SandFlushItem::setRemainingBackwashTime(int remainingBackwashTime)
 {
     this->remainingBackwashTime = remainingBackwashTime;
+}
+
+/**
+ * @brief Set the remaining time before an automatic backwash retry.
+ *
+ * @param retryIn The automatic backwash retry interval.
+ */
+void SandFlushItem::setAutoBackwashRetryIn(short retryIn)
+{
+    this->autoBackwashRetryIn = retryIn;
+}
+
+/**
+ * @brief Set whether an automatic backwash was interrupted.
+ *
+ * @param interrupted true if the automatic backwash was interrupted.
+ */
+void SandFlushItem::setAutoBackwashInterrupted(bool interrupted)
+{
+    this->autoBackwashInterrupted = interrupted;
+}
+
+/**
+ * @brief Set whether the backwash was triggered manually.
+ *
+ * @param triggeredManually true if the backwash was triggered manually.
+ */
+void SandFlushItem::setBackwashTriggeredManually(bool triggeredManually)
+{
+    this->backwashTriggeredManually = triggeredManually;
 }
 
 /**
