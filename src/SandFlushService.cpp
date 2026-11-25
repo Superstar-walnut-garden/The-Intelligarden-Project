@@ -158,6 +158,9 @@ void SandFlushService::determineStatusofItems()
             const double elapsedSeconds = std::chrono::duration<double>(
                 std::chrono::steady_clock::now() - item->backwashStartTime
             ).count();
+            
+            if(!item->isSwitchSequence()) // if switch sequence is disabled
+                item->setFlushSequenceReversed(false); // do not use reversed sequence
 
             if (elapsedSeconds < totalBackwashTime) // ongoing backwash sequence
             {
@@ -166,15 +169,16 @@ void SandFlushService::determineStatusofItems()
                 );
 
                 double timeOffset = 0;
-
+                const bool reversed = item->isFlushSequenceReversed();
                 for (int i = 0; i < filterCount; i++)
                 {
                     // Valve opening delay + actual flushing
                     const double activeDuration = valveDelay + flushDuration;
+                    const int filterIndex = reversed ? filterCount - 1 - i : i;
 
                     if (elapsedSeconds < timeOffset + activeDuration)
                     {
-                        item->setBackwashingFilterNumber(i);
+                        item->setBackwashingFilterNumber(filterIndex);
                         break;
                     }
 
@@ -201,8 +205,10 @@ void SandFlushService::determineStatusofItems()
                     item->setOperatingState(SandFlushItem::OperatingState::Filtering); // transition back to filtering
                 }
             }
-            else // total backwash sequence finished
+            else // total backwash sequence finished successfully
             {
+                if(item->isSwitchSequence()) // if switch sequence is enabled
+                    item->setFlushSequenceReversed(!item->isFlushSequenceReversed()); // toggle reversed sequence
                 item->setBackwashTriggeredManually(false);
                 item->setAutoBackwashInterrupted(false);
                 item->autoBackwashCancelTime = std::nullopt;
