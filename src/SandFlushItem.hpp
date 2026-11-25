@@ -10,7 +10,7 @@ class SandFlushItem : public SignalCompatibleBaseItem, public ILoggableItem
 {
 public:
     enum class OperatingState {Idle, Filtering, Backwashing};
-    enum class TriggerMode {DP, Interval, Hybrid};
+    enum class TriggerMode {DP, Interval, Hybrid, ManualOnly};
 
     SandFlushItem();
 

@@ -64,6 +64,50 @@
     ]
   },
   {
+    "qualified_name": "SandFlushItem::OperatingState",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
+    "line": 12,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Idle",
+        "value": 0
+      },
+      {
+        "name": "Filtering",
+        "value": 1
+      },
+      {
+        "name": "Backwashing",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "qualified_name": "SandFlushItem::TriggerMode",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
+    "line": 13,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "DP",
+        "value": 0
+      },
+      {
+        "name": "Interval",
+        "value": 1
+      },
+      {
+        "name": "Hybrid",
+        "value": 2
+      },
+      {
+        "name": "ManualOnly",
+        "value": 3
+      }
+    ]
+  },
+  {
     "qualified_name": "SignalRouterItem::Mode",
     "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SignalRouterItem.hpp",
     "line": 42,
@@ -175,46 +219,6 @@
       },
       {
         "name": "CharLcd",
-        "value": 2
-      }
-    ]
-  },
-  {
-    "qualified_name": "SandFlushItem::OperatingState",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
-    "line": 12,
-    "is_scoped": true,
-    "enumerators": [
-      {
-        "name": "Idle",
-        "value": 0
-      },
-      {
-        "name": "Filtering",
-        "value": 1
-      },
-      {
-        "name": "Backwashing",
-        "value": 2
-      }
-    ]
-  },
-  {
-    "qualified_name": "SandFlushItem::TriggerMode",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
-    "line": 13,
-    "is_scoped": true,
-    "enumerators": [
-      {
-        "name": "DP",
-        "value": 0
-      },
-      {
-        "name": "Interval",
-        "value": 1
-      },
-      {
-        "name": "Hybrid",
         "value": 2
       }
     ]

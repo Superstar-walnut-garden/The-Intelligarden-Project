@@ -119,13 +119,24 @@ void SandFlushService::determineStatusofItems()
             calculateFiltrationTimeSinceBackwash();
             calculateStartupDelayRemaining();
             // if something triggers backwashing
+            auto isAutoBackwashTriggered = [&] () -> auto
+            {
+                // get trigger mode
+                auto triggerMode = item->getTriggerMode();
+
+                // assess which trigger modes are allowed
+                auto autoTriggerAllowed = (item->getStartupDelayRemaining() == 0) and (item->getAutoBackwashRetryIn() == 0) and (triggerMode != SandFlushItem::TriggerMode::ManualOnly);
+                auto intervalTriggerAllowed = ((triggerMode == SandFlushItem::TriggerMode::Interval) or (triggerMode == SandFlushItem::TriggerMode::Hybrid));
+                auto dPTriggerAllowed = ((triggerMode == SandFlushItem::TriggerMode::DP) or (triggerMode == SandFlushItem::TriggerMode::Hybrid));
+
+                auto intervalTrigger = (item->getFiltrationElapsedTimeSinceBackwash() > item->getFlushInterval()) and intervalTriggerAllowed;
+                auto pendingAutoBackwash = item->isAutoBackwashInterrupted();
+                auto dPTrigger = false and dPTriggerAllowed;
+                auto autoTrigger = (intervalTrigger or pendingAutoBackwash or dPTrigger) and autoTriggerAllowed;
+                return autoTrigger;
+            };
             auto manualTrigger = item->isManualFlush();
-            auto intervalTrigger = (item->getFiltrationElapsedTimeSinceBackwash() > item->getFlushInterval());
-            auto pendingAutoBackwash = item->isAutoBackwashInterrupted();
-            auto dpTrigger = false;
-            auto autoTriggerAllowed = (item->getStartupDelayRemaining() == 0) and (item->getAutoBackwashRetryIn() == 0);
-            auto autoTrigger = (intervalTrigger or pendingAutoBackwash or dpTrigger) and autoTriggerAllowed;
-            if(manualTrigger or autoTrigger) // transition to backwashing
+            if(isAutoBackwashTriggered() or manualTrigger) // transition to backwashing
             {
                 item->setBackwashTriggeredManually(manualTrigger);
                 startBackwash();

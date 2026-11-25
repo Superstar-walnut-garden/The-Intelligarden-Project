@@ -80,7 +80,7 @@ SandFlushItem::SandFlushItem()
         this->dwellTime = json["dwellTime"].as<int>();
         this->dpSetpoint = json["dpSetpoint"].as<double>();
         this->switchSequence = json["switchSequence"].as<bool>();
-        this->triggerMode = static_cast<TriggerMode>(json["triggerMode"].as<int>());
+        this->triggerMode = EnumCrafter::parse<TriggerMode>(json["triggerMode"]).value_or(this->triggerMode);
         this->pressureSensorId = std::stoull(json["pressureSensorId"].as<std::string>());
         this->startupDelay = json["startupDelay"].as<long int>(); // seconds
 

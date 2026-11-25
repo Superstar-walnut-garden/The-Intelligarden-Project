@@ -61,6 +61,25 @@ constexpr std::string_view toString(LogDispatcherStatus e) {
     }
 }
 
+constexpr std::string_view toString(SandFlushItem::OperatingState e) {
+    switch (e) {
+        case SandFlushItem::OperatingState::Idle: return "Idle";
+        case SandFlushItem::OperatingState::Filtering: return "Filtering";
+        case SandFlushItem::OperatingState::Backwashing: return "Backwashing";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(SandFlushItem::TriggerMode e) {
+    switch (e) {
+        case SandFlushItem::TriggerMode::DP: return "DP";
+        case SandFlushItem::TriggerMode::Interval: return "Interval";
+        case SandFlushItem::TriggerMode::Hybrid: return "Hybrid";
+        case SandFlushItem::TriggerMode::ManualOnly: return "ManualOnly";
+        default: return "???";
+    }
+}
+
 constexpr std::string_view toString(SignalRouterItem::Mode e) {
     switch (e) {
         case SignalRouterItem::Mode::SingleSource: return "SingleSource";
@@ -110,24 +129,6 @@ constexpr std::string_view toString(DisplayConfig::DisplayType e) {
     }
 }
 
-constexpr std::string_view toString(SandFlushItem::OperatingState e) {
-    switch (e) {
-        case SandFlushItem::OperatingState::Idle: return "Idle";
-        case SandFlushItem::OperatingState::Filtering: return "Filtering";
-        case SandFlushItem::OperatingState::Backwashing: return "Backwashing";
-        default: return "???";
-    }
-}
-
-constexpr std::string_view toString(SandFlushItem::TriggerMode e) {
-    switch (e) {
-        case SandFlushItem::TriggerMode::DP: return "DP";
-        case SandFlushItem::TriggerMode::Interval: return "Interval";
-        case SandFlushItem::TriggerMode::Hybrid: return "Hybrid";
-        default: return "???";
-    }
-}
-
 template<>
 constexpr std::optional<SignalNameResolver::SignalType> parse<SignalNameResolver::SignalType>(std::string_view s) {
     if (s == "Broadcaster") return SignalNameResolver::SignalType::Broadcaster;
@@ -150,6 +151,23 @@ constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::str
     if (s == "Running") return LogDispatcherStatus::Running;
     if (s == "StorageFullError") return LogDispatcherStatus::StorageFullError;
     if (s == "StorageNotReadyError") return LogDispatcherStatus::StorageNotReadyError;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<SandFlushItem::OperatingState> parse<SandFlushItem::OperatingState>(std::string_view s) {
+    if (s == "Idle") return SandFlushItem::OperatingState::Idle;
+    if (s == "Filtering") return SandFlushItem::OperatingState::Filtering;
+    if (s == "Backwashing") return SandFlushItem::OperatingState::Backwashing;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<SandFlushItem::TriggerMode> parse<SandFlushItem::TriggerMode>(std::string_view s) {
+    if (s == "DP") return SandFlushItem::TriggerMode::DP;
+    if (s == "Interval") return SandFlushItem::TriggerMode::Interval;
+    if (s == "Hybrid") return SandFlushItem::TriggerMode::Hybrid;
+    if (s == "ManualOnly") return SandFlushItem::TriggerMode::ManualOnly;
     return std::nullopt;
 }
 
@@ -198,22 +216,6 @@ constexpr std::optional<DisplayConfig::DisplayType> parse<DisplayConfig::Display
 }
 
 template<>
-constexpr std::optional<SandFlushItem::OperatingState> parse<SandFlushItem::OperatingState>(std::string_view s) {
-    if (s == "Idle") return SandFlushItem::OperatingState::Idle;
-    if (s == "Filtering") return SandFlushItem::OperatingState::Filtering;
-    if (s == "Backwashing") return SandFlushItem::OperatingState::Backwashing;
-    return std::nullopt;
-}
-
-template<>
-constexpr std::optional<SandFlushItem::TriggerMode> parse<SandFlushItem::TriggerMode>(std::string_view s) {
-    if (s == "DP") return SandFlushItem::TriggerMode::DP;
-    if (s == "Interval") return SandFlushItem::TriggerMode::Interval;
-    if (s == "Hybrid") return SandFlushItem::TriggerMode::Hybrid;
-    return std::nullopt;
-}
-
-template<>
 constexpr std::array<SignalNameResolver::SignalType, 2> makeIterable<SignalNameResolver::SignalType> = { SignalNameResolver::SignalType::Broadcaster, SignalNameResolver::SignalType::Listener };
 
 template<>
@@ -221,6 +223,12 @@ constexpr std::array<FusionBusItem::DeviceType, 4> makeIterable<FusionBusItem::D
 
 template<>
 constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
+
+template<>
+constexpr std::array<SandFlushItem::OperatingState, 3> makeIterable<SandFlushItem::OperatingState> = { SandFlushItem::OperatingState::Idle, SandFlushItem::OperatingState::Filtering, SandFlushItem::OperatingState::Backwashing };
+
+template<>
+constexpr std::array<SandFlushItem::TriggerMode, 4> makeIterable<SandFlushItem::TriggerMode> = { SandFlushItem::TriggerMode::DP, SandFlushItem::TriggerMode::Interval, SandFlushItem::TriggerMode::Hybrid, SandFlushItem::TriggerMode::ManualOnly };
 
 template<>
 constexpr std::array<SignalRouterItem::Mode, 3> makeIterable<SignalRouterItem::Mode> = { SignalRouterItem::Mode::SingleSource, SignalRouterItem::Mode::AndWithAuxiliary, SignalRouterItem::Mode::OrWithAuxiliary };
@@ -236,11 +244,5 @@ constexpr std::array<WebApiService::Method, 4> makeIterable<WebApiService::Metho
 
 template<>
 constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };
-
-template<>
-constexpr std::array<SandFlushItem::OperatingState, 3> makeIterable<SandFlushItem::OperatingState> = { SandFlushItem::OperatingState::Idle, SandFlushItem::OperatingState::Filtering, SandFlushItem::OperatingState::Backwashing };
-
-template<>
-constexpr std::array<SandFlushItem::TriggerMode, 3> makeIterable<SandFlushItem::TriggerMode> = { SandFlushItem::TriggerMode::DP, SandFlushItem::TriggerMode::Interval, SandFlushItem::TriggerMode::Hybrid };
 
 } // namespace EnumCrafter
