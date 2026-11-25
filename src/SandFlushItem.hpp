@@ -32,7 +32,10 @@ public:
     bool isBackwashTriggeredManually() const;
     bool isManualFlush();
     bool isCancelFlush();
-    long int getFiltrationTimeSinceBackwash() const;
+    long int getFiltrationElapsedTimeSinceBackwash() const;
+    long int getFiltrationElapsedTimeUntilCurrentSession() const;
+    long int getStartupDelayRemaining() const;
+    long int getStartupDelay() const;
     TriggerMode getTriggerMode() const;
     uint64_t getPressureSensorId() const;
 
@@ -45,7 +48,9 @@ public:
     void setAutoBackwashRetryIn(short retryIn);
     void setAutoBackwashInterrupted(bool interrupted);
     void setBackwashTriggeredManually(bool triggeredManually);
-    void setFiltrationTimeSinceBackwash(long int filtrationTimeSinceBackwash);
+    void setFiltrationElapsedTimeSinceBackwash(long int filtrationElapsedTimeSinceBackwash);
+    void setFiltrationElapsedTimeUntilCurrentSession(long int filtrationElapsedTimeUntilCurrentSession);
+    void setStartupDelayRemaining(long int startupDelayRemaining);
 
     std::string getFiltrationSystemRunningSignalName() const;
     std::vector<std::string> getFilterBackwashSignalNames() const;
@@ -61,6 +66,7 @@ public:
 
     std::chrono::steady_clock::time_point backwashStartTime;
     std::chrono::steady_clock::time_point filtrationStartTime;
+    std::chrono::steady_clock::time_point idleToFiltrationTransitionTimeStamp;
     std::optional<std::chrono::steady_clock::time_point> autoBackwashCancelTime = std::nullopt;
 
 private:
@@ -80,9 +86,12 @@ private:
     bool manualFlush;
     bool cancelFlush;
     bool backwashTriggeredManually;
-    short autoBackwashRetryIn;
+    short autoBackwashRetryIn; // minutes
     bool autoBackwashInterrupted;
-    long int filtrationTimeSinceBackwash; // minutes
+    long int filtrationElapsedTimeSinceBackwash; // minutes
+    long int filtrationElapsedTimeUntilCurrentSession; // minutes
+    long int startupDelayRemaining; // seconds
+    long int startupDelay; // seconds
     TriggerMode triggerMode;
     uint64_t pressureSensorId;
 };

@@ -33,7 +33,10 @@ SandFlushItem::SandFlushItem()
       backwashTriggeredManually(false),
       autoBackwashRetryIn(0),
       autoBackwashInterrupted(false),
-      filtrationTimeSinceBackwash(0),
+      filtrationElapsedTimeSinceBackwash(0),
+      filtrationElapsedTimeUntilCurrentSession(0),
+      startupDelayRemaining(0),
+      startupDelay(0),
       triggerMode(TriggerMode::DP),
       operatingState(OperatingState::Idle),
       pressureSensorId(0)
@@ -50,6 +53,7 @@ SandFlushItem::SandFlushItem()
         json["switchSequence"] = this->switchSequence;
         json["triggerMode"] = EnumCrafter::toString(this->triggerMode);
         json["pressureSensorId"] = std::to_string(this->pressureSensorId);
+        json["startupDelay"] = this->startupDelay;
 
         //runtime live parameters
         json["dp"] = this->dp;
@@ -57,9 +61,10 @@ SandFlushItem::SandFlushItem()
         json["remainingBackwashTime"] = this->remainingBackwashTime;
         json["flushSequenceReversed"] = this->flushSequenceReversed;
         json["backwashingFilterNumber"] = this->backwashingFilterNumber;
-        json["filtrationTimeSinceBackwash"] = this->filtrationTimeSinceBackwash;
+        json["filtrationElapsedTimeSinceBackwash"] = this->filtrationElapsedTimeSinceBackwash;
         json["autoBackwashRetryIn"] = this->autoBackwashRetryIn;
         json["autoBackwashInterrupted"] = this->autoBackwashInterrupted;
+        json["startupDelayRemaining"] = this->startupDelayRemaining;
 
         // Enforce command-type parameters to stay false
         json["manualFlush"] = false;
@@ -77,6 +82,7 @@ SandFlushItem::SandFlushItem()
         this->switchSequence = json["switchSequence"].as<bool>();
         this->triggerMode = static_cast<TriggerMode>(json["triggerMode"].as<int>());
         this->pressureSensorId = std::stoull(json["pressureSensorId"].as<std::string>());
+        this->startupDelay = json["startupDelay"].as<long int>(); // seconds
 
         // runtime live parameters (do nothing with them!!!)
         this->dp;
@@ -84,10 +90,10 @@ SandFlushItem::SandFlushItem()
         this->operatingState;
         this->backwashingFilterNumber;
         this->remainingBackwashTime;
-        this->filtrationTimeSinceBackwash; 
+        this->filtrationElapsedTimeSinceBackwash; 
         this->autoBackwashRetryIn;
         this->autoBackwashInterrupted; // maybe later save and load this separately to EEPROM or SPIFFS to keep track of filtration time since last backwash even after power loss, but for now it is just a runtime parameter
-
+        this->startupDelayRemaining; // seconds
         // commands
         if((json["manualFlush"].as<bool>() | false)) // if manual flush is true
             this->manualFlush = true; // raise manual flush
@@ -294,13 +300,45 @@ bool SandFlushItem::isCancelFlush()
 }
 
 /**
- * @brief Get the elapsed filtration time since the last backwash event.
+ * @brief Get the filtration elapsed time (minutes) since the last backwash event.
  *
- * @return long int The filtration time (minutes) since the last backwash.
+ * @return long int filtrationElapsedTimeSinceBackwash (minutes) since the last backwash.
  */
-long int SandFlushItem::getFiltrationTimeSinceBackwash() const
+long int SandFlushItem::getFiltrationElapsedTimeSinceBackwash() const
 {
-    return this->filtrationTimeSinceBackwash;
+    return this->filtrationElapsedTimeSinceBackwash;
+}
+
+/**
+ * @brief get the total elapsed filtration elapsed time (in minutes) from the last backwash event until the start of the current filtration session.
+ *
+ * @return long int filtrationElapsedTimeUntilCurrentSession (minutes)
+ */
+long int SandFlushItem::getFiltrationElapsedTimeUntilCurrentSession() const
+{
+    return filtrationElapsedTimeUntilCurrentSession;
+}
+
+/**
+ * @brief get the startup-delay remaining time (in seconds) since the current filteration session started.
+ * @details will not perform an auto-backwash in this period (may used for pressure stablization period or pipe fill period)
+ *
+ * @return long int startupDelayRemaining The startup-delay remaining time (seconds).
+ */
+long int SandFlushItem::getStartupDelayRemaining() const
+{
+    return startupDelayRemaining;
+}
+
+/**
+ * @brief get the startup-delay (in seconds).
+ * @details may used to wait for pressure stablization period or pipe fill period before initiating an auto-backwash
+ * 
+ * @return long int startupDelay The startup-delay (seconds).
+ */
+long int SandFlushItem::getStartupDelay() const
+{
+    return startupDelay;
 }
 
 /**
@@ -414,11 +452,32 @@ void SandFlushItem::setBackwashTriggeredManually(bool triggeredManually)
 /**
  * @brief Set the elapsed filtration time since the last backwash.
  *
- * @param filtrationTimeSinceBackwash The filtration time (minutes) since the last backwash.
+ * @param filtrationElapsedTimeSinceBackwash The filtration time (minutes) since the last backwash.
  */
-void SandFlushItem::setFiltrationTimeSinceBackwash(long int filtrationTimeSinceBackwash)
+void SandFlushItem::setFiltrationElapsedTimeSinceBackwash(long int filtrationElapsedTimeSinceBackwash)
 {
-    this->filtrationTimeSinceBackwash = filtrationTimeSinceBackwash;
+    this->filtrationElapsedTimeSinceBackwash = filtrationElapsedTimeSinceBackwash;
+}
+
+/**
+ * @brief Set the total filtration elapsed time (in minutes) from the last backwash event until the start of the current filtration session.
+ *
+ * @param filtrationElapsedTimeUntilCurrentSession filtration elapsed time (in minutes) until the start of the current filtration session
+ */
+void SandFlushItem::setFiltrationElapsedTimeUntilCurrentSession(long int filtrationElapsedTimeUntilCurrentSession)
+{
+    this->filtrationElapsedTimeUntilCurrentSession = filtrationElapsedTimeUntilCurrentSession;
+}
+
+/**
+ * @brief Set the startup-delay remaining time (in seconds) since the current filteration session started.
+ * @details will not perform an auto-backwash in this period (may used for pressure stablization period or pipe fill period)
+ *
+ * @param startupDelayRemaining The startup-delay remaining time (seconds).
+ */
+void SandFlushItem::setStartupDelayRemaining(long int startupDelayRemaining)
+{
+    this->startupDelayRemaining = startupDelayRemaining;
 }
 
 /**
