@@ -14,6 +14,7 @@
 #include "src/DisplayConfig.hpp"
 #include "src/FusionBusItem.hpp"
 #include "src/LogDispatcherStatus.hpp"
+#include "src/SandFlushItem.hpp"
 #include "src/SignalNameResolver.hpp"
 #include "src/SignalRouterItem.hpp"
 #include "src/StatusCode.hpp"
@@ -50,12 +51,31 @@ constexpr std::string_view toString(FusionBusItem::DeviceType e) {
     }
 }
 
-constexpr std::string_view toString(WebApiService::Method e) {
+constexpr std::string_view toString(LogDispatcherStatus e) {
     switch (e) {
-        case WebApiService::Method::Get: return "Get";
-        case WebApiService::Method::Post: return "Post";
-        case WebApiService::Method::Put: return "Put";
-        case WebApiService::Method::Delete: return "Delete";
+        case LogDispatcherStatus::Idle: return "Idle";
+        case LogDispatcherStatus::Running: return "Running";
+        case LogDispatcherStatus::StorageFullError: return "StorageFullError";
+        case LogDispatcherStatus::StorageNotReadyError: return "StorageNotReadyError";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(SandFlushItem::OperatingState e) {
+    switch (e) {
+        case SandFlushItem::OperatingState::Idle: return "Idle";
+        case SandFlushItem::OperatingState::Filtering: return "Filtering";
+        case SandFlushItem::OperatingState::Backwashing: return "Backwashing";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(SandFlushItem::TriggerMode e) {
+    switch (e) {
+        case SandFlushItem::TriggerMode::DP: return "DP";
+        case SandFlushItem::TriggerMode::Interval: return "Interval";
+        case SandFlushItem::TriggerMode::Hybrid: return "Hybrid";
+        case SandFlushItem::TriggerMode::ManualOnly: return "ManualOnly";
         default: return "???";
     }
 }
@@ -78,16 +98,6 @@ constexpr std::string_view toString(StatusCode e) {
     }
 }
 
-constexpr std::string_view toString(LogDispatcherStatus e) {
-    switch (e) {
-        case LogDispatcherStatus::Idle: return "Idle";
-        case LogDispatcherStatus::Running: return "Running";
-        case LogDispatcherStatus::StorageFullError: return "StorageFullError";
-        case LogDispatcherStatus::StorageNotReadyError: return "StorageNotReadyError";
-        default: return "???";
-    }
-}
-
 constexpr std::string_view toString(VentDriveItem::State e) {
     switch (e) {
         case VentDriveItem::State::Unknown: return "Unknown";
@@ -96,6 +106,16 @@ constexpr std::string_view toString(VentDriveItem::State e) {
         case VentDriveItem::State::Idle: return "Idle";
         case VentDriveItem::State::Error: return "Error";
         case VentDriveItem::State::Uninitialized: return "Uninitialized";
+        default: return "???";
+    }
+}
+
+constexpr std::string_view toString(WebApiService::Method e) {
+    switch (e) {
+        case WebApiService::Method::Get: return "Get";
+        case WebApiService::Method::Post: return "Post";
+        case WebApiService::Method::Put: return "Put";
+        case WebApiService::Method::Delete: return "Delete";
         default: return "???";
     }
 }
@@ -126,11 +146,28 @@ constexpr std::optional<FusionBusItem::DeviceType> parse<FusionBusItem::DeviceTy
 }
 
 template<>
-constexpr std::optional<WebApiService::Method> parse<WebApiService::Method>(std::string_view s) {
-    if (s == "Get") return WebApiService::Method::Get;
-    if (s == "Post") return WebApiService::Method::Post;
-    if (s == "Put") return WebApiService::Method::Put;
-    if (s == "Delete") return WebApiService::Method::Delete;
+constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::string_view s) {
+    if (s == "Idle") return LogDispatcherStatus::Idle;
+    if (s == "Running") return LogDispatcherStatus::Running;
+    if (s == "StorageFullError") return LogDispatcherStatus::StorageFullError;
+    if (s == "StorageNotReadyError") return LogDispatcherStatus::StorageNotReadyError;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<SandFlushItem::OperatingState> parse<SandFlushItem::OperatingState>(std::string_view s) {
+    if (s == "Idle") return SandFlushItem::OperatingState::Idle;
+    if (s == "Filtering") return SandFlushItem::OperatingState::Filtering;
+    if (s == "Backwashing") return SandFlushItem::OperatingState::Backwashing;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<SandFlushItem::TriggerMode> parse<SandFlushItem::TriggerMode>(std::string_view s) {
+    if (s == "DP") return SandFlushItem::TriggerMode::DP;
+    if (s == "Interval") return SandFlushItem::TriggerMode::Interval;
+    if (s == "Hybrid") return SandFlushItem::TriggerMode::Hybrid;
+    if (s == "ManualOnly") return SandFlushItem::TriggerMode::ManualOnly;
     return std::nullopt;
 }
 
@@ -151,15 +188,6 @@ constexpr std::optional<StatusCode> parse<StatusCode>(std::string_view s) {
 }
 
 template<>
-constexpr std::optional<LogDispatcherStatus> parse<LogDispatcherStatus>(std::string_view s) {
-    if (s == "Idle") return LogDispatcherStatus::Idle;
-    if (s == "Running") return LogDispatcherStatus::Running;
-    if (s == "StorageFullError") return LogDispatcherStatus::StorageFullError;
-    if (s == "StorageNotReadyError") return LogDispatcherStatus::StorageNotReadyError;
-    return std::nullopt;
-}
-
-template<>
 constexpr std::optional<VentDriveItem::State> parse<VentDriveItem::State>(std::string_view s) {
     if (s == "Unknown") return VentDriveItem::State::Unknown;
     if (s == "Closing") return VentDriveItem::State::Closing;
@@ -167,6 +195,15 @@ constexpr std::optional<VentDriveItem::State> parse<VentDriveItem::State>(std::s
     if (s == "Idle") return VentDriveItem::State::Idle;
     if (s == "Error") return VentDriveItem::State::Error;
     if (s == "Uninitialized") return VentDriveItem::State::Uninitialized;
+    return std::nullopt;
+}
+
+template<>
+constexpr std::optional<WebApiService::Method> parse<WebApiService::Method>(std::string_view s) {
+    if (s == "Get") return WebApiService::Method::Get;
+    if (s == "Post") return WebApiService::Method::Post;
+    if (s == "Put") return WebApiService::Method::Put;
+    if (s == "Delete") return WebApiService::Method::Delete;
     return std::nullopt;
 }
 
@@ -185,7 +222,13 @@ template<>
 constexpr std::array<FusionBusItem::DeviceType, 4> makeIterable<FusionBusItem::DeviceType> = { FusionBusItem::DeviceType::VentDrive, FusionBusItem::DeviceType::TempSensor, FusionBusItem::DeviceType::SoilSensor, FusionBusItem::DeviceType::Unknown };
 
 template<>
-constexpr std::array<WebApiService::Method, 4> makeIterable<WebApiService::Method> = { WebApiService::Method::Get, WebApiService::Method::Post, WebApiService::Method::Put, WebApiService::Method::Delete };
+constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
+
+template<>
+constexpr std::array<SandFlushItem::OperatingState, 3> makeIterable<SandFlushItem::OperatingState> = { SandFlushItem::OperatingState::Idle, SandFlushItem::OperatingState::Filtering, SandFlushItem::OperatingState::Backwashing };
+
+template<>
+constexpr std::array<SandFlushItem::TriggerMode, 4> makeIterable<SandFlushItem::TriggerMode> = { SandFlushItem::TriggerMode::DP, SandFlushItem::TriggerMode::Interval, SandFlushItem::TriggerMode::Hybrid, SandFlushItem::TriggerMode::ManualOnly };
 
 template<>
 constexpr std::array<SignalRouterItem::Mode, 3> makeIterable<SignalRouterItem::Mode> = { SignalRouterItem::Mode::SingleSource, SignalRouterItem::Mode::AndWithAuxiliary, SignalRouterItem::Mode::OrWithAuxiliary };
@@ -194,10 +237,10 @@ template<>
 constexpr std::array<StatusCode, 3> makeIterable<StatusCode> = { StatusCode::SUCCESS, StatusCode::NOT_FOUND, StatusCode::ERROR };
 
 template<>
-constexpr std::array<LogDispatcherStatus, 4> makeIterable<LogDispatcherStatus> = { LogDispatcherStatus::Idle, LogDispatcherStatus::Running, LogDispatcherStatus::StorageFullError, LogDispatcherStatus::StorageNotReadyError };
+constexpr std::array<VentDriveItem::State, 6> makeIterable<VentDriveItem::State> = { VentDriveItem::State::Unknown, VentDriveItem::State::Closing, VentDriveItem::State::Opening, VentDriveItem::State::Idle, VentDriveItem::State::Error, VentDriveItem::State::Uninitialized };
 
 template<>
-constexpr std::array<VentDriveItem::State, 6> makeIterable<VentDriveItem::State> = { VentDriveItem::State::Unknown, VentDriveItem::State::Closing, VentDriveItem::State::Opening, VentDriveItem::State::Idle, VentDriveItem::State::Error, VentDriveItem::State::Uninitialized };
+constexpr std::array<WebApiService::Method, 4> makeIterable<WebApiService::Method> = { WebApiService::Method::Get, WebApiService::Method::Post, WebApiService::Method::Put, WebApiService::Method::Delete };
 
 template<>
 constexpr std::array<DisplayConfig::DisplayType, 3> makeIterable<DisplayConfig::DisplayType> = { DisplayConfig::DisplayType::None, DisplayConfig::DisplayType::Oled, DisplayConfig::DisplayType::CharLcd };

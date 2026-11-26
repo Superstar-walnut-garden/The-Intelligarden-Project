@@ -327,3 +327,57 @@ void Configuration::setTempSensorConfig(const std::string& json)
         Serial.println("Failed to open file for writing.");
     }
 }
+
+std::string Configuration::getSandFlush() const
+{
+    auto file = SPIFFS.open(sandFlushFileAddress, FILE_READ);
+    std::string jsonData;
+    if (file)
+    {
+        jsonData = file.readString().c_str(); // read raw data from file
+        file.close();
+        return jsonData;
+    }
+    return ""; // return empty
+}
+void Configuration::setSandFlush(const std::string& json)
+{
+    File file = SPIFFS.open(sandFlushFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json.c_str());
+        file.close();
+        Serial.println("Sandflush data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}
+
+std::string Configuration::getSandFlushConfig() const
+{
+    auto file = SPIFFS.open(sandFlushConfigFileAddress, FILE_READ);
+    std::string jsonData;
+    if (file)
+    {
+        jsonData = file.readString().c_str(); // read raw data from file
+        file.close();
+        return jsonData;
+    }
+    return ""; // return empty
+}
+void Configuration::setSandFlushConfig(const std::string& json)
+{
+    File file = SPIFFS.open(sandFlushConfigFileAddress, FILE_WRITE);
+    if (file)
+    {
+        file.println(json.c_str());
+        file.close();
+        Serial.println("Sandflush config data saved successfully.");
+    } 
+    else 
+    {
+        Serial.println("Failed to open file for writing.");
+    }
+}

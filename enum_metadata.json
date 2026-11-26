@@ -40,25 +40,69 @@
     ]
   },
   {
-    "qualified_name": "WebApiService::Method",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
-    "line": 25,
+    "qualified_name": "LogDispatcherStatus",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
+    "line": 8,
     "is_scoped": true,
     "enumerators": [
       {
-        "name": "Get",
+        "name": "Idle",
         "value": 0
       },
       {
-        "name": "Post",
+        "name": "Running",
         "value": 1
       },
       {
-        "name": "Put",
+        "name": "StorageFullError",
         "value": 2
       },
       {
-        "name": "Delete",
+        "name": "StorageNotReadyError",
+        "value": 3
+      }
+    ]
+  },
+  {
+    "qualified_name": "SandFlushItem::OperatingState",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
+    "line": 12,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Idle",
+        "value": 0
+      },
+      {
+        "name": "Filtering",
+        "value": 1
+      },
+      {
+        "name": "Backwashing",
+        "value": 2
+      }
+    ]
+  },
+  {
+    "qualified_name": "SandFlushItem::TriggerMode",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\SandFlushItem.hpp",
+    "line": 13,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "DP",
+        "value": 0
+      },
+      {
+        "name": "Interval",
+        "value": 1
+      },
+      {
+        "name": "Hybrid",
+        "value": 2
+      },
+      {
+        "name": "ManualOnly",
         "value": 3
       }
     ]
@@ -104,30 +148,6 @@
     ]
   },
   {
-    "qualified_name": "LogDispatcherStatus",
-    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\LogDispatcherStatus.hpp",
-    "line": 8,
-    "is_scoped": true,
-    "enumerators": [
-      {
-        "name": "Idle",
-        "value": 0
-      },
-      {
-        "name": "Running",
-        "value": 1
-      },
-      {
-        "name": "StorageFullError",
-        "value": 2
-      },
-      {
-        "name": "StorageNotReadyError",
-        "value": 3
-      }
-    ]
-  },
-  {
     "qualified_name": "VentDriveItem::State",
     "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\VentDriveItem.hpp",
     "line": 11,
@@ -156,6 +176,30 @@
       {
         "name": "Uninitialized",
         "value": 5
+      }
+    ]
+  },
+  {
+    "qualified_name": "WebApiService::Method",
+    "file": "C:\\Users\\mahya\\Desktop\\The-Intelligarden-Project\\src\\WebApiService.hpp",
+    "line": 25,
+    "is_scoped": true,
+    "enumerators": [
+      {
+        "name": "Get",
+        "value": 0
+      },
+      {
+        "name": "Post",
+        "value": 1
+      },
+      {
+        "name": "Put",
+        "value": 2
+      },
+      {
+        "name": "Delete",
+        "value": 3
       }
     ]
   },

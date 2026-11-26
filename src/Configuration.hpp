@@ -22,6 +22,8 @@ constexpr auto thermostatFileAddress = "/thermostat.json";
 constexpr auto registeredSensorFileAddress = "/registered_sensors.json";
 constexpr auto timeConfigFileAddress = "/time_config.json";
 constexpr auto logDispatcherConfigFileAddress = "/log_config.json";
+constexpr auto sandFlushFileAddress = "/sandflush.json";
+constexpr auto sandFlushConfigFileAddress = "/sandflush_cfg.json";
 
 class Configuration
 {
@@ -67,5 +69,11 @@ public:
 
     std::string getTempSensorConfig() const;
     void setTempSensorConfig(const std::string& json);
+
+    std::string getSandFlush() const;
+    void setSandFlush(const std::string& json);
+
+    std::string getSandFlushConfig() const;
+    void setSandFlushConfig(const std::string& json);
 
 };

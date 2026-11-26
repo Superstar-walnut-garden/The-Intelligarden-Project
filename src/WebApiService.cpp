@@ -17,6 +17,7 @@
 #include "LogDispatcherService.hpp"
 #include "FileExplorerService.hpp"
 #include "TempSensorItem.hpp"
+#include "SandFlushService.hpp"
 
 /**
  * @brief Construct a new WebApiService object
@@ -86,6 +87,7 @@ void WebApiService::init()
     createEndpoint<TempSensorConfig>("/temp-sensor-config", TempSensorService::getInstance());
     createEndpoint("/signal-hub", CentralizedSignalHubService::getInstance());
 
+    createEndpoint<SandFlushItem>("/sandflush", SandFlushService::getInstance());
     createEndpoint<TempSensorItem>("/fusionbus", TempSensorService::getInstance());
     createEndpoint<GpioItem>("/gpio", GpioService::getInstance());
     createEndpoint<ThermostatItem>("/thermostat", ThermostatService::getInstance());
